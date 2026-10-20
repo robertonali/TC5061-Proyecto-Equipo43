@@ -7,11 +7,13 @@ cada script lo haga distinto.
 
 from pathlib import Path
 import subprocess
+import urllib.request
 
 from loguru import logger
 import mlflow
 
 from mibici_mlops.config import (
+    COMANDO_SERVIDOR_MLFLOW,
     DATA_DIR,
     EXPERIMENTO_MLFLOW,
     MLFLOW_ARTIFACTS_DIR,
@@ -63,8 +65,25 @@ def etiquetas_run(pregunta: str, script: str) -> dict[str, str]:
     }
 
 
+def verificar_servidor(uri: str = MLFLOW_TRACKING_URI) -> None:
+    """Falla de inmediato si el servidor de MLflow no responde.
+
+    Sin esto, MLflow reintenta la conexión durante varios minutos antes de dar un error.
+    """
+    if not uri.startswith("http"):
+        return
+    try:
+        urllib.request.urlopen(f"{uri.rstrip('/')}/health", timeout=5)
+    except OSError as error:
+        raise RuntimeError(
+            f"No hay un servidor de MLflow en {uri}. Levántalo en otra terminal, desde la raíz "
+            f"del proyecto, con:\n    {COMANDO_SERVIDOR_MLFLOW}"
+        ) from error
+
+
 def usar_experimento() -> None:
-    """Apunta MLflow a mlflow.db y al experimento del equipo; lo crea si todavía no existe."""
+    """Apunta MLflow al servidor de tracking y al experimento del equipo; lo crea si no existe."""
+    verificar_servidor()
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     if mlflow.get_experiment_by_name(EXPERIMENTO_MLFLOW) is None:
         mlflow.create_experiment(

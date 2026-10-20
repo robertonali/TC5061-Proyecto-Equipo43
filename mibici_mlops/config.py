@@ -1,4 +1,6 @@
+import os
 from pathlib import Path
+import sys
 
 from dotenv import load_dotenv
 from loguru import logger
@@ -46,10 +48,25 @@ FECHA_FIN = "2026-09-30"
 FECHA_INICIO_VALIDACION = "2025-10-01"
 FECHA_INICIO_PRUEBA = "2026-04-01"
 
-# Registro de experimentos: un solo experimento de MLflow para P1, P2 y P3. Los runs se guardan en
-# mlflow.db y los artefactos en mlruns/, en la raíz del proyecto, desde donde sea que se corra.
+# Registro de experimentos: un solo experimento de MLflow para P1, P2 y P3. Los runs se mandan al
+# servidor de tracking local, que los guarda en mlflow.db (SQLite, lo que pide el Model Registry);
+# los artefactos van a mlruns/. Se levanta con COMANDO_SERVIDOR_MLFLOW (ver la sección de MLflow
+# del README). Para usar otro servidor, definir MLFLOW_TRACKING_URI en .env.
 EXPERIMENTO_MLFLOW = "mibici-equipo43"
-MLFLOW_TRACKING_URI = f"sqlite:///{(PROJ_ROOT / 'mlflow.db').as_posix()}"
+COMANDO_SERVIDOR_MLFLOW = (
+    "mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-destination mlruns "
+    "--port 5000 --workers 1"
+)
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
+# MLflow lee esta variable por su cuenta: así también la usan los scripts que no llaman a
+# registro.usar_experimento().
+os.environ["MLFLOW_TRACKING_URI"] = MLFLOW_TRACKING_URI
+# Con un servidor, MLflow imprime un emoji al terminar cada run. En Windows, si la salida se
+# redirige a un archivo o a otro programa, la codificación cp1252 no lo acepta y el script falla;
+# así el carácter se escribe como texto escapado.
+for flujo in (sys.stdout, sys.stderr):
+    if hasattr(flujo, "reconfigure"):
+        flujo.reconfigure(errors="backslashreplace")
 MLFLOW_ARTIFACTS_DIR = PROJ_ROOT / "mlruns"
 SEMILLA = 43
 

@@ -46,9 +46,10 @@ flowchart LR
     registro --> train
     config -.-> dataset & feat & train
 
-    train -->|"parámetros, métricas,<br/>etiquetas y artefactos"| mlflow[("MLflow<br/>mlflow.db + mlruns/")]
+    train -->|"parámetros, métricas,<br/>etiquetas y artefactos"| server["mlflow server<br/>127.0.0.1:5000"]
+    server --> mlflow[("mlflow.db + mlruns/")]
     train --> models[("models/")]
-    mlflow --> ui["mlflow ui<br/>comparar runs"]
+    server --> ui["interfaz web<br/>comparar runs"]
 ```
 
 - **Datos:** los CSV crudos se versionan con DVC en el Drive del equipo; `dataset.py` también
@@ -124,6 +125,29 @@ git commit -m "Actualizar datos"
 dvc push        # si falla con WinError 10054: dvc push -j 2
 git push
 ```
+
+## MLflow: servidor de tracking local
+
+Los scripts `train_*.py` mandan sus runs a un servidor de MLflow que corre en tu computadora. El
+servidor guarda parámetros, métricas, etiquetas y modelos registrados en `mlflow.db` (SQLite), el
+almacenamiento con base de datos que requiere el Model Registry, y los artefactos en `mlruns/`.
+Ninguno de los dos se sube a Git: cada integrante tiene su propio historial.
+
+Antes de entrenar, levanta el servidor en una terminal aparte, desde la raíz del proyecto y con el
+entorno virtual activado, y déjalo corriendo:
+
+```powershell
+mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-destination mlruns --port 5000 --workers 1
+```
+
+Los runs se ven en http://127.0.0.1:5000. Para detener el servidor, `Ctrl+C` en esa terminal.
+
+- Los scripts se conectan a `http://127.0.0.1:5000` (`MLFLOW_TRACKING_URI` en `config.py`). Para
+  usar otro servidor, define `MLFLOW_TRACKING_URI` en un archivo `.env` en la raíz del proyecto.
+- `--workers 1` levanta un solo proceso. Con los 4 que usa por defecto, en Windows algunos fallan
+  con `WinError 10022` porque no pueden compartir el puerto.
+- Si el servidor no está corriendo, `train_p1` y `train_p2` fallan de inmediato con un mensaje
+  que indica el comando para levantarlo.
 
 ## P1: demanda de viajes por estación y día
 
@@ -208,7 +232,6 @@ Después de `python -m mibici_mlops.dataset`:
 ```powershell
 python -m mibici_mlops.features p2                  # etiqueta y variables (~35 s, ~3.6 GB de RAM)
 python -m mibici_mlops.modeling.train_p2            # baselines registrados en MLflow (~30 s)
-mlflow ui --backend-store-uri sqlite:///mlflow.db   # ver los runs en http://127.0.0.1:5000
 ```
 
 | Comando | Resultado esperado |
@@ -216,8 +239,9 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db   # ver los runs en http://127
 | `features p2` | `6,979,284 ventanas de 471 estaciones` y clases `sin_riesgo: 81.39`, `se_vacia: 9.77`, `se_llena: 8.83` |
 | `train_p2` | Dos runs en el experimento `mibici-equipo43`: `p2-baseline-clase-mayoritaria` y `p2-baseline-frecuencia-4-semanas` |
 
-Los runs se guardan en `mlflow.db` y `mlruns/`, que no se suben a Git. Conviene correr `train_p2`
-con todo en commit: cada run registra el commit y si había cambios sin commit.
+`train_p2` necesita el [servidor de MLflow](#mlflow-servidor-de-tracking-local) corriendo; los
+runs se ven en http://127.0.0.1:5000. Conviene correr `train_p2` con todo en commit: cada run
+registra el commit y si había cambios sin commit.
 
 ### Resultados de los baselines (conjunto de prueba)
 
@@ -261,12 +285,11 @@ Las decisiones y su justificación están en
 
 ### Cómo correrlo
 
-Después de `python -m mibici_mlops.dataset`:
+Después de `python -m mibici_mlops.dataset` y con el [servidor de MLflow](#mlflow-servidor-de-tracking-local) corriendo:
 
 ```powershell
 python -m mibici_mlops.features p3                  # perfil de cada estación (~5 s, ~3 GB de RAM)
 python -m mibici_mlops.modeling.train_p3            # baseline y KMeans registrados en MLflow (~30 s)
-mlflow ui --backend-store-uri sqlite:///mlflow.db   # ver los runs en http://127.0.0.1:5000
 ```
 
 | Comando | Resultado esperado |
