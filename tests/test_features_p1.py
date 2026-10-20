@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 
-from mibici_mlops.features_p1 import armar_tabla, calcular_historial, es_feriado
+from mibici_mlops.features import es_feriado, historial_demanda, tabla_estacion_dia
 
 SEMILLA = 7
 N_ESTACIONES = 4
@@ -29,10 +29,10 @@ def test_historial_no_usa_informacion_del_dia_a_predecir():
     matriz, _ = malla()
     d = 20
 
-    original = calcular_historial(matriz)
+    original = historial_demanda(matriz)
     alterada = matriz.copy()
     alterada[:, d:] += 1000
-    modificada = calcular_historial(alterada)
+    modificada = historial_demanda(alterada)
 
     for nombre in original:
         np.testing.assert_array_equal(
@@ -44,7 +44,7 @@ def test_historial_no_usa_informacion_del_dia_a_predecir():
 
 def test_rezago_y_media_corresponden_al_corte():
     matriz, _ = malla()
-    historial = calcular_historial(matriz)
+    historial = historial_demanda(matriz)
     d, est = 20, 2
 
     assert historial["lag_7d"][est, d] == matriz[est, d - 7]
@@ -55,7 +55,7 @@ def test_rezago_y_media_corresponden_al_corte():
 def test_sin_historial_suficiente_no_hay_filas():
     """Los primeros 7 días de la malla no tienen una semana completa antes del corte."""
     matriz, dias = malla()
-    tabla = armar_tabla(matriz, dias, estaciones())
+    tabla = tabla_estacion_dia(matriz, dias, estaciones())
     assert tabla["fecha"].min() >= dias[0] + pd.Timedelta(days=7)
     assert tabla[["lag_7d", "media_7d"]].notna().all().all()
     # La variable objetivo es el conteo de ese mismo día.
@@ -67,7 +67,7 @@ def test_sin_historial_suficiente_no_hay_filas():
 def test_estacion_sin_viajes_en_la_semana_previa_se_excluye():
     matriz, dias = malla()
     matriz[0, :] = 0
-    tabla = armar_tabla(matriz, dias, estaciones())
+    tabla = tabla_estacion_dia(matriz, dias, estaciones())
     assert 1 not in set(tabla["estacion_id"])
 
 

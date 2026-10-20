@@ -2,8 +2,8 @@
 
 Decisiones específicas de P1: ¿cuántos viajes iniciarán en cada estación durante el día
 siguiente? Las decisiones generales del proyecto (formato de los datos, periodo de análisis)
-están en [decisiones.md](decisiones.md). El código está en `mibici_mlops/features_p1.py` y
-`mibici_mlops/modeling/train_p1.py`.
+están en [decisiones.md](decisiones.md). El código está en `mibici_mlops/features.py` (subcomando
+`p1`) y `mibici_mlops/modeling/train_p1.py`.
 
 ## 1. Predecir los viajes por estación y día, con horizonte de un día
 
@@ -124,7 +124,7 @@ anteriores al corte. Es una regla que se puede evaluar al predecir.
 ## 4. Partición temporal y evaluación
 
 - **Fecha:** 2026-10-18
-- **Estado:** propuesta, pendiente de confirmar con el equipo (aplica también a P2 y P3)
+- **Estado:** reemplazada por la decisión 6 (2026-10-19)
 - **Aplica a:** `conjunto` en `features_p1.py` y `train_p1.py`.
 
 ### Decisión
@@ -180,4 +180,49 @@ anteriores al corte. Es una regla que se puede evaluar al predecir.
 - Cada corrida se registra en MLflow (experimento `mibici-equipo43`, etiqueta `pregunta=P1`,
   runs `p1-baseline-semana-previa` y `p1-gradient-boosting`).
 - Los resultados con datos reales se anotan en el documento de la propuesta, no aquí.
-- **Pendiente:** la partición de la decisión 4 y el tratamiento de septiembre de 2026.
+- **Pendiente:** el tratamiento de septiembre de 2026 en la prueba (decisión 6).
+
+## 6. Usar la partición temporal común del equipo
+
+- **Fecha:** 2026-10-19
+- **Estado:** vigente; reemplaza a la decisión 4
+- **Aplica a:** `asignar_conjunto` en `features.py` (subcomando `p1`) y `train_p1.py`.
+
+### Contexto
+
+La decisión 4 proponía fechas propias para P1. Mientras tanto, el equipo fijó en `config.py` una
+partición común para las tres preguntas (`FECHA_INICIO_VALIDACION` y `FECHA_INICIO_PRUEBA`,
+decisión 6 de `decisiones_p2.md`). Con fechas distintas, los resultados de P1 no se podían
+comparar con los de P2 y P3.
+
+### Decisión
+
+Usar las fechas de `config.py`:
+
+| Conjunto | Periodo | Filas estación-día |
+|---|---|---|
+| Entrenamiento | 2022-03-08 a 2025-09-30 | 434,345 |
+| Validación | 2025-10-01 a 2026-03-31 | 66,890 |
+| Prueba | 2026-04-01 a 2026-09-30 | 75,913 |
+
+El entrenamiento empieza el 2022-03-08 y no el 2022-03-01 (`FECHA_INICIO`) porque cada fila
+necesita una semana completa de historial (decisión 2). Siguen igual las reglas de la decisión 4:
+los hiperparámetros se eligen con la validación y la prueba se evalúa una sola vez.
+
+### Por qué
+
+- **Mismos días de prueba para P1, P2 y P3.** Los resultados de las tres preguntas se pueden
+  comparar y reportar juntos.
+- **Las fechas se definen una sola vez.** P1 ya no tiene valores propios de respaldo; si el equipo
+  cambia la partición en `config.py`, P1 la sigue sin tocar su código.
+- **Validación y prueba duran seis meses cada una**, en lugar de cuatro y cinco: la validación
+  cubre otoño e invierno y la prueba, primavera y verano.
+
+### Consecuencias
+
+- Cambian los números de P1 (antes, `test_mae` de 5.97 para el gradient boosting y 7.85 para el
+  baseline). Con esta partición, el gradient boosting tiene `val_mae` 5.72 y `test_mae` 5.99, y el
+  baseline 7.78 y 7.94. La mejora sigue siendo de ~25%.
+- Las variables de P1 no cambian: solo cambia la columna `conjunto`.
+- La prueba empieza un mes antes e incluye septiembre de 2026 (pendiente de la decisión 2 de
+  `decisiones.md`).

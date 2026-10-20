@@ -3,6 +3,10 @@
 Lee `data/interim/viajes.parquet` y el catálogo de estaciones, y guarda en `data/processed/` una
 tabla por pregunta. Ninguna variable usa información posterior al momento de la predicción.
 
+P1 (demanda de viajes por estación y día): una fila por estación y día que se quiere predecir,
+con el número de viajes que inician ahí, variables de calendario y de la estación, y el historial
+de los días anteriores. Las reglas están en references/decisiones_p1.md.
+
 P2 (riesgo de que una estación se vacíe o se llene): una fila por estación y ventana de 2 horas,
 con la etiqueta y la frecuencia de cada clase en las semanas anteriores. Las reglas están en
 references/decisiones_p2.md y el análisis, en las secciones 12 y 13 de
@@ -14,6 +18,7 @@ franja del día. Las reglas están en references/decisiones_p3.md y la exploraci
 notebooks/1.0-im-initial-eda.ipynb.
 
 Uso:
+    python -m mibici_mlops.features p1
     python -m mibici_mlops.features p2
     python -m mibici_mlops.features p3
 """
@@ -32,6 +37,7 @@ from mibici_mlops.config import (
     FECHA_INICIO,
     FECHA_INICIO_PRUEBA,
     FECHA_INICIO_VALIDACION,
+    P1_FEATURES_PATH,
     P2_HORA_REINICIO,
     P2_INVENTARIO_INICIAL,
     P2_SEMANAS_HISTORIA,
@@ -374,6 +380,194 @@ def p3(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     tabla.to_parquet(output_path, index=False, compression="zstd")
     logger.success(f"{len(tabla):,} perfiles guardados en {output_path}")
+
+
+# Variables del modelo de P1. La variable objetivo es `viajes`.
+COLUMNAS_P1 = [
+    "dia_semana",
+    "mes",
+    "es_fin_de_semana",
+    "es_feriado",
+    "capacidad",
+    "lat",
+    "lon",
+    "lag_7d",
+    "media_7d",
+]
+
+DIAS_POR_SEMANA = 7
+
+
+def dias_feriados(anios: range) -> set[pd.Timestamp]:
+    """Días de descanso obligatorio de la Ley Federal del Trabajo (art. 74)."""
+
+    def lunes(anio: int, mes: int, n: int) -> pd.Timestamp:
+        primero = pd.Timestamp(anio, mes, 1)
+        primer_lunes = primero + pd.Timedelta(days=(7 - primero.weekday()) % 7)
+        return primer_lunes + pd.Timedelta(weeks=n - 1)
+
+    feriados = set()
+    for anio in anios:
+        feriados |= {
+            pd.Timestamp(anio, 1, 1),
+            lunes(anio, 2, 1),  # Día de la Constitución
+            lunes(anio, 3, 3),  # Natalicio de Benito Juárez
+            pd.Timestamp(anio, 5, 1),
+            pd.Timestamp(anio, 9, 16),
+            lunes(anio, 11, 3),  # Día de la Revolución
+            pd.Timestamp(anio, 12, 25),
+        }
+        if (anio - 1994) % 6 == 0:  # transmisión del Poder Ejecutivo Federal
+            feriados.add(pd.Timestamp(anio, 10, 1))
+    return feriados
+
+
+def es_feriado(fechas: pd.DatetimeIndex) -> np.ndarray:
+    """Indica, para cada fecha, si cae en un día de descanso obligatorio."""
+    feriados = dias_feriados(range(fechas.year.min(), fechas.year.max() + 1))
+    return fechas.normalize().isin(feriados)
+
+
+def conteos_diarios(
+    viajes: pd.DataFrame, estaciones_ids: pd.Index, dias: pd.DatetimeIndex
+) -> np.ndarray:
+    """Matriz (estaciones × días) con los viajes que inician en cada estación y día.
+
+    La malla es completa: los días sin viajes quedan con 0. Los viajes de estaciones que no están
+    en la nomenclatura se descartan y se reportan.
+
+    Por qué para P1: los rezagos y promedios de `historial_demanda` cuentan columnas hacia atrás,
+    así que cada columna debe ser exactamente un día.
+    """
+    t = ((viajes["inicio"].dt.floor("D") - dias[0]) // pd.Timedelta(days=1)).to_numpy()
+    s = estaciones_ids.get_indexer(viajes["origen_id"].astype("int64"))
+    conocida = s >= 0
+    if not conocida.all():
+        logger.warning(f"{(~conocida).sum():,} viajes con estación fuera de la nomenclatura")
+
+    n_est, n_dias = len(estaciones_ids), len(dias)
+    plano = s[conocida].astype(np.int64) * n_dias + t[conocida]
+    matriz = np.bincount(plano, minlength=n_est * n_dias).reshape(n_est, n_dias)
+    return matriz.astype(np.float32)
+
+
+def historial_demanda(matriz: np.ndarray) -> dict[str, np.ndarray]:
+    """Calcula las variables de historial sin usar información del día que se predice.
+
+    Para el día ``d``, el corte es el cierre del día ``d-1``. Todo rezago o ventana termina en
+    ese día o antes. Donde no hay suficiente historial dentro de la malla, el valor es NaN.
+
+    Parámetros:
+        matriz: viajes por estación (filas) y día (columnas), sobre una malla diaria continua.
+    """
+    n_est, n_dias = matriz.shape
+
+    # Mismo día de la semana anterior: d-7 (anterior al corte).
+    lag_7d = np.full_like(matriz, np.nan)
+    lag_7d[:, DIAS_POR_SEMANA:] = matriz[:, : n_dias - DIAS_POR_SEMANA]
+
+    # Promedio de los 7 días anteriores (d-7 a d-1), con sumas acumuladas.
+    suma = np.concatenate(
+        [np.zeros((n_est, 1)), np.cumsum(matriz, axis=1, dtype=np.float64)], axis=1
+    )
+    media_7d = np.full_like(matriz, np.nan)
+    d = np.arange(DIAS_POR_SEMANA, n_dias)
+    media_7d[:, d] = (suma[:, d] - suma[:, d - DIAS_POR_SEMANA]) / DIAS_POR_SEMANA
+
+    return {"lag_7d": lag_7d, "media_7d": media_7d}
+
+
+def asignar_conjunto(fechas: pd.Series) -> pd.Categorical:
+    """Etiqueta cada fila como entrenamiento, validación o prueba según su fecha.
+
+    Usa la partición común de config.py (decisión 6 de P2), para que P1, P2 y P3 se evalúen en
+    los mismos días.
+    """
+    conjunto = np.where(
+        fechas < pd.Timestamp(FECHA_INICIO_VALIDACION),
+        "entrenamiento",
+        np.where(fechas < pd.Timestamp(FECHA_INICIO_PRUEBA), "validacion", "prueba"),
+    )
+    return pd.Categorical(conjunto, categories=["entrenamiento", "validacion", "prueba"])
+
+
+def tabla_estacion_dia(
+    matriz: np.ndarray, dias: pd.DatetimeIndex, estaciones: pd.DataFrame
+) -> pd.DataFrame:
+    """Arma la tabla estación-día con la variable objetivo y las variables de P1.
+
+    Se conservan las filas con una semana completa de historial antes del corte y al menos un
+    viaje en esa semana. Las estaciones nuevas o sin actividad reciente se excluyen: no tienen
+    historial con qué predecir.
+    """
+    historial = historial_demanda(matriz)
+    elegible = np.isfinite(historial["media_7d"]) & (historial["media_7d"] > 0)
+    s_idx, t_idx = np.nonzero(elegible)
+
+    fecha = dias[t_idx]
+    tabla = pd.DataFrame(
+        {
+            "estacion_id": estaciones.index.to_numpy()[s_idx].astype("int32"),
+            "fecha": fecha,
+            "viajes": matriz[s_idx, t_idx].astype("int32"),
+            "dia_semana": fecha.dayofweek.astype("int8"),
+            "mes": fecha.month.astype("int8"),
+            "es_fin_de_semana": (fecha.dayofweek >= 5).astype("int8"),
+            "es_feriado": es_feriado(dias)[t_idx].astype("int8"),
+            "capacidad": estaciones["dpcapacity"].to_numpy(dtype="float32")[s_idx],
+            "lat": estaciones["latitude"].to_numpy(dtype="float32")[s_idx],
+            "lon": estaciones["longitude"].to_numpy(dtype="float32")[s_idx],
+        }
+    )
+    for nombre, valores in historial.items():
+        tabla[nombre] = valores[s_idx, t_idx].astype("float32")
+    tabla["conjunto"] = asignar_conjunto(tabla["fecha"])
+    return tabla
+
+
+@app.command()
+def p1(
+    viajes_path: Path = VIAJES_PATH,
+    estaciones_path: Path = ESTACIONES_PATH,
+    output_path: Path = P1_FEATURES_PATH,
+):
+    """P1: viajes por estación y día, con variables de calendario, de la estación y de historial.
+
+    Solo se leen `inicio` y `origen_id`: los datos del usuario (`usuario_id`, `genero`,
+    `anio_nacimiento`) no se cargan.
+    """
+    estaciones = pd.read_csv(estaciones_path).set_index("id").sort_index()
+    logger.info(f"{len(estaciones)} estaciones en la nomenclatura")
+
+    viajes = pd.read_parquet(
+        viajes_path,
+        columns=["inicio", "origen_id"],
+        filters=[
+            ("inicio", ">=", pd.Timestamp(FECHA_INICIO)),
+            ("inicio", "<", pd.Timestamp(FECHA_FIN) + pd.Timedelta(days=1)),
+        ],
+    ).dropna()
+    logger.info(f"{len(viajes):,} viajes de {FECHA_INICIO} a {FECHA_FIN}")
+
+    dias = pd.date_range(FECHA_INICIO, FECHA_FIN, freq="D")
+    matriz = conteos_diarios(viajes, estaciones.index, dias)
+    logger.info(f"Malla: {matriz.shape[0]} estaciones × {matriz.shape[1]:,} días")
+
+    tabla = tabla_estacion_dia(matriz, dias, estaciones)
+    excluidas = matriz.size - len(tabla)
+    logger.info(
+        f"{len(tabla):,} filas estación-día ({excluidas:,} excluidas por falta de historial "
+        "o de actividad en la semana previa)"
+    )
+    for conjunto, grupo in tabla.groupby("conjunto", observed=True):
+        logger.info(
+            f"{conjunto}: {len(grupo):,} filas, {grupo['estacion_id'].nunique()} estaciones, "
+            f"{grupo['fecha'].min():%Y-%m-%d} a {grupo['fecha'].max():%Y-%m-%d}"
+        )
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    tabla.to_parquet(output_path, compression="zstd", index=False)
+    logger.success(f"Variables de P1 guardadas en {output_path}")
 
 
 if __name__ == "__main__":
