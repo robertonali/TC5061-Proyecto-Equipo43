@@ -5,11 +5,18 @@ se hizo `dvc pull`, no descarga nada), corrige las diferencias de formato entre 
 errores de los datos, como filas duplicadas (ver references/fuentes_datos.md). No filtra filas
 por criterios de análisis: esas decisiones, como el periodo a usar, van en features.py.
 
+Al terminar escribe el manifiesto de la versión de los datos (data/interim/manifiesto.json): los
+archivos usados con su md5 y sus filas. Los scripts de entrenamiento lo guardan en cada run. Con
+`mlflow run . -e ingest`, la ingesta también queda como un run con el manifiesto.
+
 Uso:
     python -m mibici_mlops.dataset
     python -m mibici_mlops.dataset --sin-descargar   # solo usa los CSV que ya están en data/raw
 """
 
+import hashlib
+import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -17,6 +24,7 @@ from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
 from loguru import logger
+import mlflow
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -27,9 +35,11 @@ from mibici_mlops.config import (
     ESTACIONES_PATH,
     FECHA_FIN,
     INTERIM_DATA_DIR,
+    MANIFIESTO_PATH,
     RAW_DATA_DIR,
     URL_DATOS_ABIERTOS,
 )
+from mibici_mlops.modeling.registro import etiquetas_run, registrar_manifiesto, usar_experimento
 
 app = typer.Typer()
 
@@ -220,11 +230,57 @@ def unir_estaciones(df: pd.DataFrame, estdf: pd.DataFrame) -> pd.DataFrame:
     con_est["destino_lat"] = a_float(con_est.destino_id.map(estdf.latitude))
     return con_est
 
+
+def md5_archivo(ruta: Path) -> str:
+    """md5 de un archivo, leído por bloques para no cargarlo completo en memoria."""
+    md5 = hashlib.md5()
+    with open(ruta, "rb") as archivo:
+        for bloque in iter(lambda: archivo.read(1 << 20), b""):
+            md5.update(bloque)
+    return md5.hexdigest()
+
+
+def escribir_manifiesto(
+    archivos: list[dict], estaciones_path: Path, total: int, ruta: Path
+) -> dict:
+    """Guarda el manifiesto de la versión de los datos y lo regresa.
+
+    Lleva cada CSV con su md5 y sus filas después de quitar duplicados, la nomenclatura de
+    estaciones con su md5 y el total de viajes. `version` es el md5 de todo lo anterior: cambia si
+    cambia cualquier archivo o la limpieza. No lleva la fecha en que se generó, para que los mismos
+    datos den siempre el mismo manifiesto.
+    """
+    manifiesto = {
+        "fecha_fin": FECHA_FIN,
+        "viajes": total,
+        "estaciones": {"archivo": estaciones_path.name, "md5": md5_archivo(estaciones_path)},
+        "archivos": archivos,
+    }
+    contenido = json.dumps(manifiesto, sort_keys=True).encode()
+    manifiesto["version"] = hashlib.md5(contenido).hexdigest()
+    ruta.write_text(json.dumps(manifiesto, indent=2, ensure_ascii=False), encoding="utf-8")
+    return manifiesto
+
+
+def registrar_ingesta(manifiesto_path: Path) -> None:
+    """Agrega el manifiesto al run que creó `mlflow run . -e ingest`.
+
+    `mlflow run` crea el run antes de llamar a este script y pasa su id en MLFLOW_RUN_ID;
+    `mlflow.start_run()` lo retoma. Así la versión de los datos también queda en el experimento.
+    """
+    usar_experimento()
+    etiquetas = {**etiquetas_run("datos", __file__), "stage_of_work": "ingest"}
+    with mlflow.start_run(run_name="ingesta-datos", tags=etiquetas):
+        mlflow.set_tag("mlflow.runName", "ingesta-datos")
+        registrar_manifiesto(manifiesto_path)
+
+
 @app.command()
 def main(
     estaciones_path: Path = ESTACIONES_PATH,
     viajes_dir: Path = RAW_DATA_DIR / "viajes",
     output_path: Path = INTERIM_DATA_DIR / "viajes.parquet",
+    manifiesto_path: Path = MANIFIESTO_PATH,
     descargar_csv: bool = typer.Option(True, "--descargar/--sin-descargar"),
 ):
     if descargar_csv:
@@ -238,6 +294,7 @@ def main(
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     total = 0
+    usados = []
     # Se escribe mes por mes para no tener los ~39 M de filas en memoria a la vez.
     with pq.ParquetWriter(output_path, ESQUEMA, compression="zstd") as writer:
         for ruta in tqdm(archivos, desc="Meses"):
@@ -248,8 +305,13 @@ def main(
             limpio = quitar_duplicados(limpio, ruta.name)
             writer.write_table(pa.Table.from_pandas(limpio, schema=ESQUEMA, preserve_index=False))
             total += len(limpio)
+            usados.append({"archivo": ruta.name, "md5": md5_archivo(ruta), "filas": len(limpio)})
 
     logger.success(f"{total:,} viajes guardados en {output_path}")
+    manifiesto = escribir_manifiesto(usados, estaciones_path, total, manifiesto_path)
+    logger.success(f"Versión de los datos {manifiesto['version']} en {manifiesto_path}")
+    if os.environ.get("MLFLOW_RUN_ID"):
+        registrar_ingesta(manifiesto_path)
 
 
 if __name__ == "__main__":

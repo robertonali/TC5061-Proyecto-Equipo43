@@ -1,0 +1,7 @@
+# Entorno del MLproject: la versión de Python del proyecto y las mismas versiones fijas de
+# requirements.txt (no se repiten aquí para que no se desincronicen).
+python: "3.13.7"
+build_dependencies:
+  - pip==25.2
+dependencies:
+  - -r requirements.txt
