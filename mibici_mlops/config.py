@@ -105,6 +105,7 @@ P3_FRANJAS = {"madrugada": 0, "manana": 6, "tarde": 12, "noche": 18}
 P3_MIN_VIAJES = 500
 P3_GRUPOS = 3
 P3_GRUPOS_BUSQUEDA = range(2, 9)
+P3_MODELO_REGISTRADO = "mibici-equipo43-p3-clusters"
 
 REPORTS_DIR = PROJ_ROOT / "reports"
 FIGURES_DIR = REPORTS_DIR / "figures"

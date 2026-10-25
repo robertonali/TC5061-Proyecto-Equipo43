@@ -1,13 +1,43 @@
-from pathlib import Path
-
 from loguru import logger
+from pathlib import Path
 from tqdm import tqdm
+
+import pandas as pd
+
+import mlflow
 import typer
 
-from mibici_mlops.config import MODELS_DIR, PROCESSED_DATA_DIR
+from mibici_mlops.config import MODELS_DIR, PROCESSED_DATA_DIR, P3_PERFILES_PATH, MLFLOW_TRACKING_URI
 
 app = typer.Typer()
 
+
+@app.command("p3")
+def predict_p3(
+    model_uri: str = typer.Option(..., "--model-uri"),
+    input_path: Path = P3_PERFILES_PATH,
+    output_path: Path = PROCESSED_DATA_DIR / "p3_predicciones.parquet",
+    conjunto: str = "prueba",
+):
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+
+    perfiles = pd.read_parquet(input_path)
+    filas = perfiles[perfiles["conjunto"] == conjunto].copy()
+
+    columnas = [
+        c for c in perfiles.columns
+        if c.startswith(("sal_", "lle_"))
+    ]
+    X = filas[columnas].astype("float64")
+
+    modelo = mlflow.pyfunc.load_model(model_uri)
+    etiquetas = modelo.predict(X)
+
+    resultado = filas[["estacion", "conjunto"]].copy()
+    resultado["cluster"] = etiquetas
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    resultado.to_parquet(output_path, index=False, compression="zstd")
 
 @app.command()
 def main(

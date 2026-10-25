@@ -398,6 +398,7 @@ def p3(
     fin = (pd.Timestamp(FECHA_FIN) + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
     periodos = {
         "entrenamiento": (FECHA_INICIO, FECHA_INICIO_VALIDACION),
+        "validacion": (FECHA_INICIO_VALIDACION, FECHA_INICIO_PRUEBA),
         "prueba": (FECHA_INICIO_PRUEBA, fin),
     }
     partes = []

@@ -19,8 +19,8 @@ class P3Plotter:
         self.clusters = clusters.copy()
         self.perfiles = perfiles.copy()
 
-        self.asignaciones = self.clusters[clusters.conjunto == 'prueba']
-        self.perfiles = self.perfiles[perfiles.conjunto == 'prueba']
+        self.asignaciones = self.clusters[clusters.conjunto == 'validacion']
+        self.perfiles = self.perfiles[perfiles.conjunto == 'validacion']
 
         self.perfiles_con_cluster = self.perfiles.merge(
             self.asignaciones[['estacion', 'conjunto', 'cluster']],
