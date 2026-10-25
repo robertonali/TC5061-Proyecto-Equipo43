@@ -1,0 +1,30 @@
+name: mibici-equipo43
+
+# Entorno: la versión de Python del proyecto y las versiones fijas de requirements.txt. En Windows
+# se corre con `--env-manager local` (el .venv instalado según el README); ver la sección de MLflow
+# Project del README.
+python_env: python_env.yaml
+
+entry_points:
+  # Ingesta: descarga los CSV que falten en data/raw, los une en data/interim/viajes.parquet y
+  # escribe el manifiesto de la versión de los datos (data/interim/manifiesto.json). Con
+  # -P descarga=sin-descargar solo usa los CSV que ya están en data/raw.
+  ingest:
+    parameters:
+      descarga: {type: string, default: descargar}
+    command: "python -m mibici_mlops.dataset --{descarga}"
+
+  # Variables y etiqueta de una pregunta (p1, p2 o p3) en data/processed/.
+  features:
+    parameters:
+      question: string
+    command: "python -m mibici_mlops.features {question}"
+
+  # Entrenamiento de una pregunta. Los hiperparámetros se pasan con -P nombre=valor (p. ej.
+  # -P learning_rate=0.05); los que no se pasan toman su valor de config.py. Rutas, fechas y
+  # semillas también salen de config.py.
+  train:
+    parameters:
+      question: string
+      model: string
+    command: "python -m mibici_mlops.modeling.train --question {question} --model {model}"

@@ -47,7 +47,9 @@ riesgo, que es justo lo que el equipo de rebalanceo necesita para actuar.
   pesos de clase (`class_weight`) en los modelos.
 - El baseline de clase mayoritaria tendrá recall de 0 en las clases de riesgo; sirve como
   piso, no como referencia útil.
-- Hay que actualizar la sección de P2 del ML Canvas (`references/MLCanvas_MiBici.pdf`).
+- La sección de P2 del ML Canvas (`references/MLCanvas_MiBici.pdf`) se actualizó en la
+  iteración 2 (2026-10-18): 3 clases por ventana de 2 horas, los dos baselines y la frecuencia
+  de las 4 semanas anteriores como variable.
 - El umbral que define "se vacía" y "se llena" está en la decisión 5.
 
 ## 2. Predecir el riesgo en ventanas de 2 horas
@@ -328,7 +330,7 @@ sin intervención, que es justo lo que el equipo de rebalanceo necesita saber.
 ## 6. Partición temporal y momento de predicción
 
 - **Fecha:** 2026-10-17
-- **Estado:** vigente
+- **Estado:** vigente; el uso de la validación se amplía en la decisión 8 (2026-10-25)
 - **Aplica a:** el entrenamiento y la evaluación de P2 (baselines y candidatos).
 
 ### Contexto
@@ -386,7 +388,8 @@ Las fechas están en `mibici_mlops/config.py` (`FECHA_INICIO`, `FECHA_INICIO_VAL
 ### Consecuencias
 
 - Los baselines no usan validación (no tienen nada que ajustar); los candidatos la usarán para
-  elegir hiperparámetros.
+  elegir hiperparámetros. *Actualizado en la decisión 8:* todos los modelos, baselines incluidos,
+  se evalúan también en validación, porque ahí se elige el modelo y se compara contra el baseline.
 - Los modelos se comparan siempre en el mismo conjunto. Las métricas de validación y de prueba no
   se comparan entre sí: la proporción de riesgo es distinta y la PR-AUC depende de ella.
 - El baseline de frecuencia usa las 4 semanas anteriores aunque caigan en otro conjunto (por
@@ -397,7 +400,8 @@ Las fechas están en `mibici_mlops/config.py` (`FECHA_INICIO`, `FECHA_INICIO_VAL
 ## 7. Evaluación y registro de los baselines en MLflow
 
 - **Fecha:** 2026-10-17
-- **Estado:** vigente
+- **Estado:** vigente; ampliada por la decisión 10 (2026-10-25): métricas de validación, etiquetas,
+  artefactos y manifiesto de los datos
 - **Aplica a:** los runs de P2 en MLflow.
 
 ### Contexto
@@ -445,7 +449,8 @@ las métricas y qué se registra para poder repetir cada run.
 
 - **Exactitud (accuracy):** predecir siempre "sin riesgo" da 87% de exactitud en prueba sin
   detectar nada (decisión 1).
-- **Manifiesto propio con hashes:** repetiría lo que ya hace DVC.
+- **Manifiesto propio con hashes:** repetiría lo que ya hace DVC. *Se adoptó en la decisión 10:*
+  la entrega 2 pide guardar en cada run el manifiesto que genera la ingesta.
 
 ### Consecuencias
 
@@ -453,3 +458,250 @@ las métricas y qué se registra para poder repetir cada run.
   runs.
 - Los runs se ejecutan con todo en commit, para que el commit registrado sea el código que los
   produjo.
+
+## 8. Candidatos, variables, búsqueda y métrica para elegir el modelo
+
+- **Fecha:** 2026-10-25
+- **Estado:** vigente
+- **Aplica a:** los modelos candidatos de P2 y su comparación con los baselines (entrega 2).
+
+### Contexto
+
+La entrega 2 pide al menos tres versiones además del baseline, una búsqueda de hiperparámetros
+organizada como nested runs y la misma partición y métricas de la entrega anterior. La decisión 3
+propuso los candidatos; faltaba fijar sus variables, sus hiperparámetros y con qué métrica se
+elige entre ellos.
+
+### Decisión
+
+**Variables:** seis, todas conocidas a las 4:00, cuando se predice (decisión 6).
+
+| Variable | Qué es | Tipo |
+|---|---|---|
+| `hora` | Hora en que empieza la ventana (0, 2, …, 22) | Categórica |
+| `dia_semana` | Día de la semana (0 = lunes) | Categórica |
+| `feriado` | Si es feriado oficial (la misma lista que usa P1) | 0 o 1 |
+| `capacidad` | Anclajes de la estación | Número |
+| `frec_se_vacia`, `frec_se_llena` | Fracción de las 4 semanas anteriores con ese riesgo: la regla del baseline de frecuencia | 0 a 1 |
+
+**Versiones**, todas con la partición de la decisión 6 y la semilla `43`:
+
+| Run | Modelo | Hiperparámetros | Qué prueba |
+|---|---|---|---|
+| `p2-logistica-balanceado-c1.0` | `LogisticRegression` | `C` 1, 1000 iteraciones, `class_weight="balanced"` | Si basta una relación lineal |
+| `p2-hgb-balanceado-lr0.1-hojas31-arboles300` | `HistGradientBoostingClassifier` | `learning_rate` 0.1, 31 hojas, 300 árboles, `balanced` | Si las combinaciones de variables ayudan |
+| `p2-hgb-sin-pesos-lr0.1-hojas31-arboles300` | El mismo | Los mismos, sin pesos de clase | El efecto de `class_weight` |
+| `p2-busqueda-hgb-balanceado-arboles300` | Búsqueda: un run padre y 6 hijos | `learning_rate` 0.05 o 0.1 × `max_leaf_nodes` 31, 63 o 127 | Si más capacidad o un aprendizaje más lento mejoran |
+| `p2-hgb-balanceado-lr0.05-hojas31-arboles300` | El mejor de la búsqueda | `learning_rate` 0.05, 31 hojas, 300 árboles, `balanced` | Candidato final |
+
+**Métrica para elegir:** el promedio de la PR-AUC de validación de "se vacía" y "se llena"
+(`val_pr_auc_promedio`). El modelo se elige solo con validación; la prueba se reporta como
+estimación final y no interviene en la elección. Por eso los hijos de la búsqueda solo se evalúan
+en validación, y el ganador se vuelve a correr como candidato para evaluarlo también en prueba.
+
+**Métricas:** las de la entrega 1 (recall, precisión y PR-AUC de cada clase de riesgo en prueba,
+decisión 7) y las mismas en validación, con el prefijo `val_`. Se agregan:
+
+- `val_pr_auc_promedio` y `test_pr_auc_promedio`: la métrica para elegir.
+- `*_pr_auc_promedio_desv_mensual`: desviación estándar de la PR-AUC promedio de un mes a otro
+  (estabilidad).
+- `tiempo_entrenamiento_s` y `tiempo_prediccion_s` (costo; la predicción incluye validación y
+  prueba).
+
+### Por qué
+
+- **Promedio de las dos clases de riesgo:** las dos acciones (llevar o retirar bicicletas)
+  importan igual al equipo de rebalanceo; promediarlas evita elegir un modelo que solo mejora en
+  una. La PR-AUC no depende de un umbral y se enfoca en las clases minoritarias (decisión 7).
+- **Elegir con validación, no con prueba:** si la prueba sirviera para elegir, dejaría de ser una
+  estimación honesta de cómo le irá al modelo con datos nuevos.
+- **La frecuencia como variable:** es la señal del baseline; el modelo tiene que superarla
+  aprovechándola. `frec_sin_riesgo` no entra porque es 1 menos las otras dos.
+- **Hora, día de la semana y feriado:** el riesgo se concentra en las horas pico de los días
+  hábiles (decisión 2), y la frecuencia no distingue un feriado entre semana de un día hábil.
+- **Sin early stopping en HGB:** apartaría al azar una parte del entrenamiento para decidir cuándo
+  parar y mezclaría fechas; el número de árboles queda fijo (300).
+- **Rejilla de 6 combinaciones:** cada una tarda de 1 a 2 minutos con 5.2 millones de ventanas, y
+  cubre los dos hiperparámetros que más cambian la capacidad del modelo.
+
+### Alternativas descartadas
+
+- **Elegir con la PR-AUC de prueba:** ver arriba.
+- **Validación cruzada temporal:** más robusta, pero multiplica el costo por el número de cortes.
+  Con 6 meses de validación y la variación mensual registrada, la comparación ya es estable
+  (decisión 9).
+- **F1 de la clase predicha:** depende del umbral, y la clase predicha cambia mucho con o sin pesos
+  de clase (decisión 9); la PR-AUC compara qué tan bien ordena el modelo sin fijar un umbral.
+
+### Consecuencias
+
+- Las métricas de prueba de los baselines son las mismas de la entrega 1 (PR-AUC de 0.368 y 0.539
+  en el de frecuencia), así que la comparación contra esa entrega es válida. Los baselines se
+  volvieron a correr con `mlflow run` para tener también validación y las etiquetas nuevas; los
+  runs de la entrega 1 quedaron en la papelera del servidor local.
+- El hijo ganador de la búsqueda y el candidato final se llaman igual; se distinguen por
+  `stage_of_work` (`search` o `candidate`) y porque el hijo cuelga del run padre.
+- Las cifras de validación y de prueba no se comparan entre sí (decisión 6).
+
+## 9. Modelo en producción: HistGradientBoosting con pesos de clase, con aliases
+
+- **Fecha:** 2026-10-25
+- **Estado:** vigente
+- **Aplica a:** el modelo de P2 en el Model Registry (`mibici-equipo43-p2-riesgo`).
+
+### Contexto
+
+Con las corridas de la decisión 8 hay que elegir qué modelo pasa a producción, considerando la
+mejora sobre el baseline, la métrica ligada a la decisión de negocio, la estabilidad y el costo, y
+gestionar su ciclo de vida en el Model Registry.
+
+### Decisión
+
+| Alias | Versión | Run de origen | Papel |
+|---|---|---|---|
+| `champion` | 1 | `p2-hgb-balanceado-lr0.05-hojas31-arboles300` | En producción |
+| `challenger` | 2 | `p2-logistica-balanceado-c1.0` | Siguiente opción |
+
+El modelo en producción se carga con `models:/mibici-equipo43-p2-riesgo@champion`.
+
+### Por qué
+
+PR-AUC promedio de las dos clases de riesgo, y recall y precisión de prueba ("se vacía" /
+"se llena"):
+
+| Run | Validación | Prueba | Recall | Precisión | Entrena / predice |
+|---|---|---|---|---|---|
+| Frecuencia 4 semanas (baseline) | 0.495 | 0.453 | 0.47 / 0.62 | 0.46 / 0.59 | — |
+| Logística balanceada | 0.555 | 0.505 | 0.67 / 0.77 | 0.32 / 0.43 | 30 s / 0.4 s |
+| HGB balanceado, lr 0.1 | 0.570 | 0.521 | 0.71 / 0.79 | 0.30 / 0.42 | 69 s / 8 s |
+| HGB sin pesos, lr 0.1 | 0.573 | 0.523 | 0.26 / 0.45 | 0.62 / 0.73 | 73 s / 8 s |
+| **HGB balanceado, lr 0.05** | **0.571** | **0.522** | **0.71 / 0.79** | 0.30 / 0.42 | 81 s / 10 s |
+
+- **Mejora sobre el baseline:** en prueba, la PR-AUC promedio sube de 0.453 a 0.522 (+15%): +20%
+  en "se vacía" (0.368 a 0.442) y +12% en "se llena" (0.539 a 0.602). Detecta el 71% de las
+  ventanas que se vacían (47% el baseline) y el 79% de las que se llenan (62%).
+- **Métrica de negocio:** el ML Canvas prioriza el recall de las clases de riesgo, porque es peor
+  dejar a un usuario sin bicicleta o sin anclaje que mandar un camión de más. HGB sin pesos tiene
+  la PR-AUC más alta, pero la diferencia (0.002) es del tamaño de la que hay entre combinaciones de
+  la búsqueda, y su clase predicha solo detecta el 26% de las ventanas que se vacían en prueba. Con
+  pesos balanceados, la clase predicha ya está en el punto de operación que pide el negocio.
+- **El costo de ese recall:** la precisión baja (0.30 en "se vacía" contra 0.46 del baseline): de
+  cada 10 alertas de vaciado, unas 7 no se cumplen. Por eso la lista diaria se ordena por
+  probabilidad (`predict_proba`) y el equipo atiende primero las más altas (cortes propuestos en la
+  decisión 5).
+- **Estabilidad:** la PR-AUC promedio varía de un mes a otro casi lo mismo que la del baseline
+  (desviación de 0.033 contra 0.030 en prueba). Todos los modelos, baseline incluido, bajan de
+  0.04 a 0.05 de validación a prueba: la prueba tiene menos riesgo (13% de las ventanas contra 16%,
+  decisión 6), no es sobreajuste.
+- **Costo:** entrena en 81 s con 5.2 millones de ventanas y predice 1.7 millones en 10 s; la
+  predicción diaria (471 estaciones × 12 ventanas) es instantánea. El costo no separa a los
+  candidatos.
+- **La búsqueda casi no cambia el resultado:** las 6 combinaciones quedan entre 0.569 y 0.571, y
+  más hojas no ayudan. El límite está en las variables, no en la capacidad del modelo.
+- **Logística como challenger:** pierde 0.016 de PR-AUC, pero predice 20 veces más rápido, sus
+  coeficientes se pueden explicar y es de otra familia, así que es una alternativa real si el
+  champion falla o hay que explicar una alerta. HGB con lr 0.1 sería una copia casi idéntica del
+  champion.
+- **Aliases y no etapas:** las etapas (Staging, Production) están obsoletas desde MLflow 2.9. Un
+  alias es un nombre que apunta a una versión: promover un modelo o volver al anterior es mover el
+  alias, sin crear versiones ni cambiar el código que carga `@champion`, y permite nombres propios
+  como `challenger`.
+
+### Alternativas descartadas
+
+- **HGB sin pesos como champion:** con un umbral más bajo llegaría a un punto de operación parecido
+  (ordena igual de bien), pero ese umbral tendría que guardarse y mantenerse fuera del modelo.
+- **Logística como champion:** más simple, pero con menor PR-AUC y menor recall en las dos clases.
+- **Etapas clásicas (transición a Production):** obsoletas y con un conjunto fijo de nombres.
+
+### Consecuencias
+
+- Cada versión guarda su linaje como etiquetas: experimento, run de origen, commit, si había
+  cambios sin commit, versión del manifiesto, versión de DVC, familia del modelo y PR-AUC de
+  validación y prueba; su descripción resume lo mismo. `registrar_p2.py` registra las versiones,
+  asigna los aliases y verifica que `@champion` se carga y predice.
+- Sin opciones, `registrar_p2.py` elige por `val_pr_auc_promedio` y tomaría HGB sin pesos; por eso
+  se corrió con `--champion` y `--challenger` (comando en el README).
+- Para cambiar el modelo en producción se registra el nuevo run y se mueve `champion`; la versión
+  anterior se conserva y se puede volver a ella moviendo el alias.
+- Siguiente mejora: variables nuevas (riesgo del día anterior, demanda pronosticada por P1, clima),
+  no más hiperparámetros.
+
+## 10. Registro en MLflow de la entrega 2: `mlflow run`, etiquetas, artefactos y manifiesto
+
+- **Fecha:** 2026-10-25
+- **Estado:** vigente; amplía la decisión 7
+- **Aplica a:** la ingesta y todos los runs de P2.
+
+### Contexto
+
+La entrega 2 pide lanzar todas las corridas con `mlflow run`, etiquetas para filtrar y comparar
+(`question`, `model_family`, `stage_of_work`), y en cada corrida candidata el modelo con firma, el
+manifiesto de la ingesta, gráficas y configuración, en subcarpetas y sin datos personales.
+
+### Decisión
+
+- **Ejecución:** `mlflow run . -e <ingest|features|train> --env-manager local --experiment-name
+  mibici-equipo43`, con los comandos de la sección de P2 del README.
+- **Etiquetas:**
+
+  | Etiqueta | Valores |
+  |---|---|
+  | `question` y `pregunta` | `P2`; en la ingesta, `datos` |
+  | `model_family` | `dummy`, `heuristica`, `lineal`, `gradient_boosting` |
+  | `stage_of_work` | `ingest`, `features`, `baseline`, `search`, `candidate` |
+  | `equipo`, `commit`, `cambios_sin_commit` | `43`, el commit de Git y si había cambios sin commit |
+
+- **Artefactos de los baselines y los candidatos:**
+
+  | Dónde | Qué |
+  |---|---|
+  | `plots/` | Curva precisión-recall y matriz de confusión de validación y de prueba; PR-AUC por mes |
+  | `data/` | `manifiesto.json` de la ingesta |
+  | `config/` | `run_p2.json` (modelo, hiperparámetros y parámetros), `MLproject`, `python_env.yaml`, `requirements.txt` y `config.py` |
+  | Modelo (`log_model`, solo candidatos) | El Pipeline de scikit-learn con su firma (6 columnas de entrada, clase de salida) y 5 filas de ejemplo |
+
+  Además, `log_input` de los conjuntos de entrenamiento, validación y prueba: esquema, número de
+  filas y una huella (digest), no los datos.
+- **Manifiesto de los datos:** `dataset.py` escribe `data/interim/manifiesto.json` con
+  `FECHA_FIN`, el total de viajes, el md5 y las filas de cada CSV y el md5 del catálogo de
+  estaciones, más una versión (el md5 de ese contenido). Cada run lo guarda en `data/` y registra
+  la versión como parámetro (`version_manifiesto`), junto con el md5 de DVC (`version_datos`).
+
+### Por qué
+
+- **`question` además de `pregunta`:** P1 y P2 ya usaban `pregunta` desde la entrega 1;
+  `question` es el nombre que pide la actividad. Tienen el mismo valor, así que filtrar por
+  cualquiera de las dos da lo mismo.
+- **Manifiesto además del md5 de DVC:** el md5 de DVC cambia si cambia cualquier archivo de
+  `data/raw`, pero no dice cuál; el manifiesto lista cada archivo con su md5 y sus filas y viaja
+  dentro del run, así que se puede revisar sin DVC. La versión no incluye la fecha en que se
+  corrió: la misma ingesta da la misma versión (la de esta entrega es `c311be64…`).
+- **`--env-manager local`:** el entorno está declarado en `python_env.yaml`, pero con los otros
+  gestores (`virtualenv`, `uv`) MLflow instala `requirements.txt` desde una carpeta temporal con
+  enlaces simbólicos a cada archivo del proyecto. En Windows, crear esos enlaces suele requerir
+  permisos de administrador; sin ellos, MLflow copia el proyecto completo, incluidos los 2.9 GB de
+  `data/raw`, y la línea `-e .` deja el paquete instalado apuntando a esa carpeta, que se borra al
+  terminar. Con `local` se usa el `.venv` instalado según el README, con las mismas versiones de
+  `requirements.txt`.
+- **El modelo con skops:** MLflow guarda los modelos de scikit-learn con skops, que no ejecuta
+  código al cargarlos. Los 3 tipos internos de HGB que skops no conoce se declaran uno por uno en
+  lugar de volver a pickle.
+- **Sin datos personales:** la tabla de P2 no tiene id, género ni año de nacimiento de los
+  usuarios; las rutas se registran relativas al proyecto, y `mlflow.user` y `mlflow.source.name`
+  se reemplazan para no guardar el usuario ni la carpeta personal de quien corre el run.
+
+### Alternativas descartadas
+
+- **Declarar cada hiperparámetro en `MLproject`:** obligaría a repetir ahí los valores por
+  defecto de `config.py`, que la actividad pide no repetir. Con `-P nombre=valor`, MLflow pasa al
+  script los parámetros que no están declarados, y `train_p2` rechaza los que el modelo no usa.
+- **Guardar la tabla de P2 en cada run:** son 16 MB que se repetirían en cada corrida; con el
+  manifiesto y el código del commit, `features p2` la reconstruye igual, y `log_input` registra su
+  huella.
+
+### Consecuencias
+
+- Todos los runs de esta entrega se lanzaron con el commit `b6edd95`, sin cambios sin commit.
+- MLflow toma del sistema operativo el usuario interno del run (`user_id`); para no guardarlo, las
+  corridas se lanzaron con la variable `LOGNAME=equipo43` (ver el README).

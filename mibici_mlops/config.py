@@ -25,6 +25,8 @@ MODELS_DIR = PROJ_ROOT / "models"
 
 # Archivos que usan varios módulos
 VIAJES_PATH = INTERIM_DATA_DIR / "viajes.parquet"
+# Manifiesto de la versión de los datos que genera dataset.py; cada run lo guarda como artefacto.
+MANIFIESTO_PATH = INTERIM_DATA_DIR / "manifiesto.json"
 ESTACIONES_PATH = RAW_DATA_DIR / "estaciones" / "nomenclatura_2026_09.csv"
 P1_FEATURES_PATH = PROCESSED_DATA_DIR / "p1_estacion_dia.parquet"
 P1_MODEL_PATH = MODELS_DIR / "p1.joblib"
@@ -79,6 +81,22 @@ P2_VENTANA = "2h"
 P2_HORA_REINICIO = 4
 P2_INVENTARIO_INICIAL = 0.5
 P2_SEMANAS_HISTORIA = 4
+
+# P2: hiperparámetros por defecto de los modelos candidatos y rejilla de la búsqueda de
+# HistGradientBoosting. Ver references/decisiones_p2.md, decisión 8. Se cambian sin editar este
+# archivo con `-P` en `mlflow run` (p. ej. -P learning_rate=0.05).
+P2_HIPERPARAMETROS = {
+    "logistica": {"c": 1.0, "max_iter": 1000, "class_weight": "balanced"},
+    "hgb": {
+        "learning_rate": 0.1,
+        "max_iter": 300,
+        "max_leaf_nodes": 31,
+        "class_weight": "balanced",
+    },
+}
+P2_BUSQUEDA_HGB = {"learning_rate": [0.05, 0.1], "max_leaf_nodes": [31, 63, 127]}
+# Nombre del modelo de P2 en el Model Registry (decisión 9).
+P2_MODELO_REGISTRADO = "mibici-equipo43-p2-riesgo"
 
 # P3: perfil de uso de cada estación y número de grupos. Ver references/decisiones_p3.md,
 # decisiones 2 (franjas), 3 (mínimo de viajes) y 5 (número de grupos).

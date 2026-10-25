@@ -57,7 +57,8 @@ flowchart LR
 - **Configuración única:** `config.py` define las rutas, el periodo (`FECHA_INICIO`, `FECHA_FIN`),
   la partición temporal, la semilla (`SEMILLA`) y el experimento de MLflow (`mibici-equipo43`).
 - **Experimentos:** cada `train_*.py` registra sus runs en el mismo experimento con la etiqueta
-  `pregunta` (P1, P2 o P3), el commit de Git y la versión de los datos.
+  `question` (P1, P2 o P3), el commit de Git y la versión de los datos. Las corridas se lanzan
+  con `mlflow run` (ver [MLflow Project](#mlflow-project)).
 
 ## Datos
 
@@ -149,6 +150,76 @@ Los runs se ven en http://127.0.0.1:5000. Para detener el servidor, `Ctrl+C` en 
 - Si el servidor no está corriendo, `train_p1` y `train_p2` fallan de inmediato con un mensaje
   que indica el comando para levantarlo.
 
+## MLflow Project
+
+`MLproject`, en la raíz, declara el entorno (`python_env.yaml`: Python 3.13 con las versiones
+fijas de `requirements.txt`) y tres puntos de entrada. Las rutas, fechas, semillas e
+hiperparámetros por defecto salen de `config.py`; con `-P` solo se pasa lo que cambia.
+
+| Punto de entrada | Qué corre | Parámetros |
+|---|---|---|
+| `ingest` | `dataset.py`: descarga los CSV que falten, los une en `data/interim/viajes.parquet` y escribe el manifiesto de los datos (`data/interim/manifiesto.json`) | `descarga`: `descargar` (por defecto) o `sin-descargar` |
+| `features` | `features.py`: variables y etiqueta de una pregunta en `data/processed/` | `question`: `p1`, `p2` o `p3` |
+| `train` | `modeling/train.py`, que llama al entrenamiento de la pregunta | `question`, `model` y los hiperparámetros del modelo (`-P nombre=valor`) |
+
+Desde un clon limpio, sigue [Cómo empezar](#cómo-empezar) hasta instalar `requirements.txt` (y
+`dvc pull` si tienes acceso al Drive), levanta el
+[servidor de MLflow](#mlflow-servidor-de-tracking-local) y, en otra terminal con el `.venv`
+activado y desde la raíz del proyecto:
+
+```powershell
+$env:MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
+mlflow run . -e ingest --env-manager local --experiment-name mibici-equipo43
+```
+
+Después siguen los comandos de cada pregunta (ver
+[P2](#p2-riesgo-de-que-una-estación-se-vacíe-o-se-llene)). Cada `mlflow run`
+crea un run en el experimento `mibici-equipo43` e imprime su id al terminar
+(`=== Run (ID '...') succeeded ===`).
+
+- **`MLFLOW_TRACKING_URI`:** `mlflow run` crea el run antes de llamar al script. Sin la variable,
+  MLflow lo escribe directo en `mlflow.db`, sin pasar por el servidor.
+- **`--experiment-name mibici-equipo43`:** sin él, el run queda en el experimento `Default` y el
+  script falla con un mensaje que lo indica.
+- **`--env-manager local`:** usa el `.venv` activado. El entorno está declarado en
+  `python_env.yaml`, pero con `virtualenv` o `uv` MLflow instala `requirements.txt` desde una
+  carpeta temporal con enlaces al proyecto. En Windows, sin permisos de administrador, copia el
+  proyecto completo (con los 2.9 GB de `data/raw`), y `-e .` deja el paquete apuntando a esa
+  carpeta, que se borra al terminar (decisión 10 de P2).
+- **Hiperparámetros:** se pasan con `-P` aunque no estén declarados en `MLproject`; MLflow los
+  agrega al comando como `--nombre valor`, y los que no se pasan toman su valor de `config.py`.
+  Así `MLproject` no repite los valores por defecto.
+- **Opcional:** `$env:LOGNAME = "equipo43"` antes de `mlflow run` para que MLflow no guarde tu
+  usuario de Windows en el campo interno de usuario de cada run.
+
+## Model Registry
+
+El modelo elegido de cada pregunta se registra en el Model Registry del servidor, con nombre
+`mibici-equipo43-<pregunta>-<tema>`. El ciclo de vida se gestiona con **aliases**:
+
+| Alias | Significado |
+|---|---|
+| `champion` | La versión en producción: la que cargan las siguientes etapas del proyecto |
+| `challenger` | La siguiente mejor, lista para reemplazar a `champion` |
+
+**Por qué aliases y no etapas:** las etapas (`Staging`, `Production`) están obsoletas desde
+MLflow 2.9. Un alias es un nombre que apunta a una versión: promover un modelo, o volver al
+anterior si falla, es mover el alias, sin crear versiones ni cambiar el código que carga el
+modelo. Cada versión guarda su linaje como etiquetas: experimento, run de origen, commit y versión
+de los datos.
+
+Con `MLFLOW_TRACKING_URI` apuntando al servidor:
+
+```python
+import mlflow
+
+modelo = mlflow.pyfunc.load_model("models:/mibici-equipo43-p2-riesgo@champion")
+```
+
+| Pregunta | Modelo registrado | `champion` | `challenger` |
+|---|---|---|---|
+| P2 | `mibici-equipo43-p2-riesgo` | Versión 1: `HistGradientBoostingClassifier` con pesos de clase | Versión 2: regresión logística |
+
 ## P1: demanda de viajes por estación y día
 
 **Pregunta:** ¿cuántos viajes iniciarán en cada estación durante el día siguiente? La usa
@@ -223,46 +294,104 @@ etiqueta: 12; partición: 13).
 | Etiqueta | Inventario simulado: cada estación empieza el día (4:00) al 50% de su capacidad y se le suman las llegadas y restan las salidas. "Se vacía" si llega a 0 o menos; "se llena" si llega a la capacidad |
 | Datos | Viajes del 2022-03-01 al 2026-09-30 y capacidad de cada estación. No usa datos de los usuarios (id, género ni año de nacimiento) |
 | Partición | Por fechas: entrenamiento 2022-03 a 2025-09, validación 2025-10 a 2026-03 y prueba 2026-04 a 2026-09 |
-| Métricas | Recall, precisión y PR-AUC de cada clase de riesgo en el conjunto de prueba |
+| Métricas | Recall, precisión y PR-AUC de cada clase de riesgo, en validación y prueba. El modelo se elige con el promedio de la PR-AUC de validación de las dos clases de riesgo |
+| Modelo en producción | `HistGradientBoostingClassifier` con pesos de clase: `models:/mibici-equipo43-p2-riesgo@champion` |
+
+Las decisiones de la entrega 2 (candidatos, búsqueda, modelo elegido y registro en MLflow) son las
+8, 9 y 10 de [references/decisiones_p2.md](references/decisiones_p2.md).
 
 ### Cómo correrlo
 
-Después de `python -m mibici_mlops.dataset`:
+Con el [servidor de MLflow](#mlflow-servidor-de-tracking-local) corriendo, después de la ingesta
+(ver [MLflow Project](#mlflow-project)) y con todo en commit, porque cada run registra el commit y
+si había cambios sin commit:
 
 ```powershell
-python -m mibici_mlops.features p2                  # etiqueta y variables (~35 s, ~3.6 GB de RAM)
-python -m mibici_mlops.modeling.train_p2            # baselines registrados en MLflow (~30 s)
+# Etiqueta y variables
+mlflow run . -e features --env-manager local --experiment-name mibici-equipo43 -P question=p2
+# Baselines
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p2 -P model=mayoritaria
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p2 -P model=frecuencia
+# Candidatos
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p2 -P model=logistica
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p2 -P model=hgb
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p2 -P model=hgb -P class_weight=none
+# Búsqueda de hiperparámetros (nested runs) y su mejor combinación, que es el modelo elegido
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p2 -P model=busqueda-hgb
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p2 -P model=hgb -P learning_rate=0.05
+# Model Registry: el run_id del modelo elegido y el de la logística (los imprime mlflow run)
+python -m mibici_mlops.modeling.registrar_p2 --champion <run_id> --challenger <run_id>
 ```
 
-| Comando | Resultado esperado |
-|---|---|
-| `features p2` | `6,979,284 ventanas de 471 estaciones` y clases `sin_riesgo: 81.39`, `se_vacia: 9.77`, `se_llena: 8.83` |
-| `train_p2` | Dos runs en el experimento `mibici-equipo43`: `p2-baseline-clase-mayoritaria` y `p2-baseline-frecuencia-4-semanas` |
+| Paso | Tiempo | Resultado esperado |
+|---|---|---|
+| `features` | ~35 s, ~3.6 GB de RAM | `6,979,284 ventanas de 471 estaciones` y clases `sin_riesgo: 81.39`, `se_vacia: 9.77`, `se_llena: 8.83` |
+| Cada `train` | De 1 a 2.5 min | Un run con el nombre de la tabla de resultados |
+| `busqueda-hgb` | ~10 min | El run padre `p2-busqueda-hgb-balanceado-arboles300` con 6 runs hijos; sus parámetros `mejor_learning_rate` y `mejor_max_leaf_nodes` valen `0.05` y `31` |
+| `registrar_p2` | Segundos | `models:/mibici-equipo43-p2-riesgo@champion (versión N) se carga y predice` |
 
-`train_p2` necesita el [servidor de MLflow](#mlflow-servidor-de-tracking-local) corriendo; los
-runs se ven en http://127.0.0.1:5000. Conviene correr `train_p2` con todo en commit: cada run
-registra el commit y si había cambios sin commit.
+- **Hiperparámetros** (por defecto, los de `P2_HIPERPARAMETROS` en `config.py`): `logistica`
+  acepta `c`, `max_iter` y `class_weight` (`balanced` o `none`); `hgb`, `learning_rate`,
+  `max_iter` (número de árboles), `max_leaf_nodes` y `class_weight`. `busqueda-hgb` recorre la
+  rejilla `P2_BUSQUEDA_HGB`.
+- **`registrar_p2` sin opciones** elige los dos candidatos con mayor PR-AUC de validación, que no
+  son los elegidos (ver abajo y la decisión 9).
+- **Sin `mlflow run`:** `python -m mibici_mlops.modeling.train_p2 --modelo hgb --learning-rate 0.05`
+  hace lo mismo que el `train` correspondiente.
 
-### Resultados de los baselines (conjunto de prueba)
+### Resultados
 
-| Métrica | Clase mayoritaria | Frecuencia 4 semanas | Azar |
-|---|---|---|---|
-| PR-AUC se vacía | 0.057 | **0.368** | 0.057 |
-| PR-AUC se llena | 0.072 | **0.539** | 0.072 |
-| Recall se vacía | 0 | 0.470 | — |
-| Precisión se vacía | 0 | 0.461 | — |
-| Recall se llena | 0 | 0.623 | — |
-| Precisión se llena | 0 | 0.593 | — |
+PR-AUC promedio de "se vacía" y "se llena" en validación y prueba, y recall y precisión de prueba
+("se vacía" / "se llena"). Todos los runs se lanzaron con `mlflow run` desde el commit `b6edd95`.
+
+| Run | `stage_of_work` | Validación | Prueba | Recall | Precisión |
+|---|---|---|---|---|---|
+| `p2-baseline-clase-mayoritaria` | baseline | 0.080 | 0.064 | 0 / 0 | 0 / 0 |
+| `p2-baseline-frecuencia-4-semanas` | baseline | 0.495 | 0.453 | 0.47 / 0.62 | 0.46 / 0.59 |
+| `p2-logistica-balanceado-c1.0` | candidate | 0.555 | 0.505 | 0.67 / 0.77 | 0.32 / 0.43 |
+| `p2-hgb-balanceado-lr0.1-hojas31-arboles300` | candidate | 0.570 | 0.521 | 0.71 / 0.79 | 0.30 / 0.42 |
+| `p2-hgb-sin-pesos-lr0.1-hojas31-arboles300` | candidate | 0.573 | 0.523 | 0.26 / 0.45 | 0.62 / 0.73 |
+| `p2-busqueda-hgb-balanceado-arboles300` (6 hijos) | search | 0.569 a 0.571 | — | — | — |
+| **`p2-hgb-balanceado-lr0.05-hojas31-arboles300`** | candidate | **0.571** | **0.522** | **0.71 / 0.79** | 0.30 / 0.42 |
 
 - **Clase mayoritaria:** predice siempre "sin riesgo". Acierta en el 87% de las ventanas de prueba,
-  pero no detecta ningún riesgo; por eso la exactitud no sirve como métrica.
+  pero no detecta ningún riesgo; por eso la exactitud no sirve como métrica. Su PR-AUC es la del
+  azar: la proporción de cada clase.
 - **Frecuencia de las últimas 4 semanas** (misma estación, mismo día de la semana y misma ventana):
   detecta casi la mitad de las ventanas "se vacía" y el 62% de las "se llena", con una PR-AUC
-  entre 6.5 y 7.5 veces la del azar. Es la referencia que deben superar los modelos candidatos
-  (`LogisticRegression` y `HistGradientBoostingClassifier` con pesos de clase).
-- **Azar** es la proporción de cada clase en prueba: la PR-AUC de un modelo que no distingue nada.
+  entre 6.5 y 7.5 veces la del azar. Es la referencia que deben superar los candidatos; sus cifras
+  de prueba son las mismas de la entrega 1.
+- **Modelo elegido** (decisión 9): `HistGradientBoostingClassifier` con pesos de clase y
+  `learning_rate` 0.05, el mejor de la búsqueda.
+  - Supera al baseline en prueba: PR-AUC promedio de 0.522 contra 0.453 (+15%), y detecta el 71%
+    de las ventanas que se vacían (47% el baseline).
+  - HGB sin pesos tiene 0.002 más de PR-AUC, pero su clase predicha solo detecta el 26% de las
+    ventanas que se vacían, y el ML Canvas prioriza el recall de las clases de riesgo.
+  - A cambio da más falsas alarmas (precisión de 0.30 en "se vacía"), por lo que la lista diaria
+    se ordena por probabilidad.
+  - Varía de un mes a otro lo mismo que el baseline; entrena en 81 s y la predicción de un día
+    tarda menos de un segundo.
+  - `challenger`: la regresión logística, de otra familia, 20 veces más rápida al predecir e
+    interpretable.
 
-Las capturas de MLflow están en `reports/figures/mlflow_p2_*.png`.
+**Artefactos de cada run** (decisión 10): `plots/` (curvas precisión-recall y matrices de
+confusión de validación y prueba, PR-AUC por mes), `data/manifiesto.json`, `config/` (la
+configuración del run, `MLproject`, `python_env.yaml`, `requirements.txt` y `config.py`) y, en los
+candidatos, el modelo con su firma y un ejemplo de entrada. Además, `log_input` de los conjuntos de
+entrenamiento, validación y prueba.
+
+**Capturas de MLflow** (entrega 2):
+
+| Captura | Qué muestra |
+|---|---|
+| [Nested runs](reports/figures/mlflow2_p2_1_nested_runs.png) | Los runs de P2, con la búsqueda y sus 6 runs hijos |
+| [Comparación](reports/figures/mlflow2_p2_2_comparacion.png) | Los 2 baselines y los 4 candidatos con sus métricas de validación y prueba |
+| [Artefactos](reports/figures/mlflow2_p2_3_artefactos.png) | `plots/`, `data/` y `config/` del champion |
+| [Modelo y firma](reports/figures/mlflow2_p2_4_modelo_firma.png) | El modelo que guardó el champion, con su firma |
+| [Model Registry](reports/figures/mlflow2_p2_5_registry.png) | `mibici-equipo43-p2-riesgo` con los aliases `champion` y `challenger` |
+| [Linaje](reports/figures/mlflow2_p2_6_linaje.png) | La versión 1 (`champion`) con su run de origen, commit y versiones de los datos |
+
+Las de la entrega 1 están en `reports/figures/mlflow_p2_*.png`.
 
 ## P3: grupos de estaciones con patrones de uso parecidos
 
@@ -370,6 +499,8 @@ gh pr create --base master --fill
 
 ```
 ├── LICENSE            <- MIT (aplica al código; los datos son de MiBici)
+├── MLproject          <- MLflow Project: entorno y puntos de entrada ingest, features y train
+├── python_env.yaml    <- Entorno del MLflow Project (Python 3.13 y requirements.txt)
 ├── Makefile           <- Makefile with convenience commands like `make data` or `make train`
 ├── README.md          <- The top-level README for developers using this project.
 ├── data
@@ -412,10 +543,11 @@ gh pr create --base master --fill
     ├── modeling                
     │   ├── __init__.py 
     │   ├── predict.py          <- Code to run model inference with trained models          
+    │   ├── registrar_p2.py     <- P2: modelo elegido al Model Registry (champion y challenger)
     │   ├── registro.py         <- Experimento, etiquetas y versión de datos de MLflow (P1, P2, P3)
-    │   ├── train.py            <- Code to train models
+    │   ├── train.py            <- Punto de entrada train del MLproject: llama al de cada pregunta
     │   ├── train_p1.py         <- P1: baseline y gradient boosting registrados en MLflow
-    │   ├── train_p2.py         <- P2: baselines registrados en MLflow
+    │   ├── train_p2.py         <- P2: baselines, candidatos y búsqueda registrados en MLflow
     │   └── train_p3.py         <- P3: baseline y KMeans registrados en MLflow
     │
     └── plots.py                <- Code to create visualizations
