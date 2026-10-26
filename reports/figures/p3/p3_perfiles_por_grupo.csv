@@ -1,4 +1,4 @@
 grupo,color,salidas_top,llegadas_top
-0,Rojo,dom_manana (12.5%); dom_tarde (9.6%); mar_tarde (5.0%),dom_manana (15.6%); dom_tarde (11.7%); sab_noche (4.9%)
-1,Azul,mie_tarde (7.2%); mar_tarde (7.0%); vie_tarde (7.0%),mie_manana (7.0%); mar_manana (6.7%); jue_manana (6.5%)
-2,Verde,mie_manana (6.3%); mar_manana (6.2%); jue_manana (6.0%),mie_noche (6.5%); mar_noche (6.5%); jue_noche (6.4%)
+0,Rojo,dom_manana (11.5%); dom_tarde (8.9%); mar_tarde (5.1%),dom_manana (14.1%); dom_tarde (10.9%); sab_noche (4.7%)
+1,Azul,mie_tarde (7.1%); mar_tarde (6.9%); vie_tarde (6.9%),mie_manana (6.8%); mar_manana (6.6%); jue_manana (6.3%)
+2,Verde,mie_manana (6.5%); mar_manana (6.4%); jue_manana (6.2%),mie_noche (6.6%); mar_noche (6.5%); jue_noche (6.5%)

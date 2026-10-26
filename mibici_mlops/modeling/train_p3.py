@@ -13,6 +13,7 @@ import typer
 
 from mibici_mlops.config import ESTACIONES_PATH, P3_CLUSTERS_PATH, P3_MODEL_PATH, P3_PERFILES_PATH, RANDOM_STATE
 from mibici_mlops.modeling.registro import usar_experimento, etiquetas_run
+from mibici_mlops.plots import p3 as generar_plots
 
 app = typer.Typer()
 
@@ -192,7 +193,9 @@ def p3train(
             signature=infer_signature(p3.X, p3.etiquetas),
             serialization_format="skops",
         )
-        
+
+        generar_plots(run_id=run.info.run_id)
+
     return run.info.run_id
 
 
