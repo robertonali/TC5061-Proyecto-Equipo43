@@ -12,6 +12,7 @@ from sklearn.cluster import KMeans
 from sklearn.base import clone
 from loguru import logger
 from pathlib import Path
+import tempfile
 import pandas as pd
 import joblib
 import mlflow
@@ -348,7 +349,15 @@ def p3train(
                 serialization_format="skops",
             )
 
-        generar_plots(run_id=run.info.run_id)
+        # En una carpeta temporal: reports/figures/p3 está versionado y solo lo actualiza el
+        # champion (scripts/run_p3.py); si no, cada run deja el repositorio con cambios.
+        with tempfile.TemporaryDirectory() as carpeta:
+            generar_plots(
+                clusters_path=output_path,
+                profiles_path=input_path,
+                output_dir=Path(carpeta),
+                run_id=run.info.run_id,
+            )
 
     return run.info.run_id
 
