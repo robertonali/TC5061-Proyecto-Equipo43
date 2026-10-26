@@ -414,21 +414,32 @@ Las decisiones y su justificación están en
 
 ### Cómo correrlo
 
-Después de `python -m mibici_mlops.dataset` y con el [servidor de MLflow](#mlflow-servidor-de-tracking-local) corriendo:
+Con el [servidor de tracking de MLflow](#mlflow-servidor-de-tracking-local) corriendo, ejecuta desde la raíz:
 
-```powershell
-python -m mibici_mlops.features p3                  # perfil de cada estación (~5 s, ~3 GB de RAM)
-python -m mibici_mlops.modeling.train_p3            # baseline y KMeans registrados en MLflow (~30 s)
+```bash
+python scripts/run_p3.py
 ```
 
-| Comando | Resultado esperado |
-|---|---|
-| `features p3` | `entrenamiento: 371 estaciones con perfil` y `prueba: 429 estaciones con perfil` |
-| `train_p3` | Dos runs en el experimento `mibici-equipo43`: `p3-baseline-zonas-geograficas-k3` y `p3-kmeans-perfil-uso-k3` |
+El flujo prepara los datos si hace falta, genera perfiles, entrena los candidatos configurados,
+registra en el Model Registry el mejor por `ari_estabilidad` como `champion` y el siguiente como
+`challenger`. Guarda las asignaciones del champion en `data/processed/p3_clusters.parquet` y
+`models/p3.joblib`, y al final sirve `models:/mibici-equipo43-p3-clusters@champion` en
+`http://127.0.0.1:5001`. El endpoint de predicción es `/invocations`; detén el servidor con `Ctrl+C`.
 
-Cada run guarda como artefactos el mapa de los grupos (`mapa_grupos.png`), su perfil de uso
-(`perfil_grupos.png`) y el grupo de cada estación (`estaciones_grupos.json`); el de KMeans,
-además, la silhouette según el número de grupos.
+Para ejecutar el flujo sin dejar el servidor HTTP activo:
+
+```bash
+python scripts/run_p3.py --no-serve
+```
+
+| Paso | Resultado esperado |
+|---|---|
+| Entrenamiento | Un run por candidato en el experimento `mibici-equipo43`, con sus métricas y artefactos |
+| Registro | Alias `champion` y `challenger` para `mibici-equipo43-p3-clusters` |
+| Servicio | API local en el puerto 5001; el tracking server sigue en el puerto 5000 |
+
+Cada run guarda el mapa de clusters y la tabla de perfiles por grupo como artefactos bajo `p3/`.
+Las métricas y los parámetros de cada candidato quedan registrados en su run de MLflow.
 
 ### Resultados
 
