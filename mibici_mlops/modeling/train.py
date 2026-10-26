@@ -18,10 +18,11 @@ import typer
 
 app = typer.Typer()
 
-# Pregunta → módulo con su entrenamiento. P1 y P3 se agregan cuando sus scripts acepten --modelo.
+# Pregunta → módulo con su entrenamiento.
 PREGUNTAS = {
+    "p1": "mibici_mlops.modeling.train_p1",
     "p2": "mibici_mlops.modeling.train_p2",
-    "p3": "mibici_mlops.modeling.train_p3"
+    "p3": "mibici_mlops.modeling.train_p3",
 }
 
 

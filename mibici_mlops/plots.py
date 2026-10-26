@@ -121,8 +121,8 @@ def p3(
     logger.success('Gráficas y mapas de los clusters de P3 generadas.')
 
     if (run_id):
-        mlflow.log_artifact(p3plt.mapa_path, artifact_path="p3", run_id=run_id)
-        mlflow.log_artifact(p3plt.tabla_perfiles_path, artifact_path="p3", run_id=run_id)
+        mlflow.log_artifact(p3plt.mapa_path, artifact_path="plots", run_id=run_id)
+        mlflow.log_artifact(p3plt.tabla_perfiles_path, artifact_path="plots", run_id=run_id)
 
 if __name__ == '__main__':
     app()

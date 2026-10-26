@@ -153,3 +153,53 @@ def registrar_manifiesto(ruta: Path = MANIFIESTO_PATH) -> str:
     mlflow.log_artifact(str(ruta), artifact_path="data")
     mlflow.log_param("version_manifiesto", version)
     return version
+
+
+# Archivos de configuración que se guardan en config/ de cada run (P1 y P3; P2 tiene su copia).
+ARCHIVOS_CONFIGURACION = [
+    "MLproject",
+    "python_env.yaml",
+    "requirements.txt",
+    "mibici_mlops/config.py",
+]
+
+
+def registrar_parametros(parametros: dict) -> None:
+    """Registra los parámetros del run activo sin repetir los que ya registró `mlflow run`.
+
+    `mlflow run` guarda como texto los -P que recibe (p. ej. "0.10"); volver a registrarlos con
+    otro formato (0.1) haría fallar a MLflow, que no deja cambiar el valor de un parámetro.
+    """
+    ya_registrados = mlflow.get_run(mlflow.active_run().info.run_id).data.params
+    mlflow.log_params({k: v for k, v in parametros.items() if k not in ya_registrados})
+
+
+def ruta_para_registro(ruta: Path) -> str:
+    """Ruta relativa al proyecto (o solo el nombre del archivo si está fuera de él).
+
+    Así no se registra en MLflow la carpeta personal de quien corre el run.
+    """
+    try:
+        return ruta.resolve().relative_to(PROJ_ROOT).as_posix()
+    except ValueError:
+        return ruta.name
+
+
+def registrar_configuracion(configuracion: dict, pregunta: str) -> None:
+    """Configuración con que corrió el run en config/: la del run y los archivos del proyecto."""
+    mlflow.log_dict(configuracion, f"config/run_{pregunta.lower()}.json")
+    for archivo in ARCHIVOS_CONFIGURACION:
+        mlflow.log_artifact(str(PROJ_ROOT / archivo), artifact_path="config")
+
+
+def registrar_conjuntos(conjuntos: dict, fuente: str, nombre: str, objetivo: str | None) -> None:
+    """Huella de cada conjunto con `log_input` (esquema, filas y digest, no los datos).
+
+    `conjuntos` va de contexto de MLflow (training, validation, testing) a su DataFrame, ya con
+    solo las columnas que usa el modelo; `fuente` es la tabla de la que salen.
+    """
+    for contexto, datos in conjuntos.items():
+        dataset = mlflow.data.from_pandas(
+            datos, source=fuente, name=f"{nombre}_{contexto}", targets=objetivo
+        )
+        mlflow.log_input(dataset, context=contexto)

@@ -161,6 +161,7 @@ hiperparámetros por defecto salen de `config.py`; con `-P` solo se pasa lo que 
 | `ingest` | `dataset.py`: descarga los CSV que falten, los une en `data/interim/viajes.parquet` y escribe el manifiesto de los datos (`data/interim/manifiesto.json`) | `descarga`: `descargar` (por defecto) o `sin-descargar` |
 | `features` | `features.py`: variables y etiqueta de una pregunta en `data/processed/` | `question`: `p1`, `p2` o `p3` |
 | `train` | `modeling/train.py`, que llama al entrenamiento de la pregunta | `question`, `model` y los hiperparámetros del modelo (`-P nombre=valor`) |
+| `register` | `modeling/registrar_<question>.py`: registra el modelo elegido en el Model Registry con los aliases `champion` y `challenger` y comprueba que se carga por nombre y alias | `question`; opcionales `-P champion=<run_id>` y `-P challenger=<run_id>` |
 
 Desde un clon limpio, sigue [Cómo empezar](#cómo-empezar) hasta instalar `requirements.txt` (y
 `dvc pull` si tienes acceso al Drive), levanta el
@@ -173,7 +174,9 @@ mlflow run . -e ingest --env-manager local --experiment-name mibici-equipo43
 ```
 
 Después siguen los comandos de cada pregunta (ver
-[P2](#p2-riesgo-de-que-una-estación-se-vacíe-o-se-llene)). Cada `mlflow run`
+[P1](#p1-demanda-de-viajes-por-estación-y-día),
+[P2](#p2-riesgo-de-que-una-estación-se-vacíe-o-se-llene) y
+[P3](#p3-grupos-de-estaciones-con-patrones-de-uso-parecidos)). Cada `mlflow run`
 crea un run en el experimento `mibici-equipo43` e imprime su id al terminar
 (`=== Run (ID '...') succeeded ===`).
 
@@ -218,7 +221,12 @@ modelo = mlflow.pyfunc.load_model("models:/mibici-equipo43-p2-riesgo@champion")
 
 | Pregunta | Modelo registrado | `champion` | `challenger` |
 |---|---|---|---|
+| P1 | `mibici-equipo43-p1-demanda` | `HistGradientBoostingRegressor` con pérdida de Poisson y 63 hojas | `RandomForestRegressor` |
 | P2 | `mibici-equipo43-p2-riesgo` | Versión 1: `HistGradientBoostingClassifier` con pesos de clase | Versión 2: regresión logística |
+| P3 | `mibici-equipo43-p3-clusters` | KMeans con 3 grupos sobre el perfil de uso | `GaussianMixture` con 2 componentes |
+
+Cada pregunta se registra con `mlflow run . -e register -P question=<p1|p2|p3>` (ver la sección
+de cada una).
 
 ## P1: demanda de viajes por estación y día
 
@@ -234,18 +242,48 @@ Las decisiones y su justificación están en
 | Granularidad | Una fila por estación y día; los días sin viajes cuentan como 0 |
 | Horizonte | Cada día a las 23:59 se predice el día siguiente |
 | Variables | Historial que termina el día anterior (`lag_7d`, `media_7d`), calendario y datos de la estación |
-| Modelos | Baseline: mismo día de la semana pasada (`lag_7d`). Candidato: `HistGradientBoostingRegressor` |
-| Métricas | MAE y RMSE en viajes por estación-día (validación y prueba) |
+| Modelos | Baseline: mismo día de la semana pasada (`lag_7d`). Candidatos: `Ridge`, `RandomForestRegressor` y `HistGradientBoostingRegressor` |
+| Métricas | MAE y RMSE en viajes por estación-día (validación y prueba). El modelo se elige con el MAE de validación |
+| Modelo en producción | `HistGradientBoostingRegressor` con pérdida de Poisson: `models:/mibici-equipo43-p1-demanda@champion` |
 
 ### Cómo correrlo
 
-Después de `python -m mibici_mlops.dataset`:
+Con el [servidor de MLflow](#mlflow-servidor-de-tracking-local) corriendo, después de la ingesta
+(ver [MLflow Project](#mlflow-project)) y con todo en commit:
 
 ```powershell
-python -m mibici_mlops.features p1                  # variables por estación y día
-python -m mibici_mlops.modeling.train_p1            # baseline y gradient boosting en MLflow
-pytest tests/test_features_p1.py                    # verifica que no haya fuga de datos
+# Variables por estación y día
+mlflow run . -e features --env-manager local --experiment-name mibici-equipo43 -P question=p1
+# Baseline
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p1 -P model=baseline
+# Candidatos
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p1 -P model=ridge
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p1 -P model=rf
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p1 -P model=hgb
+# Búsqueda de hiperparámetros de hgb (nested runs) y su mejor combinación
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p1 -P model=busqueda-hgb
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p1 -P model=hgb -P max_leaf_nodes=127
+# Model Registry: champion = hgb con 63 hojas, challenger = rf (los run_id los imprime mlflow run)
+mlflow run . -e register --env-manager local --experiment-name mibici-equipo43 -P question=p1 -P champion=<run_id> -P challenger=<run_id>
+# Prueba de que las variables no usan información del día que se predice
+pytest tests/test_features_p1.py
 ```
+
+| Paso | Tiempo | Resultado esperado |
+|---|---|---|
+| `features` | ~20 s | `entrenamiento: 434,345 filas`, `validacion: 66,890 filas`, `prueba: 75,913 filas` |
+| Cada `train` | De segundos a ~30 s | Un run con el nombre de la tabla de resultados |
+| `busqueda-hgb` | ~1.5 min | El run padre `p1-busqueda-hgb-lr0.1-arboles300` con 6 runs hijos; sus parámetros `mejor_loss` y `mejor_max_leaf_nodes` valen `poisson` y `127` |
+| `register` | Segundos | `models:/mibici-equipo43-p1-demanda@champion (versión N) se carga y predice` |
+
+- **Hiperparámetros** (por defecto, los de `P1_HIPERPARAMETROS` en `config.py`): `ridge` acepta
+  `alpha`; `rf`, `n_estimators`, `max_depth`, `min_samples_leaf` y `max_samples`; `hgb`, `loss`
+  (`poisson` o `squared_error`), `learning_rate`, `max_iter` y `max_leaf_nodes`. `busqueda-hgb`
+  recorre la rejilla `P1_BUSQUEDA_HGB` (pérdida × hojas).
+- **`register` sin `champion` ni `challenger`** elige los dos candidatos con menor MAE de
+  validación (aquí, los dos `hgb`).
+- **Sin `mlflow run`:** `python -m mibici_mlops.modeling.train_p1 --modelo hgb --max-leaf-nodes 127`
+  hace lo mismo que el `train` correspondiente.
 
 **Datos y partición temporal** (marzo de 2022 a septiembre de 2026, con 434,345 filas estación-día para entrenamiento, 66,890 para validación y 75,913 para prueba). Se usa la partición común de `config.py`, igual que P2 y P3:
 
@@ -255,25 +293,42 @@ pytest tests/test_features_p1.py                    # verifica que no haya fuga 
 | Validación | 2025-10-01 a 2026-03-31 |
 | Prueba | 2026-04-01 a 2026-09-30 |
 
-**Resultados** (MAE y RMSE en viajes por estación y día; menor es mejor):
+### Resultados
 
-| Modelo | val_mae | val_rmse | test_mae | test_rmse |
-|---|---|---|---|---|
-| Baseline: mismo día de la semana pasada | 7.78 | 14.12 | 7.94 | 15.41 |
-| Gradient boosting (`HistGradientBoostingRegressor`) | 5.72 | 10.37 | 5.99 | 11.52 |
-| Mejora frente al baseline | 26 % | 27 % | 25 % | 25 % |
+MAE y RMSE en viajes por estación y día (menor es mejor) y mejora del MAE de prueba frente al
+baseline (métrica `test_mae_mejora_vs_baseline` de cada run).
 
-Configuración elegida con validación: pérdida de Poisson, `learning_rate` 0.1, `max_iter` 300 y `max_leaf_nodes` 63 (semilla 43). Los runs están en MLflow como `p1-baseline-semana-previa` y `p1-gradient-boosting`, y las gráficas en `reports/figures/p1_*`.
+| Run | `stage_of_work` | val_mae | val_rmse | test_mae | test_rmse | Mejora test_mae | Entrenamiento |
+|---|---|---|---|---|---|---|---|
+| `p1-baseline-semana-previa` | baseline | 7.78 | 14.12 | 7.94 | 15.41 | — | — |
+| `p1-ridge-alpha1.0` | candidate | 6.85 | 11.72 | 7.03 | 12.80 | 11 % | 0.1 s |
+| `p1-rf-arboles100-prof16-hoja20` | candidate | 5.90 | 10.75 | 6.13 | 11.92 | 23 % | 4 s |
+| `p1-busqueda-hgb-lr0.1-arboles300` (6 hijos) | search | 5.72 a 5.78 | 10.37 a 10.44 | — | — | — | 6 a 20 s |
+| **`p1-hgb-poisson-lr0.1-hojas63-arboles300`** | candidate | **5.72** | **10.39** | **5.99** | **11.51** | **25 %** | 8 s |
+| `p1-hgb-poisson-lr0.1-hojas127-arboles300` | candidate | 5.72 | 10.37 | 6.02 | 11.60 | 24 % | 17 s |
 
-**Interpretación**
+- **Los tres candidatos superan al baseline**, incluso la regresión lineal (11 % menos error).
+  Los árboles capturan la interacción entre el nivel de la estación y el calendario, que un
+  modelo lineal no ve.
+- **Modelo elegido:** gradient boosting con pérdida de Poisson y 63 hojas.
+  - Reduce el MAE de prueba de 7.94 a 5.99 viajes por estación-día (25 %) y el RMSE en la misma
+    proporción, el criterio de despliegue de la propuesta.
+  - La búsqueda encontró que 127 hojas baja el MAE de validación en solo 0.005 viajes; en prueba
+    es peor (6.02) y tarda el doble en entrenar, así que la diferencia no compensa.
+  - Es estable: el error de prueba es 5 % mayor que el de validación, y gana al baseline todos
+    los días de la semana (`plots/error_por_dia_semana_test.png`).
+  - La pérdida de Poisson es la adecuada para un conteo de viajes y nunca predice valores
+    negativos.
+  - `challenger`: el random forest. Es de otra familia, con un MAE solo 0.13 viajes mayor en prueba,
+    y entrena en la mitad del tiempo.
+- El RMSE es casi el doble del MAE, así que hay estaciones-día con errores grandes. El análisis por nivel de uso (`plots/error_por_nivel_uso_test.csv`) lo confirma: en las estaciones de uso alto (63 viajes al día en promedio) el MAE es de 11.0 viajes, contra 2.9 en las de uso bajo. En proporción a su demanda, el error es menor en las de uso alto (17 % contra 28 %).
 
-- El gradient boosting supera al baseline en las cuatro métricas, con una mejora de alrededor de una cuarta parte del error. Se cumple el criterio de despliegue de la propuesta (menor MAE y RMSE que el baseline en prueba).
-- Validación y prueba dan errores parecidos (el de prueba es un poco mayor, 5.99 contra 5.72), por lo que no hay señal fuerte de sobreajuste al periodo de validación. La prueba incluye septiembre de 2026, el mes con más uso de la serie.
-- El modelo gana todos los días de la semana. Su error es estable (entre 5.5 y 6.2 viajes), mientras que el del baseline varía más y es peor entre semana, sobre todo miércoles y viernes (8.6 y 9.0). El domingo es el día más fácil para ambos.
-- El RMSE es casi el doble del MAE, así que hay estaciones-día con errores grandes. El análisis por nivel de uso (`p1_error_por_nivel_uso.csv`) lo confirma: en las estaciones de uso alto (63 viajes al día en promedio) el MAE es de 11.0 viajes, contra 2.9 en las de uso bajo. En proporción a su demanda, el error es menor en las de uso alto (17 % contra 28 %).
-
-Crea dos runs en el experimento `mibici-equipo43`: `p1-baseline-semana-previa` y
-`p1-gradient-boosting`. Las gráficas del análisis de error están en `reports/figures/p1_*`.
+**Artefactos de cada run:** `plots/` (real contra predicho, residuales y MAE por día de la
+semana y por nivel de uso de la estación en prueba, con sus tablas CSV), `data/manifiesto.json`,
+`config/` (la configuración del run, `MLproject`, `python_env.yaml`, `requirements.txt` y
+`config.py`) y, en los candidatos, el modelo con su firma y un ejemplo de entrada. Además,
+`log_input` de los conjuntos de entrenamiento, validación y prueba. Las gráficas de la entrega 1
+siguen en `reports/figures/p1_*`.
 
 ## P2: riesgo de que una estación se vacíe o se llene
 
@@ -320,7 +375,7 @@ mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P q
 mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p2 -P model=busqueda-hgb
 mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p2 -P model=hgb -P learning_rate=0.05
 # Model Registry: el run_id del modelo elegido y el de la logística (los imprime mlflow run)
-python -m mibici_mlops.modeling.registrar_p2 --champion <run_id> --challenger <run_id>
+mlflow run . -e register --env-manager local --experiment-name mibici-equipo43 -P question=p2 -P champion=<run_id> -P challenger=<run_id>
 ```
 
 | Paso | Tiempo | Resultado esperado |
@@ -328,14 +383,15 @@ python -m mibici_mlops.modeling.registrar_p2 --champion <run_id> --challenger <r
 | `features` | ~35 s, ~3.6 GB de RAM | `6,979,284 ventanas de 471 estaciones` y clases `sin_riesgo: 81.39`, `se_vacia: 9.77`, `se_llena: 8.83` |
 | Cada `train` | De 1 a 2.5 min | Un run con el nombre de la tabla de resultados |
 | `busqueda-hgb` | ~10 min | El run padre `p2-busqueda-hgb-balanceado-arboles300` con 6 runs hijos; sus parámetros `mejor_learning_rate` y `mejor_max_leaf_nodes` valen `0.05` y `31` |
-| `registrar_p2` | Segundos | `models:/mibici-equipo43-p2-riesgo@champion (versión N) se carga y predice` |
+| `register` | Segundos | `models:/mibici-equipo43-p2-riesgo@champion (versión N) se carga y predice` |
 
 - **Hiperparámetros** (por defecto, los de `P2_HIPERPARAMETROS` en `config.py`): `logistica`
   acepta `c`, `max_iter` y `class_weight` (`balanced` o `none`); `hgb`, `learning_rate`,
   `max_iter` (número de árboles), `max_leaf_nodes` y `class_weight`. `busqueda-hgb` recorre la
   rejilla `P2_BUSQUEDA_HGB`.
-- **`registrar_p2` sin opciones** elige los dos candidatos con mayor PR-AUC de validación, que no
-  son los elegidos (ver abajo y la decisión 9).
+- **`register` sin `champion` ni `challenger`** elige los dos candidatos con mayor PR-AUC de
+  validación, que no son los elegidos (ver abajo y la decisión 9). Sin `mlflow run`:
+  `python -m mibici_mlops.modeling.registrar_p2 --champion <run_id> --challenger <run_id>`.
 - **Sin `mlflow run`:** `python -m mibici_mlops.modeling.train_p2 --modelo hgb --learning-rate 0.05`
   hace lo mismo que el `train` correspondiente.
 
@@ -414,7 +470,26 @@ Las decisiones y su justificación están en
 
 ### Cómo correrlo
 
-Con el [servidor de tracking de MLflow](#mlflow-servidor-de-tracking-local) corriendo, ejecuta desde la raíz:
+Con el [servidor de tracking de MLflow](#mlflow-servidor-de-tracking-local) corriendo, después
+de la ingesta (ver [MLflow Project](#mlflow-project)) y con todo en commit:
+
+```powershell
+# Perfiles de uso por estación
+mlflow run . -e features --env-manager local --experiment-name mibici-equipo43 -P question=p3
+# Baseline: zonas de la ciudad (KMeans sobre latitud y longitud estandarizadas)
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p3 -P model=zonas_k3
+# Búsqueda del número de grupos de KMeans (nested runs, un hijo por k de 2 a 8)
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p3 -P model=busqueda-kmeans
+# Candidatos sobre el perfil de uso
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p3 -P model=kmeans_k3
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p3 -P model=kmeans_k4
+mlflow run . -e train --env-manager local --experiment-name mibici-equipo43 -P question=p3 -P model=gmm_diag_k2
+# Model Registry: champion y challenger (por defecto, los de mayor ari_estabilidad)
+mlflow run . -e register --env-manager local --experiment-name mibici-equipo43 -P question=p3 -P champion=<run_id> -P challenger=<run_id>
+```
+
+Como alternativa, `scripts/run_p3.py` hace todo el flujo en un solo comando (sin pasar por
+`mlflow run`) y además sirve el modelo:
 
 ```bash
 python scripts/run_p3.py
@@ -438,8 +513,13 @@ python scripts/run_p3.py --no-serve
 | Registro | Alias `champion` y `challenger` para `mibici-equipo43-p3-clusters` |
 | Servicio | API local en el puerto 5001; el tracking server sigue en el puerto 5000 |
 
-Cada run guarda el mapa de clusters y la tabla de perfiles por grupo como artefactos bajo `p3/`.
-Las métricas y los parámetros de cada candidato quedan registrados en su run de MLflow.
+**Artefactos de cada run:** `plots/` (mapa de los grupos y tabla de perfiles por grupo),
+`data/manifiesto.json`, `config/` (la configuración del run, `MLproject`, `python_env.yaml`,
+`requirements.txt` y `config.py`) y, en los candidatos, el modelo con su firma y un ejemplo de
+entrada. Además, `log_input` de los perfiles de entrenamiento, validación y prueba. Las
+métricas (`train_*`, `val_*` y `test_*` de silhouette, Davies-Bouldin y Calinski-Harabasz, y
+`ari_estabilidad`) y los parámetros quedan en cada run, con las etiquetas `stage_of_work`
+(`baseline`, `search` o `candidate`) y `model_family`.
 
 ### Resultados
 
@@ -451,6 +531,23 @@ Las métricas y los parámetros de cada candidato quedan registrados en su run d
 | Davies-Bouldin prueba | 3.721 | **1.278** |
 | Calinski-Harabasz entrenamiento | 36.2 | **153.1** |
 | Estabilidad (ARI) | 1 (por construcción) | 0.714 |
+
+**Comparación de la entrega 2** (runs de `mlflow run`; todas las métricas sobre el perfil de uso,
+`ari_estabilidad` entre los grupos de entrenamiento y de validación):
+
+| Run | `stage_of_work` | Silhouette train | Silhouette test | Davies-Bouldin test | Calinski-Harabasz test | `ari_estabilidad` |
+|---|---|---|---|---|---|---|
+| `p3-zonas_k3` | baseline | 0.063 | 0.023 | 3.721 | 30.6 | 1 (por construcción) |
+| `p3-busqueda-kmeans` (7 hijos, k = 2 a 8) | search | 0.173 a 0.303 | 0.109 a 0.246 | — | — | 0.43 a 0.75 |
+| **`p3-kmeans_k3`** | candidate | **0.303** | **0.246** | **1.278** | **161.3** | 0.749 |
+| `p3-kmeans_k4` | candidate | 0.212 | 0.172 | 1.501 | 138.4 | 0.559 |
+| `p3-gmm_diag_k2` | candidate | 0.266 | 0.203 | 1.746 | 108.4 | 0.687 |
+
+- **KMeans con 3 grupos es el `champion`:** es el mejor en las cuatro métricas internas y el más
+  estable de los candidatos. La búsqueda confirma k = 3 (decisión 5): con 2 grupos el ARI es
+  casi igual (0.753), pero la silhouette baja y se pierde el grupo recreativo.
+- **`challenger`: `GaussianMixture`** con 2 componentes, de otra familia: da la probabilidad de
+  pertenecer a cada grupo, útil para estaciones que mezclan usos.
 
 - **Agrupar por uso da grupos mucho más coherentes que agrupar por zona**: la silhouette es
   casi 5 veces la del baseline, y la ventaja se mantiene en prueba.
@@ -469,9 +566,10 @@ Las métricas y los parámetros de cada candidato quedan registrados en su run d
   64 de ellas ya tienen perfil en prueba y el modelo les asigna un grupo (33 al 2, 20 al 1 y 11
   al 3): es lo que planeación urbana necesita para saber qué tipo de estaciones abrió.
 
-Las capturas de MLflow están en `reports/figures/mlflow_p3_*.png`: lista de runs, detalle del
-run de KMeans (métricas, parámetros y etiquetas), el mapa de grupos como artefacto y la
-comparación contra el baseline.
+Las capturas de MLflow de la entrega 1 están en `reports/figures/mlflow_p3_*.png` (lista de runs,
+detalle del run de KMeans, el mapa de grupos como artefacto y la comparación contra el baseline),
+y las de la entrega 2 en `reports/figures/mlflow2_p3_*.png` (además, Model Registry, linaje y la
+API del modelo servido).
 
 ## Flujo de trabajo en Git
 
