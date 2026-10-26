@@ -195,6 +195,15 @@ crea un run en el experimento `mibici-equipo43` e imprime su id al terminar
 - **Opcional:** `$env:LOGNAME = "equipo43"` antes de `mlflow run` para que MLflow no guarde tu
   usuario de Windows en el campo interno de usuario de cada run.
 
+### Reproducción de la entrega 2
+
+El 2026-10-25 se corrió la entrega completa desde un clon limpio, con un servidor de tracking
+nuevo y solo los comandos de este README: `ingest` (142 CSV descargados de los datos abiertos),
+`features` de las tres preguntas, todos los `train` de P1, P2 y P3 y `register` de las tres. El
+resultado son 44 runs en `mibici-equipo43`, todos con `cambios_sin_commit = false` (P1 y P2 con
+el commit `045d186`; P3 y los registros con `3ba087d`), y los tres modelos registrados con
+`champion` y `challenger`. Las cifras coinciden con las tablas de resultados de cada pregunta.
+
 ## Model Registry
 
 El modelo elegido de cada pregunta se registra en el Model Registry del servidor, con nombre
@@ -398,7 +407,9 @@ mlflow run . -e register --env-manager local --experiment-name mibici-equipo43 -
 ### Resultados
 
 PR-AUC promedio de "se vacía" y "se llena" en validación y prueba, y recall y precisión de prueba
-("se vacía" / "se llena"). Todos los runs se lanzaron con `mlflow run` desde el commit `b6edd95`.
+("se vacía" / "se llena"). Todos los runs se lanzaron con `mlflow run` desde el commit `b6edd95` y se
+volvieron a reproducir desde un clon limpio con el commit `045d186`, con las mismas cifras (ver
+[Reproducción de la entrega 2](#reproducción-de-la-entrega-2)).
 
 | Run | `stage_of_work` | Validación | Prueba | Recall | Precisión |
 |---|---|---|---|---|---|
@@ -541,7 +552,7 @@ métricas (`train_*`, `val_*` y `test_*` de silhouette, Davies-Bouldin y Calinsk
 | `p3-busqueda-kmeans` (7 hijos, k = 2 a 8) | search | 0.173 a 0.303 | 0.109 a 0.246 | — | — | 0.43 a 0.75 |
 | **`p3-kmeans_k3`** | candidate | **0.303** | **0.246** | **1.278** | **161.3** | 0.749 |
 | `p3-kmeans_k4` | candidate | 0.212 | 0.172 | 1.501 | 138.4 | 0.559 |
-| `p3-gmm_diag_k2` | candidate | 0.266 | 0.203 | 1.746 | 108.4 | 0.687 |
+| `p3-gmm_diag_k2` | candidate | 0.266 | 0.203 | 1.746 | 108.5 | 0.687 |
 
 - **KMeans con 3 grupos es el `champion`:** es el mejor en las cuatro métricas internas y el más
   estable de los candidatos. La búsqueda confirma k = 3 (decisión 5): con 2 grupos el ARI es
