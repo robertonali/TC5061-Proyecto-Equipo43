@@ -74,6 +74,21 @@ for flujo in (sys.stdout, sys.stderr):
 MLFLOW_ARTIFACTS_DIR = PROJ_ROOT / "mlruns"
 SEMILLA = 43
 
+# P1: hiperparámetros por defecto de los modelos candidatos y rejilla de la búsqueda de
+# HistGradientBoosting. Se cambian sin editar este archivo con `-P` en `mlflow run`
+# (p. ej. -P max_leaf_nodes=127). Ver references/decisiones_p1.md, decisión 7.
+P1_HIPERPARAMETROS = {
+    "ridge": {"alpha": 1.0},
+    "rf": {"n_estimators": 100, "max_depth": 16, "min_samples_leaf": 20, "max_samples": 0.3},
+    "hgb": {"loss": "poisson", "learning_rate": 0.1, "max_iter": 300, "max_leaf_nodes": 63},
+}
+P1_BUSQUEDA_HGB = {
+    "loss": ["poisson", "squared_error"],
+    "max_leaf_nodes": [31, 63, 127],
+}
+# Nombre del modelo de P1 en el Model Registry.
+P1_MODELO_REGISTRADO = "mibici-equipo43-p1-demanda"
+
 # P2: etiqueta de riesgo y baseline de frecuencia. Ver references/decisiones_p2.md, decisiones 2
 # (ventana), 3 (semanas de historia), 4 (reinicio e inventario inicial) y 5 (umbral).
 # La hora de reinicio debe coincidir con el inicio de una ventana.

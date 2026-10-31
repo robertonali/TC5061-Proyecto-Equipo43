@@ -22,7 +22,7 @@ import pandas as pd
 import typer
 
 from mibici_mlops.config import EXPERIMENTO_MLFLOW, P2_MODELO_REGISTRADO, P2_VENTANAS_PATH
-from mibici_mlops.modeling.registro import usar_experimento
+from mibici_mlops.modeling.registro import etiquetar_run_de_proyecto, usar_experimento
 from mibici_mlops.modeling.train_p2 import VARIABLES
 
 app = typer.Typer()
@@ -131,6 +131,7 @@ def main(
         None, help="Run del siguiente mejor (por defecto, el segundo)."
     ),
 ):
+    etiquetar_run_de_proyecto("P2", __file__, "register")
     usar_experimento()
     cliente = MlflowClient()
     ordenados = candidatos_p2(cliente)

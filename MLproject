@@ -28,3 +28,11 @@ entry_points:
       question: string
       model: string
     command: "python -m mibici_mlops.modeling.train --question {question} --model {model}"
+
+  # Model Registry: registra el modelo elegido de una pregunta (p1, p2 o p3) con alias champion y
+  # challenger y comprueba que se carga por nombre y alias. Sin -P champion/challenger elige por la
+  # métrica de la pregunta (ver registrar_p*.py); con ellos se pasan los run_id a mano.
+  register:
+    parameters:
+      question: string
+    command: "python -m mibici_mlops.modeling.registrar_{question}"

@@ -226,3 +226,43 @@ los hiperparámetros se eligen con la validación y la prueba se evalúa una sol
 - Las variables de P1 no cambian: solo cambia la columna `conjunto`.
 - La prueba empieza un mes antes e incluye septiembre de 2026 (pendiente de la decisión 2 de
   `decisiones.md`).
+
+## 7. Candidatos, búsqueda y modelo en producción (entrega 2)
+
+- **Fecha:** 2026-10-25
+- **Estado:** vigente
+- **Aplica a:** `mibici_mlops/modeling/train_p1.py`, `registrar_p1.py` y `P1_HIPERPARAMETROS` /
+  `P1_BUSQUEDA_HGB` en `config.py`.
+
+### Contexto
+
+La entrega 2 pide al menos tres candidatos por pregunta además del baseline, una búsqueda de
+hiperparámetros con nested runs, todas las corridas con `mlflow run` y el modelo elegido en el
+Model Registry. Antes, un solo script probaba tres configuraciones de gradient boosting dentro
+de un run.
+
+### Decisión
+
+- **Un run por modelo**, con `-P model=<nombre>`: `baseline`, `ridge`, `rf` y `hgb`, más
+  `busqueda-hgb` (run padre con un hijo por combinación de pérdida × hojas, evaluados solo en
+  validación). Se mantienen la partición (decisión 6), las variables y las métricas (MAE y RMSE).
+- **Métrica para elegir:** MAE de validación. La prueba se mira una sola vez, para el reporte.
+- **Modelo en producción** (`mibici-equipo43-p1-demanda@champion`): gradient boosting con
+  pérdida de Poisson, `learning_rate` 0.1, 300 árboles y 63 hojas. `challenger`: el random forest.
+- **Ciclo de vida con aliases**, igual que P2 (decisión 9 de P2).
+
+### Por qué
+
+- **Familias distintas** (lineal, bagging y boosting) muestran si la mejora viene del modelo o
+  de las variables: la regresión lineal ya mejora 11 % sobre el baseline; los árboles, ~24 %.
+- **63 y no 127 hojas:** la búsqueda prefiere 127 hojas por 0.005 viajes de MAE en validación,
+  una diferencia menor que el ruido; en prueba es peor (6.02 contra 5.99) y entrena en el doble
+  de tiempo.
+- **El random forest como `challenger`** es de otra familia y queda a 0.13 viajes de MAE en
+  prueba: si el boosting fallara, el reemplazo no comparte sus mismos errores.
+
+### Consecuencias
+
+- Los runs `p1-gradient-boosting` de la entrega 1 quedan como históricos; los de esta entrega se
+  llaman como en la tabla de resultados del README.
+- Las gráficas se guardan como artefactos del run (`plots/`), no en `reports/figures`.
