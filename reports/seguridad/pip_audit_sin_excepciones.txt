@@ -1,0 +1,16 @@
+Found 2 known vulnerabilities in 1 package
+Name      Version ID              Fix Versions Description
+--------- ------- --------------- ------------ -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+diskcache 5.6.3   PYSEC-2026-2447              DiskCache (python-diskcache) through 5.6.3 uses Python pickle for serialization by default. An attacker with write access to the cache directory can achieve arbitrary code execution when a victim application reads from the cache.
+diskcache 5.6.3   PYSEC-2026-2447              DiskCache (python-diskcache) through 5.6.3 uses Python pickle for serialization by default. An attacker with write access to the cache directory can achieve arbitrary code execution when a victim application reads from the cache.
+
+Name         Skip Reason
+------------ -------------------------------
+mibici-mlops distribution marked as editable
+
+Found 3 known vulnerabilities in 1 package
+Name       Version ID                  Fix Versions
+---------- ------- ------------------- ------------
+setuptools 80.9.0  PYSEC-2026-3447     83.0.0
+setuptools 80.9.0  PYSEC-2026-3447     83.0.0
+setuptools 80.9.0  GHSA-xmj3-9gf7-h52w 84.1.0

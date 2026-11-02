@@ -20,7 +20,7 @@ import os
 from pathlib import Path
 import re
 import shutil
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from urllib.request import Request, urlopen
 
 from loguru import logger
@@ -88,12 +88,27 @@ ESQUEMA = pa.schema(
 PATRON_ARCHIVO = re.compile(r"datos_abiertos_(\d{4})_(\d{2})")
 
 
+ESQUEMAS_PERMITIDOS = {"http", "https"}
+
+
+def abrir_url(url: str, timeout: int):
+    """`urlopen` solo para http(s).
+
+    Las URL de los CSV se leen de los `href` de la página de MiBici; sin esta validación, un enlace
+    `file://` (o de otro esquema) haría que `urlopen` leyera archivos locales. Es el aviso B310 de
+    bandit: ya se validó el esquema, por eso la línea de `urlopen` lleva `# nosec B310`.
+    """
+    if urlparse(url).scheme not in ESQUEMAS_PERMITIDOS:
+        raise ValueError(f"Solo se descargan URL http(s), no {url!r}")
+    return urlopen(Request(url, headers=ENCABEZADOS), timeout=timeout)  # nosec B310
+
+
 def descargar(url: str, destino: Path) -> None:
     """Descarga `url` en `destino`. Escribe primero un .part para no dejar archivos a medias."""
     destino.parent.mkdir(parents=True, exist_ok=True)
     temporal = destino.with_suffix(".part")
     with (
-        urlopen(Request(url, headers=ENCABEZADOS), timeout=300) as respuesta,
+        abrir_url(url, timeout=300) as respuesta,
         open(temporal, "wb") as archivo,
     ):
         shutil.copyfileobj(respuesta, archivo)
@@ -102,7 +117,7 @@ def descargar(url: str, destino: Path) -> None:
 
 def enlaces_publicados(url: str = URL_DATOS_ABIERTOS) -> dict[str, str]:
     """Nombre → URL de cada CSV enlazado en la página de datos abiertos, más los respaldos."""
-    with urlopen(Request(url, headers=ENCABEZADOS), timeout=60) as respuesta:
+    with abrir_url(url, timeout=60) as respuesta:
         html = respuesta.read().decode("utf-8", errors="replace")
     rutas = re.findall(r'href="([^"]+\.csv)"', html)
     enlaces = {Path(ruta).name: urljoin(url, ruta) for ruta in rutas}
@@ -232,8 +247,12 @@ def unir_estaciones(df: pd.DataFrame, estdf: pd.DataFrame) -> pd.DataFrame:
 
 
 def md5_archivo(ruta: Path) -> str:
-    """md5 de un archivo, leído por bloques para no cargarlo completo en memoria."""
-    md5 = hashlib.md5()
+    """md5 de un archivo, leído por bloques para no cargarlo completo en memoria.
+
+    El md5 es una huella para detectar cambios en los datos, no una firma de seguridad:
+    `usedforsecurity=False` lo declara (y evita el aviso B324 de bandit).
+    """
+    md5 = hashlib.md5(usedforsecurity=False)
     with open(ruta, "rb") as archivo:
         for bloque in iter(lambda: archivo.read(1 << 20), b""):
             md5.update(bloque)
@@ -257,7 +276,7 @@ def escribir_manifiesto(
         "archivos": archivos,
     }
     contenido = json.dumps(manifiesto, sort_keys=True).encode()
-    manifiesto["version"] = hashlib.md5(contenido).hexdigest()
+    manifiesto["version"] = hashlib.md5(contenido, usedforsecurity=False).hexdigest()
     ruta.write_text(json.dumps(manifiesto, indent=2, ensure_ascii=False), encoding="utf-8")
     return manifiesto
 

@@ -63,6 +63,37 @@ data: requirements
 	$(PYTHON_INTERPRETER) mibici_mlops/dataset.py
 
 
+## Pruebas unitarias con PyTest
+.PHONY: test
+test:
+	$(PYTHON_INTERPRETER) -m pytest
+
+# Vulnerabilidades aceptadas, sin versión corregida que el proyecto pueda usar (ver README,
+# "Chequeos de seguridad"): diskcache (dependencia de DVC) y setuptools (fijado por DeepChecks).
+VULNS_ACEPTADAS_PROYECTO = --ignore-vuln PYSEC-2026-2447
+VULNS_ACEPTADAS_DEEPCHECKS = --ignore-vuln PYSEC-2026-3447 --ignore-vuln GHSA-xmj3-9gf7-h52w
+DEEPCHECKS_SITE_PACKAGES ?= $(wildcard .venv-deepchecks/lib/python3.12/site-packages .venv-deepchecks/Lib/site-packages)
+DEEPCHECKS_PYTHON ?= $(firstword $(wildcard .venv-deepchecks/bin/python .venv-deepchecks/Scripts/python.exe))
+
+## Chequeos de seguridad: bandit (código) y pip-audit (dependencias de los dos entornos)
+.PHONY: seguridad
+seguridad:
+	bandit -c pyproject.toml -r mibici_mlops scripts tests
+	pip-audit --skip-editable $(VULNS_ACEPTADAS_PROYECTO)
+	pip-audit --path $(DEEPCHECKS_SITE_PACKAGES) $(VULNS_ACEPTADAS_DEEPCHECKS)
+
+## Validación de datos con DeepChecks (P1, P2 y P3; requiere .venv-deepchecks y data/processed)
+.PHONY: validar_datos
+validar_datos:
+	$(DEEPCHECKS_PYTHON) scripts/validar_datos_p1.py
+	$(DEEPCHECKS_PYTHON) scripts/validar_datos_p2.py
+	$(DEEPCHECKS_PYTHON) scripts/validar_datos_p3.py
+
+## Todo: pruebas, seguridad y validación de datos
+.PHONY: checks
+checks: test seguridad validar_datos
+
+
 #################################################################################
 # Self Documenting Commands                                                     #
 #################################################################################

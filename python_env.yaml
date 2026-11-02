@@ -2,6 +2,6 @@
 # requirements.txt (no se repiten aquí para que no se desincronicen).
 python: "3.13.7"
 build_dependencies:
-  - pip==25.2
+  - pip==26.2
 dependencies:
   - -r requirements.txt

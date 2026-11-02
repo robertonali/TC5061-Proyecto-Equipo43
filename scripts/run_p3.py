@@ -6,7 +6,7 @@ Usa `--no-serve` para terminar después de entrenar, registrar y guardar las asi
 """
 
 import argparse
-import subprocess
+import subprocess  # nosec B404
 import sys
 from pathlib import Path
 
@@ -116,7 +116,8 @@ def servir_campeon(port: int) -> None:
     uri = f"models:/{P3_MODELO_REGISTRADO}@champion"
     logger.success("Sirviendo {} en http://127.0.0.1:{}/", uri, port)
     logger.info("Endpoint de predicción: http://127.0.0.1:{}/invocations", port)
-    subprocess.run(
+    # Comando fijo con el Python actual; `port` es un int y no se usa shell.
+    subprocess.run(  # nosec B603
         [
             sys.executable,
             "-m",

@@ -1,8 +1,12 @@
+p3_integridad: 0 chequeos con condiciones que no se cumplen
+  reporte: reports/deepchecks/p3_integridad.html
 
-p3_integridad: 1 chequeos con condiciones que no se cumplen (reports/deepchecks/p3_integridad.html)
-  - Feature-Feature Correlation: Not more than 0 pairs are correlated above 0.9 -> Correlation is greater than 0.9 for pairs [('sal_lun_manana', 'sal_mar_manana'), ('sal_lun_manana', 'sal_mie_manana'), ('sal_lun_manana', 'sal_vie_manana'), ('sal_lun_tarde', 'sal_mar_tarde'), ('sal_lun_tarde', 'sal_mie_tarde'), ('sal_lun_tarde', 'sal_vie_tarde'), ('sal_lun_noche', 'sal_mar_noche'), ('sal_lun_noche', 'sal_mie_noche'), ('sal_mar_manana', 'sal_mie_manana'), ('sal_mar_manana', 'sal_vie_manana'), ('sal_mar_tarde', 'sal_mie_tarde'), ('sal_mar_tarde', 'sal_vie_tarde'), ('sal_mar_noche', 'sal_mie_noche'), ('sal_mie_manana', 'sal_vie_manana'), ('sal_mie_tarde', 'sal_vie_tarde'), ('sal_mie_noche', 'sal_vie_noche'), ('sal_jue_manana', 'sal_lun_manana'), ('sal_jue_manana', 'sal_mar_manana'), ('sal_jue_manana', 'sal_mie_manana'), ('sal_jue_manana', 'sal_vie_manana'), ('sal_jue_tarde', 'sal_lun_tarde'), ('sal_jue_tarde', 'sal_mar_tarde'), ('sal_jue_tarde', 'sal_mie_tarde'), ('sal_jue_tarde', 'sal_vie_tarde'), ('sal_jue_noche', 'sal_lun_noche'), ('sal_jue_noche', 'sal_mar_noche'), ('sal_jue_noche', 'sal_mie_noche'), ('sal_jue_noche', 'sal_vie_noche'), ('lle_lun_manana', 'lle_mar_manana'), ('lle_lun_manana', 'lle_mie_manana'), ('lle_lun_manana', 'lle_vie_manana'), ('lle_lun_noche', 'lle_mar_noche'), ('lle_lun_noche', 'lle_mie_noche'), ('lle_mar_manana', 'lle_mie_manana'), ('lle_mar_manana', 'lle_vie_manana'), ('lle_mar_noche', 'lle_mie_noche'), ('lle_mie_manana', 'lle_vie_manana'), ('lle_mie_noche', 'lle_vie_noche'), ('lle_jue_manana', 'lle_lun_manana'), ('lle_jue_manana', 'lle_mar_manana'), ('lle_jue_manana', 'lle_mie_manana'), ('lle_jue_manana', 'lle_vie_manana'), ('lle_jue_tarde', 'lle_mie_tarde'), ('lle_jue_noche', 'lle_lun_noche'), ('lle_jue_noche', 'lle_mar_noche'), ('lle_jue_noche', 'lle_mie_noche'), ('lle_jue_noche', 'lle_vie_noche'), ('llegadas_dia', 'salidas_dia')]
+p3_entrenamiento_vs_prueba: 2 chequeos con condiciones que no se cumplen
+  reporte: reports/deepchecks/p3_entrenamiento_vs_prueba.html
+  [ADVERTENCIA] Feature Drift: categorical drift score < 0.2 and numerical drift score < 0.2
+      Failed for 2 out of 59 columns.
+Found 2 numeric columns with Kolmogorov-Smirnov above threshold: {'sal_jue_noche': '0.21', 'lle_sab_noche': '0.23'}
+  [ADVERTENCIA] Multivariate Drift: Drift value is less than 0.25
+      Found drift value of: 0.52, corresponding to a domain classifier AUC of: 0.76
 
-p3_entrenamiento_vs_prueba: 2 chequeos con condiciones que no se cumplen (reports/deepchecks/p3_entrenamiento_vs_prueba.html)
-  - Feature Drift: categorical drift score < 0.2 and numerical drift score < 0.2 -> Failed for 2 out of 59 columns.
-Found 2 numeric columns with Kolmogorov-Smirnov above threshold: {'sal_jue_noche': '0.22', 'lle_sab_noche': '0.23'}
-  - Multivariate Drift: Drift value is less than 0.25 -> Found drift value of: 0.49, corresponding to a domain classifier AUC of: 0.74
+Resultado: integridad OK

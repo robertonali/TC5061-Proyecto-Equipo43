@@ -1,0 +1,1761 @@
+Run started:2026-11-02 03:04:08.980905+00:00
+
+Test results:
+>> Issue: [B310:blacklist] Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.
+   Severity: Medium   Confidence: High
+   CWE: CWE-22 (https://cwe.mitre.org/data/definitions/22.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen
+   Location: mibici_mlops/dataset.py:96:8
+95	    with (
+96	        urlopen(Request(url, headers=ENCABEZADOS), timeout=300) as respuesta,
+97	        open(temporal, "wb") as archivo,
+
+--------------------------------------------------
+>> Issue: [B310:blacklist] Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.
+   Severity: Medium   Confidence: High
+   CWE: CWE-22 (https://cwe.mitre.org/data/definitions/22.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen
+   Location: mibici_mlops/dataset.py:105:9
+104	    """Nombre → URL de cada CSV enlazado en la página de datos abiertos, más los respaldos."""
+105	    with urlopen(Request(url, headers=ENCABEZADOS), timeout=60) as respuesta:
+106	        html = respuesta.read().decode("utf-8", errors="replace")
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b324_hashlib.html
+   Location: mibici_mlops/dataset.py:236:10
+235	    """md5 de un archivo, leído por bloques para no cargarlo completo en memoria."""
+236	    md5 = hashlib.md5()
+237	    with open(ruta, "rb") as archivo:
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b324_hashlib.html
+   Location: mibici_mlops/dataset.py:260:28
+259	    contenido = json.dumps(manifiesto, sort_keys=True).encode()
+260	    manifiesto["version"] = hashlib.md5(contenido).hexdigest()
+261	    ruta.write_text(json.dumps(manifiesto, indent=2, ensure_ascii=False), encoding="utf-8")
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: mibici_mlops/modeling/registro.py:11:0
+10	from pathlib import Path
+11	import subprocess
+12	import urllib.request
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: mibici_mlops/modeling/registro.py:42:20
+41	    def git(*argumentos: str) -> str:
+42	        resultado = subprocess.run(
+43	            ["git", *argumentos], cwd=PROJ_ROOT, capture_output=True, text=True, check=True
+44	        )
+45	        return resultado.stdout.strip()
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: mibici_mlops/modeling/registro.py:42:20
+41	    def git(*argumentos: str) -> str:
+42	        resultado = subprocess.run(
+43	            ["git", *argumentos], cwd=PROJ_ROOT, capture_output=True, text=True, check=True
+44	        )
+45	        return resultado.stdout.strip()
+
+--------------------------------------------------
+>> Issue: [B310:blacklist] Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.
+   Severity: Medium   Confidence: High
+   CWE: CWE-22 (https://cwe.mitre.org/data/definitions/22.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen
+   Location: mibici_mlops/modeling/registro.py:83:8
+82	    try:
+83	        urllib.request.urlopen(f"{uri.rstrip('/')}/health", timeout=5)
+84	    except OSError as error:
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: scripts/run_p3.py:9:0
+8	import argparse
+9	import subprocess
+10	import sys
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: scripts/run_p3.py:119:4
+118	    logger.info("Endpoint de predicción: http://127.0.0.1:{}/invocations", port)
+119	    subprocess.run(
+120	        [
+121	            sys.executable,
+122	            "-m",
+123	            "mlflow",
+124	            "models",
+125	            "serve",
+126	            "--model-uri",
+127	            uri,
+128	            "--host",
+129	            "127.0.0.1",
+130	            "--port",
+131	            str(port),
+132	            "--env-manager",
+133	            "local",
+134	        ],
+135	        cwd=ROOT,
+136	        check=True,
+137	    )
+138	
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: tests/test_environment.py:12:0
+11	import re
+12	import subprocess
+13	import sys
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_environment.py:37:4
+36	    mayor, menor = (int(parte) for parte in str(esperada).split(".")[:2])
+37	    assert sys.version_info[:2] == (mayor, menor), (
+38	        f"python_env.yaml pide Python {esperada}, pero las pruebas corren con "
+39	        f"{sys.version.split()[0]} ({sys.executable})"
+40	    )
+41	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_environment.py:50:4
+49	    ]
+50	    assert not sin_fijar, f"Requisitos sin versión exacta (==): {sin_fijar}"
+51	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_environment.py:59:4
+58	        pytest.fail(f"{requisito.name} no está instalado; corre `pip install -r requirements.txt`")
+59	    assert requisito.specifier.contains(instalada, prereleases=True), (
+60	        f"{requisito.name}: instalado {instalada}, requirements.txt pide {requisito.specifier}"
+61	    )
+62	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_environment.py:70:4
+69	    )
+70	    assert resultado.returncode == 0, resultado.stdout + resultado.stderr
+71	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_environment.py:78:4
+77	    ubicacion = Path(mibici_mlops.__file__).resolve()
+78	    assert ubicacion.is_relative_to(PROJ_ROOT), (
+79	        f"mibici_mlops se importa desde {ubicacion}, fuera de {PROJ_ROOT}; "
+80	        "reinstala con `pip install -e .`"
+81	    )
+82	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_environment.py:112:4
+111	def test_entry_points_del_mlproject_existen(modulo: str):
+112	    assert find_spec(modulo) is not None, f"MLproject llama a {modulo}, que no existe"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:53:4
+52	    np.testing.assert_array_equal(matriz, [[0, 0, 1], [2, 0, 1]])
+53	    assert matriz.dtype == np.float32
+54	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:70:4
+69	    matriz = conteos_diarios(viajes, pd.Index([1, 2]), dias)
+70	    assert matriz.shape == (2, 4)
+71	    assert not matriz.any()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:71:4
+70	    assert matriz.shape == (2, 4)
+71	    assert not matriz.any()
+72	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:97:4
+96	    d, est = 20, 2
+97	    assert historial["lag_7d"][est, d] == matriz[est, d - 7]
+98	    np.testing.assert_allclose(historial["media_7d"][est, d], matriz[est, d - 7 : d].mean())
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:105:8
+104	    for nombre, valores in historial.items():
+105	        assert valores.shape == matriz.shape
+106	        assert np.isnan(valores[:, :7]).all(), nombre
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:106:8
+105	        assert valores.shape == matriz.shape
+106	        assert np.isnan(valores[:, :7]).all(), nombre
+107	        assert np.isfinite(valores[:, 7:]).all(), nombre
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:107:8
+106	        assert np.isnan(valores[:, :7]).all(), nombre
+107	        assert np.isfinite(valores[:, 7:]).all(), nombre
+108	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:118:4
+117	    historial = historial_demanda(np.ones((2, 5), dtype=np.float32))
+118	    assert all(np.isnan(valores).all() for valores in historial.values())
+119	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:144:4
+143	def test_feriados(fecha, esperado):
+144	    assert es_feriado(pd.DatetimeIndex([fecha]))[0] == esperado
+145	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:148:4
+147	def test_feriado_ignora_la_hora():
+148	    assert es_feriado(pd.DatetimeIndex(["2024-12-25 18:30"]))[0]
+149	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:162:4
+161	    )
+162	    assert list(conjunto) == ["entrenamiento", "validacion", "validacion", "prueba"]
+163	    assert list(conjunto.categories) == ["entrenamiento", "validacion", "prueba"]
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:163:4
+162	    assert list(conjunto) == ["entrenamiento", "validacion", "validacion", "prueba"]
+163	    assert list(conjunto.categories) == ["entrenamiento", "validacion", "prueba"]
+164	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:172:4
+171	    tabla = tabla_estacion_dia(matriz, dias, estaciones())
+172	    assert {*COLUMNAS_P1, "estacion_id", "fecha", "viajes", "conjunto"} <= set(tabla.columns)
+173	    assert tabla[[*COLUMNAS_P1, "viajes"]].notna().all().all()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:173:4
+172	    assert {*COLUMNAS_P1, "estacion_id", "fecha", "viajes", "conjunto"} <= set(tabla.columns)
+173	    assert tabla[[*COLUMNAS_P1, "viajes"]].notna().all().all()
+174	    assert (tabla["viajes"] >= 0).all()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:174:4
+173	    assert tabla[[*COLUMNAS_P1, "viajes"]].notna().all().all()
+174	    assert (tabla["viajes"] >= 0).all()
+175	    assert not tabla.duplicated(["estacion_id", "fecha"]).any()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:175:4
+174	    assert (tabla["viajes"] >= 0).all()
+175	    assert not tabla.duplicated(["estacion_id", "fecha"]).any()
+176	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:182:4
+181	    tabla = tabla_estacion_dia(matriz, dias, estaciones())
+182	    assert tabla["fecha"].min() == dias[7]
+183	    assert len(tabla) == N_ESTACIONES * (N_DIAS - 7)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:183:4
+182	    assert tabla["fecha"].min() == dias[7]
+183	    assert len(tabla) == N_ESTACIONES * (N_DIAS - 7)
+184	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:191:4
+190	    est = estaciones().index.get_loc(fila["estacion_id"])
+191	    assert fila["viajes"] == matriz[est, dias.get_loc(fila["fecha"])]
+192	    assert fila["capacidad"] == estaciones()["dpcapacity"].iloc[est]
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:192:4
+191	    assert fila["viajes"] == matriz[est, dias.get_loc(fila["fecha"])]
+192	    assert fila["capacidad"] == estaciones()["dpcapacity"].iloc[est]
+193	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:198:4
+197	    tabla = tabla_estacion_dia(matriz, dias, estaciones())
+198	    assert (tabla["dia_semana"] == tabla["fecha"].dt.dayofweek).all()
+199	    assert (tabla["mes"] == tabla["fecha"].dt.month).all()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:199:4
+198	    assert (tabla["dia_semana"] == tabla["fecha"].dt.dayofweek).all()
+199	    assert (tabla["mes"] == tabla["fecha"].dt.month).all()
+200	    assert (tabla["es_fin_de_semana"] == (tabla["fecha"].dt.dayofweek >= 5)).all()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:200:4
+199	    assert (tabla["mes"] == tabla["fecha"].dt.month).all()
+200	    assert (tabla["es_fin_de_semana"] == (tabla["fecha"].dt.dayofweek >= 5)).all()
+201	    # 2024-03-18 (tercer lunes de marzo) está dentro de la malla.
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:202:4
+201	    # 2024-03-18 (tercer lunes de marzo) está dentro de la malla.
+202	    assert tabla.loc[tabla["fecha"] == "2024-03-18", "es_feriado"].eq(1).all()
+203	    assert tabla.loc[tabla["fecha"] == "2024-03-19", "es_feriado"].eq(0).all()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:203:4
+202	    assert tabla.loc[tabla["fecha"] == "2024-03-18", "es_feriado"].eq(1).all()
+203	    assert tabla.loc[tabla["fecha"] == "2024-03-19", "es_feriado"].eq(0).all()
+204	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p1.py:210:4
+209	    tabla = tabla_estacion_dia(matriz, dias, estaciones())
+210	    assert 1 not in set(tabla["estacion_id"])
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:73:4
+72	def test_dia_de_simulacion_empieza_a_la_hora_de_reinicio(texto, dia):
+73	    assert dia_de_simulacion(pd.Series([momento(texto)]))[0] == pd.Timestamp(dia)
+74	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:83:4
+82	    )
+83	    assert sorted(resultado.itertuples(index=False)) == [
+84	        (1, momento("2024-03-04 08:00"), -1),
+85	        (2, momento("2024-03-04 08:15"), 1),
+86	    ]
+87	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:94:4
+93	    )
+94	    assert list(resultado.itertuples(index=False)) == [(1, momento("2024-03-04 08:15"), 1)]
+95	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:112:4
+111	    )
+112	    assert list(resultado["inventario"]) == [4, 3, 4, 3, 4]
+113	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:117:4
+116	    resultado = simular_inventario(movimientos((1, "2024-03-04 08:00", -1)), pd.Series({1: 7}))
+117	    assert resultado["inventario"].iloc[0] == P2_INVENTARIO_INICIAL * 7 - 1 == 2.5
+118	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:133:4
+132	    )
+133	    assert list(simulados["inventario"]) == [0, 1]
+134	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:152:4
+151	    de_8_a_10 = resumen.loc[momento("2024-03-04 08:00")]
+152	    assert de_8_a_10[["minimo", "maximo", "final", "neto"]].tolist() == [3, 4, 4, -1]
+153	    assert resumen.loc[momento("2024-03-04 10:00"), "final"] == 5
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:153:4
+152	    assert de_8_a_10[["minimo", "maximo", "final", "neto"]].tolist() == [3, 4, 4, -1]
+153	    assert resumen.loc[momento("2024-03-04 10:00"), "final"] == 5
+154	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:166:4
+165	    dia_4 = ventanas[ventanas["dia"] == LUNES]
+166	    assert len(dia_4) == 12  # de 04:00 a 02:00 del día siguiente
+167	    desde_las_8 = dia_4.index >= momento("2024-03-04 08:00")
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:168:4
+167	    desde_las_8 = dia_4.index >= momento("2024-03-04 08:00")
+168	    assert dia_4.loc[~desde_las_8, "clase"].eq("sin_riesgo").all()
+169	    # 08:00 llega a 0 y las 9 ventanas siguientes, sin viajes, siguen vacías.
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:170:4
+169	    # 08:00 llega a 0 y las 9 ventanas siguientes, sin viajes, siguen vacías.
+170	    assert dia_4.loc[desde_las_8, "clase"].eq("se_vacia").all()
+171	    # El día 5 se reinicia al 50%.
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:172:4
+171	    # El día 5 se reinicia al 50%.
+172	    assert ventanas.loc[momento("2024-03-05 04:00"), "final"] == 5
+173	    assert ventanas.loc[momento("2024-03-05 04:00"), "clase"] == "sin_riesgo"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:173:4
+172	    assert ventanas.loc[momento("2024-03-05 04:00"), "final"] == 5
+173	    assert ventanas.loc[momento("2024-03-05 04:00"), "clase"] == "sin_riesgo"
+174	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:183:4
+182	    primera, ultima, cuantas = por_estacion.loc[1]
+183	    assert primera == momento("2024-03-04 04:00")
+184	    assert ultima == momento("2024-03-05 02:00")
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:184:4
+183	    assert primera == momento("2024-03-04 04:00")
+184	    assert ultima == momento("2024-03-05 02:00")
+185	    assert cuantas == 12
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:185:4
+184	    assert ultima == momento("2024-03-05 02:00")
+185	    assert cuantas == 12
+186	    assert por_estacion.loc[2, "min"] == momento("2024-03-06 04:00")
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:186:4
+185	    assert cuantas == 12
+186	    assert por_estacion.loc[2, "min"] == momento("2024-03-06 04:00")
+187	    assert not ventanas.duplicated(["estacion", "ventana"]).any()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:187:4
+186	    assert por_estacion.loc[2, "min"] == momento("2024-03-06 04:00")
+187	    assert not ventanas.duplicated(["estacion", "ventana"]).any()
+188	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:200:4
+199	    )
+200	    assert ventanas.index.min() == inicio + pd.Timedelta(hours=4)
+201	    assert (ventanas["dia"] >= inicio).all()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:201:4
+200	    assert ventanas.index.min() == inicio + pd.Timedelta(hours=4)
+201	    assert (ventanas["dia"] >= inicio).all()
+202	    assert len(ventanas) == 12
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:202:4
+201	    assert (ventanas["dia"] >= inicio).all()
+202	    assert len(ventanas) == 12
+203	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:225:4
+224	def test_umbrales_de_la_etiqueta(minimo, maximo, inicio, esperada):
+225	    assert etiqueta(minimo, maximo, inicio) == esperada
+226	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:237:4
+236	def test_ventana_que_cumple_las_dos_reglas_gana_el_umbral_mas_cercano(inicio, esperada):
+237	    assert etiqueta(minimo=0, maximo=10, inicio=inicio) == esperada
+238	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:250:4
+249	    )
+250	    assert set(etiquetar(ventanas)) <= set(CLASES_P2)
+251	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:271:4
+270	    # Semana 5 (índice 4): las 4 anteriores son vacia, vacia, sin_riesgo, llena.
+271	    assert frecuencias.loc[4].tolist() == [0.5, 0.25, 0.25]
+272	    # Semana 6: vacia, sin_riesgo, llena, sin_riesgo. La semana 1 ya no cuenta.
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:273:4
+272	    # Semana 6: vacia, sin_riesgo, llena, sin_riesgo. La semana 1 ya no cuenta.
+273	    assert frecuencias.loc[5].tolist() == [0.25, 0.25, 0.5]
+274	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:279:4
+278	    frecuencias = frecuencia_semanas_anteriores(semanas_de_lunes(["se_vacia"] * 3))
+279	    assert frecuencias["frec_se_vacia"].tolist() == [0, 0.25, 0.5]
+280	    assert frecuencias["frec_sin_riesgo"].tolist() == [1, 0.75, 0.5]
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:280:4
+279	    assert frecuencias["frec_se_vacia"].tolist() == [0, 0.25, 0.5]
+280	    assert frecuencias["frec_sin_riesgo"].tolist() == [1, 0.75, 0.5]
+281	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:303:4
+302	    # Solo la segunda semana de la estación 1 tiene un lunes anterior "se vacía".
+303	    assert frecuencias["frec_se_vacia"].tolist() == [0, 0.25, 0, 0, 0, 0]
+304	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:309:4
+308	    tabla = semanas_de_lunes(list(rng.choice(CLASES_P2, 30)))
+309	    assert np.allclose(frecuencia_semanas_anteriores(tabla).sum(axis=1), 1)
+310	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:324:4
+323	    calendario = variables_calendario(ventanas)
+324	    assert calendario["hora"].tolist() == [8, 22, 6, 16]
+325	    assert calendario["dia_semana"].tolist() == [0, 6, 2, 0]  # 0 = lunes, 6 = domingo
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:325:4
+324	    assert calendario["hora"].tolist() == [8, 22, 6, 16]
+325	    assert calendario["dia_semana"].tolist() == [0, 6, 2, 0]  # 0 = lunes, 6 = domingo
+326	    # Navidad y el tercer lunes de marzo son feriados.
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:327:4
+326	    # Navidad y el tercer lunes de marzo son feriados.
+327	    assert calendario["feriado"].tolist() == [False, False, True, True]
+328	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:363:4
+362	    tabla = correr_p2(archivos_p2, grupos=1)
+363	    assert list(tabla.columns) == COLUMNAS_P2
+364	    assert tabla.notna().all().all()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:364:4
+363	    assert list(tabla.columns) == COLUMNAS_P2
+364	    assert tabla.notna().all().all()
+365	    assert not tabla.duplicated(["estacion", "ventana"]).any()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:365:4
+364	    assert tabla.notna().all().all()
+365	    assert not tabla.duplicated(["estacion", "ventana"]).any()
+366	    assert set(tabla["clase"]) <= set(CLASES_P2)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:366:4
+365	    assert not tabla.duplicated(["estacion", "ventana"]).any()
+366	    assert set(tabla["clase"]) <= set(CLASES_P2)
+367	    assert set(tabla["estacion"]) == {1, 2}  # la estación sin capacidad no entra
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:367:4
+366	    assert set(tabla["clase"]) <= set(CLASES_P2)
+367	    assert set(tabla["estacion"]) == {1, 2}  # la estación sin capacidad no entra
+368	    # 12 ventanas por día y estación.
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p2.py:369:4
+368	    # 12 ventanas por día y estación.
+369	    assert (tabla.groupby(["estacion", "dia"]).size() == 12).all()
+370	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p3.py:51:4
+50	
+51	    assert output_path.exists()
+52	    tabla = pd.read_parquet(output_path)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p3.py:53:4
+52	    tabla = pd.read_parquet(output_path)
+53	    assert set(tabla["conjunto"]) == set(PERIODOS)
+54	    assert len(tabla) == 2 * len(PERIODOS)  # cada estación, una vez por periodo
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p3.py:54:4
+53	    assert set(tabla["conjunto"]) == set(PERIODOS)
+54	    assert len(tabla) == 2 * len(PERIODOS)  # cada estación, una vez por periodo
+55	    assert not tabla.duplicated(["estacion", "conjunto"]).any()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p3.py:55:4
+54	    assert len(tabla) == 2 * len(PERIODOS)  # cada estación, una vez por periodo
+55	    assert not tabla.duplicated(["estacion", "conjunto"]).any()
+56	    esperadas = columnas_perfil("sal") + columnas_perfil("lle")
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p3.py:57:4
+56	    esperadas = columnas_perfil("sal") + columnas_perfil("lle")
+57	    assert set(esperadas + ["salidas_dia", "llegadas_dia", "balance"]) <= set(tabla.columns)
+58	    assert tabla[esperadas].notna().all().all()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p3.py:58:4
+57	    assert set(esperadas + ["salidas_dia", "llegadas_dia", "balance"]) <= set(tabla.columns)
+58	    assert tabla[esperadas].notna().all().all()
+59	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p3.py:66:4
+65	    momentos = pd.Series(pd.to_datetime([f"2024-03-04 {hora}"]))
+66	    assert franja_del_dia(momentos)[0] == franja
+67	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p3.py:72:4
+71	    perfil = perfil_de_uso(pd.Series([1, 1, 1]), momentos, "sal")
+72	    assert list(perfil.columns) == columnas_perfil("sal")
+73	    np.testing.assert_allclose(perfil.sum(axis=1), 1.0)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p3.py:74:4
+73	    np.testing.assert_allclose(perfil.sum(axis=1), 1.0)
+74	    assert perfil.loc[1, "sal_lun_manana"] == pytest.approx(2 / 3)
+75	    assert perfil.loc[1, "sal_dom_noche"] == pytest.approx(1 / 3)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_features_p3.py:75:4
+74	    assert perfil.loc[1, "sal_lun_manana"] == pytest.approx(2 / 3)
+75	    assert perfil.loc[1, "sal_dom_noche"] == pytest.approx(1 / 3)
+76	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:63:8
+62	    for modelo in ["ridge", "rf", "hgb"]:
+63	        assert resolver_hiperparametros(modelo, {}) == P1_HIPERPARAMETROS[modelo]
+64	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:69:4
+68	    resultado = resolver_hiperparametros("rf", {"max_depth": 8, "n_estimators": None})
+69	    assert resultado == {**P1_HIPERPARAMETROS["rf"], "max_depth": 8}
+70	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:78:4
+77	def test_baseline_no_acepta_hiperparametros():
+78	    assert resolver_hiperparametros("baseline", {"loss": None}) == {}
+79	    with pytest.raises(typer.BadParameter, match="learning_rate"):
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:85:4
+84	    fijos = resolver_hiperparametros(BUSQUEDA, {})
+85	    assert set(fijos).isdisjoint(P1_BUSQUEDA_HGB)
+86	    assert resolver_hiperparametros(BUSQUEDA, {"max_iter": 100})["max_iter"] == 100
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:86:4
+85	    assert set(fijos).isdisjoint(P1_BUSQUEDA_HGB)
+86	    assert resolver_hiperparametros(BUSQUEDA, {"max_iter": 100})["max_iter"] == 100
+87	    with pytest.raises(typer.BadParameter, match="max_leaf_nodes"):
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:93:8
+92	    for clave, valores in P1_BUSQUEDA_HGB.items():
+93	        assert P1_HIPERPARAMETROS["hgb"][clave] in valores
+94	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:106:4
+105	    nombres = {nombre_run("hgb", combinacion) for combinacion in combinaciones}
+106	    assert len(nombres) == len(combinaciones)
+107	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:110:4
+109	def test_nombre_run_de_cada_modelo():
+110	    assert nombre_run("baseline", {}) == "p1-baseline-semana-previa"
+111	    assert nombre_run("ridge", P1_HIPERPARAMETROS["ridge"]) == "p1-ridge-alpha1.0"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:111:4
+110	    assert nombre_run("baseline", {}) == "p1-baseline-semana-previa"
+111	    assert nombre_run("ridge", P1_HIPERPARAMETROS["ridge"]) == "p1-ridge-alpha1.0"
+112	    assert nombre_run("rf", P1_HIPERPARAMETROS["rf"]) == "p1-rf-arboles100-prof16-hoja20"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:112:4
+111	    assert nombre_run("ridge", P1_HIPERPARAMETROS["ridge"]) == "p1-ridge-alpha1.0"
+112	    assert nombre_run("rf", P1_HIPERPARAMETROS["rf"]) == "p1-rf-arboles100-prof16-hoja20"
+113	    assert (
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:113:4
+112	    assert nombre_run("rf", P1_HIPERPARAMETROS["rf"]) == "p1-rf-arboles100-prof16-hoja20"
+113	    assert (
+114	        nombre_run("hgb", P1_HIPERPARAMETROS["hgb"]) == "p1-hgb-poisson-lr0.1-hojas63-arboles300"
+115	    )
+116	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:128:4
+127	    evaluacion = tabla_simulada(semilla=2)
+128	    assert (modelo.predict(evaluacion[COLUMNAS_P1]) < 0).any()  # sin el recorte sí habría
+129	    assert (predecir(modelo, evaluacion) >= 0).all()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:129:4
+128	    assert (modelo.predict(evaluacion[COLUMNAS_P1]) < 0).any()  # sin el recorte sí habría
+129	    assert (predecir(modelo, evaluacion) >= 0).all()
+130	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:146:4
+145	    prediccion = predecir(entrenar("ridge", entrenamiento), tabla_simulada(semilla=2))
+146	    assert np.isfinite(prediccion).all()
+147	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:151:4
+150	    real = pd.Series([0, 3, 10])
+151	    assert metricas(real, real.to_numpy(), "val") == {"val_mae": 0.0, "val_rmse": 0.0}
+152	    assert metricas(real, np.array([1, 3, 13]), "test") == pytest.approx(
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:152:4
+151	    assert metricas(real, real.to_numpy(), "val") == {"val_mae": 0.0, "val_rmse": 0.0}
+152	    assert metricas(real, np.array([1, 3, 13]), "test") == pytest.approx(
+153	        {"test_mae": 4 / 3, "test_rmse": np.sqrt(10 / 3)}
+154	    )
+155	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:163:4
+162	    tabla = error_por_dia_semana(prueba, {"modelo": np.array([12, 20, 0])})
+163	    assert tabla.set_index("dia_semana")["modelo"].to_dict() == {0: 1.0, 6: 5.0}
+164	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:171:4
+170	    por_nivel = tabla.set_index("nivel_uso")
+171	    assert por_nivel.loc["bajo", "modelo"] == 0
+172	    assert por_nivel.loc["alto", "modelo"] == 10
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:172:4
+171	    assert por_nivel.loc["bajo", "modelo"] == 0
+172	    assert por_nivel.loc["alto", "modelo"] == 10
+173	    assert por_nivel.loc["sin historial", "modelo"] == 7
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:173:4
+172	    assert por_nivel.loc["alto", "modelo"] == 10
+173	    assert por_nivel.loc["sin historial", "modelo"] == 7
+174	    assert por_nivel["filas"].sum() == len(prueba)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:174:4
+173	    assert por_nivel.loc["sin historial", "modelo"] == 7
+174	    assert por_nivel["filas"].sum() == len(prueba)
+175	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:193:4
+192	    resultados = [metricas(evaluacion["viajes"], pred, "val") for pred in predicciones]
+193	    assert resultados[0] == pytest.approx(resultados[1], rel=1e-12)
+194	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:202:4
+201	    otro.fit(entrenamiento[COLUMNAS_P1], entrenamiento["viajes"])
+202	    assert not np.allclose(
+203	        predecir(otro, evaluacion), predecir(entrenar("rf", entrenamiento), evaluacion)
+204	    )
+205	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:210:4
+209	    estimador = MODELOS[modelo]["crear"](**P1_HIPERPARAMETROS[modelo])[-1]
+210	    assert estimador.random_state == SEMILLA
+211	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:215:4
+214	    """Con parada anticipada, HGB separaría al azar una validación dentro del entrenamiento."""
+215	    assert crear_hgb(**P1_HIPERPARAMETROS["hgb"])[-1].early_stopping is False
+216	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p1.py:226:4
+225	    baseline = metricas(evaluacion["viajes"], evaluacion["lag_7d"], "val")
+226	    assert resultado["val_mae"] < baseline["val_mae"]
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:97:4
+96	def test_variables_no_incluyen_la_etiqueta_ni_columnas_inexistentes():
+97	    assert "clase" not in VARIABLES
+98	    assert set(VARIABLES) <= set(COLUMNAS_P2)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:98:4
+97	    assert "clase" not in VARIABLES
+98	    assert set(VARIABLES) <= set(COLUMNAS_P2)
+99	    # frec_sin_riesgo es 1 menos las otras dos: sería redundante.
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:100:4
+99	    # frec_sin_riesgo es 1 menos las otras dos: sería redundante.
+100	    assert "frec_sin_riesgo" not in VARIABLES
+101	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:114:4
+113	    )
+114	    assert list(conjunto) == ["entrenamiento", "validacion", "validacion", "prueba"]
+115	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:119:4
+118	    dias = pd.Series(pd.to_datetime(["2023-01-01", "2026-05-01"]), index=[10, 20])
+119	    assert list(asignar_conjunto(dias).index) == [10, 20]
+120	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:129:4
+128	    resultado = baseline_clase_mayoritaria(entrenamiento, evaluacion)
+129	    assert list(resultado.columns) == CLASES_P2
+130	    assert list(resultado.index) == [5, 6, 7]
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:130:4
+129	    assert list(resultado.columns) == CLASES_P2
+130	    assert list(resultado.index) == [5, 6, 7]
+131	    assert (predecir(resultado) == "sin_riesgo").all()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:131:4
+130	    assert list(resultado.index) == [5, 6, 7]
+131	    assert (predecir(resultado) == "sin_riesgo").all()
+132	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:137:4
+136	    resultado = baseline_clase_mayoritaria(entrenamiento, pd.DataFrame(index=[0]))
+137	    assert predecir(resultado).iloc[0] == "se_vacia"
+138	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:150:4
+149	    resultado = baseline_clase_mayoritaria(entrenamiento, pd.DataFrame(index=[0]))
+150	    assert resultado.loc[0, "se_llena"] == 0
+151	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:156:4
+155	    resultado = baseline_frecuencia(pd.DataFrame(), evaluacion)
+156	    assert list(resultado.columns) == CLASES_P2
+157	    np.testing.assert_array_equal(resultado["se_vacia"], evaluacion["frec_se_vacia"])
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:176:4
+175	def test_predecir_y_desempates(fila, esperada):
+176	    assert predecir(probabilidades(fila)).iloc[0] == esperada
+177	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:184:4
+183	def test_pesos_de_clase(opcion, esperado):
+184	    assert pesos_de_clase(opcion) == esperado
+185	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:199:4
+198	    vacias = dict.fromkeys(["c", "max_iter", "class_weight", "learning_rate", "max_leaf_nodes"])
+199	    assert resolver_hiperparametros(modelo, vacias) == P2_HIPERPARAMETROS[modelo]
+200	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:204:4
+203	    resultado = resolver_hiperparametros("hgb", {"learning_rate": 0.05, "c": None})
+204	    assert resultado == {**P2_HIPERPARAMETROS["hgb"], "learning_rate": 0.05}
+205	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:224:4
+223	    fijos = resolver_hiperparametros(BUSQUEDA, {})
+224	    assert not set(fijos) & set(P2_BUSQUEDA_HGB)
+225	    assert fijos["max_iter"] == P2_HIPERPARAMETROS["hgb"]["max_iter"]
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:225:4
+224	    assert not set(fijos) & set(P2_BUSQUEDA_HGB)
+225	    assert fijos["max_iter"] == P2_HIPERPARAMETROS["hgb"]["max_iter"]
+226	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:250:4
+249	def test_nombre_run(modelo, hiperparametros, esperado):
+250	    assert nombre_run(modelo, hiperparametros) == esperado
+251	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:260:4
+259	    estimador = crear_hgb(**P2_HIPERPARAMETROS["hgb"])[-1]
+260	    assert estimador.random_state == SEMILLA
+261	    assert estimador.early_stopping is False
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:261:4
+260	    assert estimador.random_state == SEMILLA
+261	    assert estimador.early_stopping is False
+262	    assert list(estimador.categorical_features) == ["hora", "dia_semana"]
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:262:4
+261	    assert estimador.early_stopping is False
+262	    assert list(estimador.categorical_features) == ["hora", "dia_semana"]
+263	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:266:4
+265	def test_logistica_sin_pesos_de_clase():
+266	    assert crear_logistica(c=1.0, max_iter=100, class_weight="none")[-1].class_weight is None
+267	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:273:4
+272	    resultado = probabilidades_modelo(entrenado(modelo, datos), datos.head(50))
+273	    assert list(resultado.columns) == CLASES_P2
+274	    np.testing.assert_allclose(resultado.sum(axis=1), 1)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:285:4
+284	    piso = calcular_metricas(clase, baseline_clase_mayoritaria(entrenamiento, evaluacion), "val")
+285	    assert modelo_["val_pr_auc_promedio"] > piso["val_pr_auc_promedio"] + 0.1
+286	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:295:4
+294	    resultado = probabilidades_modelo(entrenado("logistica", entrenamiento), nueva)
+295	    assert resultado.notna().all().all()
+296	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:306:8
+305	    for riesgo in ["se_vacia", "se_llena"]:
+306	        assert metricas[f"test_recall_{riesgo}"] == 1
+307	        assert metricas[f"test_precision_{riesgo}"] == 1
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:307:8
+306	        assert metricas[f"test_recall_{riesgo}"] == 1
+307	        assert metricas[f"test_precision_{riesgo}"] == 1
+308	        assert metricas[f"test_pr_auc_{riesgo}"] == 1
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:308:8
+307	        assert metricas[f"test_precision_{riesgo}"] == 1
+308	        assert metricas[f"test_pr_auc_{riesgo}"] == 1
+309	        assert metricas[f"test_proporcion_{riesgo}"] == 0.25
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:309:8
+308	        assert metricas[f"test_pr_auc_{riesgo}"] == 1
+309	        assert metricas[f"test_proporcion_{riesgo}"] == 0.25
+310	    assert metricas["test_pr_auc_promedio"] == 1
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:310:4
+309	        assert metricas[f"test_proporcion_{riesgo}"] == 0.25
+310	    assert metricas["test_pr_auc_promedio"] == 1
+311	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:318:4
+317	    metricas = calcular_metricas(clase, siempre_sin_riesgo, "val")
+318	    assert metricas["val_recall_se_vacia"] == 0
+319	    assert metricas["val_precision_se_vacia"] == 0
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:319:4
+318	    assert metricas["val_recall_se_vacia"] == 0
+319	    assert metricas["val_precision_se_vacia"] == 0
+320	    # Sin distinguir nada, la PR-AUC es la proporción de la clase: la del azar.
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:321:4
+320	    # Sin distinguir nada, la PR-AUC es la proporción de la clase: la del azar.
+321	    assert metricas["val_pr_auc_se_vacia"] == pytest.approx(metricas["val_proporcion_se_vacia"])
+322	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:327:4
+326	    metricas = calcular_metricas(datos["clase"], baseline_frecuencia(datos, datos), "val")
+327	    assert metricas["val_pr_auc_promedio"] == pytest.approx(
+328	        (metricas["val_pr_auc_se_vacia"] + metricas["val_pr_auc_se_llena"]) / 2
+329	    )
+330	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:342:4
+341	    # tabla_simulada cubre de enero a principios de abril de 2025: 4 meses por conjunto.
+342	    assert tabla.groupby("conjunto").size().to_dict() == {"test": 4, "val": 4}
+343	    np.testing.assert_allclose(tabla["promedio"], tabla[["se_vacia", "se_llena"]].mean(axis=1))
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p2.py:359:4
+358	    pd.testing.assert_series_equal(predecir(resultados[0]), predecir(resultados[1]))
+359	    assert calcular_metricas(evaluacion["clase"], resultados[0], "val") == calcular_metricas(
+360	        evaluacion["clase"], resultados[1], "val"
+361	    )
+362	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:48:4
+47	    semillas = {k: v for k, v in modelo.get_params().items() if k.endswith("random_state")}
+48	    assert semillas, f"{nombre} no tiene ningún parámetro random_state"
+49	    assert set(semillas.values()) == {123}, f"{nombre} no usa la semilla: {semillas}"
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:49:4
+48	    assert semillas, f"{nombre} no tiene ningún parámetro random_state"
+49	    assert set(semillas.values()) == {123}, f"{nombre} no usa la semilla: {semillas}"
+50	    assert parametros["random_state"] == 123  # lo que se registra en MLflow
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:50:4
+49	    assert set(semillas.values()) == {123}, f"{nombre} no usa la semilla: {semillas}"
+50	    assert parametros["random_state"] == 123  # lo que se registra en MLflow
+51	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:62:4
+61	    pd.testing.assert_frame_equal(asignaciones_a, asignaciones_b)
+62	    assert metricas_a == metricas_b
+63	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:69:4
+68	    _, metricas = trainer.fit_predict()
+69	    assert adjusted_rand_score(grupo, trainer.etiquetas) == pytest.approx(1.0)
+70	    assert metricas["ari_estabilidad"] == pytest.approx(1.0)
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:70:4
+69	    assert adjusted_rand_score(grupo, trainer.etiquetas) == pytest.approx(1.0)
+70	    assert metricas["ari_estabilidad"] == pytest.approx(1.0)
+71	    assert metricas["train_silhouette"] > 0.8
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:71:4
+70	    assert metricas["ari_estabilidad"] == pytest.approx(1.0)
+71	    assert metricas["train_silhouette"] > 0.8
+72	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:93:4
+92	    asignaciones, _ = P3Trainer(perfiles, estaciones, candidato("kmeans_k3")).fit_predict()
+93	    assert len(asignaciones) == len(perfiles)
+94	    assert not asignaciones.duplicated(["estacion", "conjunto"]).any()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:94:4
+93	    assert len(asignaciones) == len(perfiles)
+94	    assert not asignaciones.duplicated(["estacion", "conjunto"]).any()
+95	    assert set(asignaciones["cluster"]) <= set(range(3))
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:95:4
+94	    assert not asignaciones.duplicated(["estacion", "conjunto"]).any()
+95	    assert set(asignaciones["cluster"]) <= set(range(3))
+96	    assert asignaciones[["estacion_lat", "estacion_lon"]].notna().all().all()
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:96:4
+95	    assert set(asignaciones["cluster"]) <= set(range(3))
+96	    assert asignaciones[["estacion_lat", "estacion_lon"]].notna().all().all()
+97	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:103:4
+102	    _, gmm = P3Trainer(perfiles, estaciones, candidato("gmm_diag_k2")).fit_predict()
+103	    assert "inertia" in kmeans and "bic" not in kmeans
+104	    assert "bic" in gmm and "inertia" not in gmm
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:104:4
+103	    assert "inertia" in kmeans and "bic" not in kmeans
+104	    assert "bic" in gmm and "inertia" not in gmm
+105	    for prefijo in ["train", "val", "test"]:
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:106:8
+105	    for prefijo in ["train", "val", "test"]:
+106	        assert f"{prefijo}_silhouette" in kmeans
+107	
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:113:4
+112	    trainer.fit_predict()
+113	    assert list(trainer.Z.columns) == ["estacion_lat", "estacion_lon"]
+114	    assert list(trainer.X.columns) == COLUMNAS
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: tests/test_train_p3.py:114:4
+113	    assert list(trainer.Z.columns) == ["estacion_lat", "estacion_lon"]
+114	    assert list(trainer.X.columns) == COLUMNAS
+115	
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 4638
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 1
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 165
+		Medium: 3
+		High: 2
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 170
+Files skipped (0):

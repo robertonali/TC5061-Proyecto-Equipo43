@@ -157,6 +157,19 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
+# Secretos y credenciales: nunca se suben (ver "Chequeos de seguridad" en el README).
+# Las variables de entorno van en .env (plantilla sin secretos: .env.example) y el secreto de
+# Google Drive para DVC, en .dvc/config.local (ignorado por .dvc/.gitignore).
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+client_secret*.json
+service_account*.json
+
 # Environments
 .env
 .venv

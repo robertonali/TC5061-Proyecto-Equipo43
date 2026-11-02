@@ -1,0 +1,15 @@
+Tabla completa (data/processed/p2_ventanas.parquet):
+entrenamiento: 5,247,312 ventanas de 371 estaciones, de 2022-03-01 a 2025-09-30; clases (%): {'sin_riesgo': 80.0, 'se_vacia': 10.8, 'se_llena': 9.2}
+validacion: 809,388 ventanas de 371 estaciones, de 2025-10-01 a 2026-03-31; clases (%): {'sin_riesgo': 83.9, 'se_llena': 8.3, 'se_vacia': 7.8}
+prueba: 922,584 ventanas de 469 estaciones, de 2026-04-01 a 2026-09-30; clases (%): {'sin_riesgo': 87.1, 'se_llena': 7.2, 'se_vacia': 5.7}
+ventanas repetidas (misma estación y ventana): 0; faltantes: 0
+Suites sobre una muestra de 300,000 ventanas por conjunto (semilla 43).
+
+p2_integridad: 0 condiciones que no se cumplen (reports/deepchecks/p2_integridad.html)
+  - Conflicting Labels (informativo): 88.3% de las ventanas comparten sus 6 variables con otra de distinta clase; esperado con variables gruesas, la clase no es función de las variables
+
+p2_entrenamiento_vs_prueba: 0 condiciones que no se cumplen (reports/deepchecks/p2_entrenamiento_vs_prueba.html)
+  - Feature Drift (puntaje por variable): {'hora': 0.0, 'dia_semana': 0.01, 'feriado': 0.034, 'capacidad': 0.052, 'frec_se_vacia': 0.084, 'frec_se_llena': 0.038}
+  - Label Drift: 0.104 (Cramer's V)
+  - Multivariate Drift: 0.166 (AUC del clasificador de dominio 0.583)
+  - Train Test Samples Mix (informativo): 99.2% de las ventanas de prueba tienen variables y clase iguales a alguna de entrenamiento; no es fuga, son ventanas distintas y las fechas no se traslapan

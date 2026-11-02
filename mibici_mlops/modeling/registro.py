@@ -8,7 +8,7 @@ cada script lo haga distinto.
 import json
 import os
 from pathlib import Path
-import subprocess
+import subprocess  # nosec B404
 import urllib.request
 
 from loguru import logger
@@ -39,7 +39,8 @@ def estado_git() -> tuple[str, bool]:
     """Commit actual y si hay cambios sin commit: liga cada run con el código que lo produjo."""
 
     def git(*argumentos: str) -> str:
-        resultado = subprocess.run(
+        # Comando fijo (git con argumentos del propio código, sin entrada del usuario ni shell).
+        resultado = subprocess.run(  # nosec B603 B607
             ["git", *argumentos], cwd=PROJ_ROOT, capture_output=True, text=True, check=True
         )
         return resultado.stdout.strip()
@@ -80,7 +81,8 @@ def verificar_servidor(uri: str = MLFLOW_TRACKING_URI) -> None:
     if not uri.startswith("http"):
         return
     try:
-        urllib.request.urlopen(f"{uri.rstrip('/')}/health", timeout=5)
+        # El `if` de arriba ya garantiza que `uri` es http(s).
+        urllib.request.urlopen(f"{uri.rstrip('/')}/health", timeout=5)  # nosec B310
     except OSError as error:
         raise RuntimeError(
             f"No hay un servidor de MLflow en {uri}. Levántalo en otra terminal, desde la raíz "

@@ -9,7 +9,7 @@ from importlib.util import find_spec
 from pathlib import Path
 import pkgutil
 import re
-import subprocess
+import subprocess  # nosec B404
 import sys
 
 from packaging.requirements import Requirement

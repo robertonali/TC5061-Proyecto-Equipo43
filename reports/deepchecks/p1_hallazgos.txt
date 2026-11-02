@@ -1,0 +1,19 @@
+Tabla completa (data/processed/p1_estacion_dia.parquet):
+entrenamiento: 434,345 filas estación-día de 371 estaciones, de 2022-03-08 a 2025-09-30; viajes por estación-día: media 36.5, mediana 26, máximo 561
+validacion: 66,890 filas estación-día de 369 estaciones, de 2025-10-01 a 2026-03-31; viajes por estación-día: media 32.9, mediana 22, máximo 424
+prueba: 75,913 filas estación-día de 469 estaciones, de 2026-04-01 a 2026-09-30; viajes por estación-día: media 30.2, mediana 20, máximo 520
+filas repetidas (misma estación y día): 0; faltantes: 0; viajes negativos: 0
+estaciones de prueba sin historial en entrenamiento: 100 (9,259 filas de prueba)
+Suites sobre una muestra de 200,000 filas por conjunto (semilla 43).
+Hallazgos aceptados: correlación [['lag_7d', 'media_7d']], drift de ['mes'] (ver docstrings de las suites).
+
+p1_integridad: 0 condiciones que no se cumplen (reports/deepchecks/p1_integridad.html)
+  - Feature-Feature Correlation: pares > 0.9: [('lag_7d', 'media_7d')]
+
+p1_entrenamiento_vs_prueba: 0 condiciones que no se cumplen (reports/deepchecks/p1_entrenamiento_vs_prueba.html)
+  - Label Drift: 0.100 (Kolmogorov-Smirnov)
+  - Feature Drift (puntaje por variable): {'dia_semana': 0.0, 'mes': 0.532, 'es_fin_de_semana': 0.0, 'es_feriado': 0.036, 'capacidad': 0.054, 'lat': 0.026, 'lon': 0.055, 'lag_7d': 0.109, 'media_7d': 0.113}
+  - Multivariate Drift (todas las variables, informativo): 0.534 (AUC del clasificador de dominio 0.767)
+
+p1_drift_sin_mes: 0 condiciones que no se cumplen (reports/deepchecks/p1_drift_sin_mes.html)
+  - Multivariate Drift (sin mes): 0.208 (AUC del clasificador de dominio 0.604)

@@ -1,0 +1,10 @@
+$ pip-audit --skip-editable --ignore-vuln PYSEC-2026-2447
+No known vulnerabilities found, 2 ignored
+Name         Skip Reason
+------------ -------------------------------
+mibici-mlops distribution marked as editable
+codigo de salida: 0
+
+$ pip-audit --path .venv-deepchecks/lib/python3.12/site-packages --ignore-vuln PYSEC-2026-3447 --ignore-vuln GHSA-xmj3-9gf7-h52w
+No known vulnerabilities found, 3 ignored
+codigo de salida: 0

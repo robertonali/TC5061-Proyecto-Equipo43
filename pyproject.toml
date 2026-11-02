@@ -32,3 +32,11 @@ extend-select = ["I"]  # Add import sorting
 known-first-party = ["mibici_mlops"]
 force-sort-within-sections = true
 
+
+[tool.bandit]
+# Análisis estático de seguridad: `bandit -c pyproject.toml -r mibici_mlops scripts tests`
+exclude_dirs = [".venv", ".venv-deepchecks", "notebooks"]
+
+[tool.bandit.assert_used]
+# En las pruebas, `assert` es la forma de PyTest de comprobar resultados (B101 no aplica).
+skips = ["*/tests/*", "tests/*"]

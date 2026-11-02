@@ -1,7 +1,7 @@
 deepchecks==0.19.1
 numpy==1.26.4
 pandas==2.2.3
-pip==25.2
+pip==26.2
 # plotly 6+ pide anywidget para guardar los reportes HTML de DeepChecks.
 plotly==5.24.1
 pyarrow==25.0.1
