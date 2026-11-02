@@ -34,9 +34,9 @@
 </script>
 
 
-<h1 id="summary_T229NFDI4DFKSOU84WKSHBX8T">Data Integrity Suite</h1>
+<h1 id="summary_WOYGIWSE45OSQ80T3FBXQNGHH">Data Integrity Suite</h1>
 <p>
-    The suite is composed of various checks such as: String Length Out Of Bounds, String Mismatch, Conflicting Labels, etc...<br>
+    The suite is composed of various checks such as: Special Characters, String Length Out Of Bounds, Mixed Data Types, etc...<br>
     Each check may contain conditions (which will result in pass <span style="color: green;display:inline-block">✓</span> /
     fail <span style="color: red;display:inline-block">✖</span> / warning <span style="color: orange;font-weight:bold;display:inline-block">!</span> / error <span style="color: firebrick;font-weight:bold;display:inline-block">⁈</span>) as well as
     other outputs such as plots or tables.<br>
@@ -45,128 +45,128 @@
 </p>
 
 <hr style="background-color: black;border: 0 none;color: black;height: 1px;"><h2>Conditions Summary</h2><style type="text/css">
-#T_091ef table {
+#T_e1da3 table {
   text-align: left;
   white-space: pre-wrap;
 }
-#T_091ef thead {
+#T_e1da3 thead {
   text-align: left;
   white-space: pre-wrap;
 }
-#T_091ef tbody {
+#T_e1da3 tbody {
   text-align: left;
   white-space: pre-wrap;
 }
-#T_091ef th {
+#T_e1da3 th {
   text-align: left;
   white-space: pre-wrap;
 }
-#T_091ef td {
-  text-align: left;
-  white-space: pre-wrap;
-}
-</style>
-<table id="T_091ef">
-  <thead>
-    <tr>
-      <th id="T_091ef_level0_col0" class="col_heading level0 col0" >Status</th>
-      <th id="T_091ef_level0_col1" class="col_heading level0 col1" >Check</th>
-      <th id="T_091ef_level0_col2" class="col_heading level0 col2" >Condition</th>
-      <th id="T_091ef_level0_col3" class="col_heading level0 col3" >More Info</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td id="T_091ef_row0_col0" class="data row0 col0" ><div style="color: red;text-align: center">✖</div></td>
-      <td id="T_091ef_row0_col1" class="data row0 col1" ><a href="#Feature-FeatureCorrelation_T229NFDI4DFKSOU84WKSHBX8T">Feature-Feature Correlation</a></td>
-      <td id="T_091ef_row0_col2" class="data row0 col2" >Not more than 0 pairs are correlated above 0.9</td>
-      <td id="T_091ef_row0_col3" class="data row0 col3" >Correlation is greater than 0.9 for pairs [('sal_lun_manana', 'sal_mar_manana'), ('sal_lun_manana', 'sal_mie_manana'), ('sal_lun_manana', 'sal_vie_manana'), ('sal_lun_tarde', 'sal_mar_tarde'), ('sal_lun_tarde', 'sal_mie_tarde'), ('sal_lun_tarde', 'sal_vie_tarde'), ('sal_lun_noche', 'sal_mar_noche'),...</td>
-    </tr>
-    <tr>
-      <td id="T_091ef_row1_col0" class="data row1 col0" ><div style="color: green;text-align: center">✓</div></td>
-      <td id="T_091ef_row1_col1" class="data row1 col1" >Single Value in Column</td>
-      <td id="T_091ef_row1_col2" class="data row1 col2" >Does not contain only a single value</td>
-      <td id="T_091ef_row1_col3" class="data row1 col3" >Passed for 59 relevant columns</td>
-    </tr>
-    <tr>
-      <td id="T_091ef_row2_col0" class="data row2 col0" ><div style="color: green;text-align: center">✓</div></td>
-      <td id="T_091ef_row2_col1" class="data row2 col1" >Special Characters</td>
-      <td id="T_091ef_row2_col2" class="data row2 col2" >Ratio of samples containing solely special character is less or equal to 0.1%</td>
-      <td id="T_091ef_row2_col3" class="data row2 col3" >Passed for 59 relevant columns</td>
-    </tr>
-    <tr>
-      <td id="T_091ef_row3_col0" class="data row3 col0" ><div style="color: green;text-align: center">✓</div></td>
-      <td id="T_091ef_row3_col1" class="data row3 col1" >Mixed Nulls</td>
-      <td id="T_091ef_row3_col2" class="data row3 col2" >Number of different null types is less or equal to 1</td>
-      <td id="T_091ef_row3_col3" class="data row3 col3" >Passed for 59 relevant columns</td>
-    </tr>
-    <tr>
-      <td id="T_091ef_row4_col0" class="data row4 col0" ><div style="color: green;text-align: center">✓</div></td>
-      <td id="T_091ef_row4_col1" class="data row4 col1" >Mixed Data Types</td>
-      <td id="T_091ef_row4_col2" class="data row4 col2" >Rare data types in column are either more than 10% or less than 1% of the data</td>
-      <td id="T_091ef_row4_col3" class="data row4 col3" >59 columns passed: found 0 columns with negligible types mix, and 59 columns without any types mix</td>
-    </tr>
-    <tr>
-      <td id="T_091ef_row5_col0" class="data row5 col0" ><div style="color: green;text-align: center">✓</div></td>
-      <td id="T_091ef_row5_col1" class="data row5 col1" >String Mismatch</td>
-      <td id="T_091ef_row5_col2" class="data row5 col2" >No string variants</td>
-      <td id="T_091ef_row5_col3" class="data row5 col3" >Passed for 1 relevant column</td>
-    </tr>
-    <tr>
-      <td id="T_091ef_row6_col0" class="data row6 col0" ><div style="color: green;text-align: center">✓</div></td>
-      <td id="T_091ef_row6_col1" class="data row6 col1" >Data Duplicates</td>
-      <td id="T_091ef_row6_col2" class="data row6 col2" >Duplicate data ratio is less or equal to 5%</td>
-      <td id="T_091ef_row6_col3" class="data row6 col3" >Found 0% duplicate data</td>
-    </tr>
-    <tr>
-      <td id="T_091ef_row7_col0" class="data row7 col0" ><div style="color: green;text-align: center">✓</div></td>
-      <td id="T_091ef_row7_col1" class="data row7 col1" >String Length Out Of Bounds</td>
-      <td id="T_091ef_row7_col2" class="data row7 col2" >Ratio of string length outliers is less or equal to 0%</td>
-      <td id="T_091ef_row7_col3" class="data row7 col3" >No relevant columns to check were found</td>
-    </tr>
-  </tbody>
-</table>
-<hr style="background-color: black;border: 0 none;color: black;height: 1px;"><h2>Check With Conditions Output</h2><h4 id="Feature-FeatureCorrelation_T229NFDI4DFKSOU84WKSHBX8T"><b>Feature-Feature Correlation</b></h4><p>    Checks for pairwise correlation between the features. <a href="https://docs.deepchecks.com/0.19/tabular/auto_checks/data_integrity/plot_feature_feature_correlation.html?utm_source=display_output&utm_medium=referral&utm_campaign=check_link" target="_blank">Read More...</a></p><h5><b>Conditions Summary</b></h5><style type="text/css">
-#T_726c6 table {
-  text-align: left;
-  white-space: pre-wrap;
-}
-#T_726c6 thead {
-  text-align: left;
-  white-space: pre-wrap;
-}
-#T_726c6 tbody {
-  text-align: left;
-  white-space: pre-wrap;
-}
-#T_726c6 th {
-  text-align: left;
-  white-space: pre-wrap;
-}
-#T_726c6 td {
+#T_e1da3 td {
   text-align: left;
   white-space: pre-wrap;
 }
 </style>
-<table id="T_726c6">
+<table id="T_e1da3">
   <thead>
     <tr>
-      <th id="T_726c6_level0_col0" class="col_heading level0 col0" >Status</th>
-      <th id="T_726c6_level0_col1" class="col_heading level0 col1" >Condition</th>
-      <th id="T_726c6_level0_col2" class="col_heading level0 col2" >More Info</th>
+      <th id="T_e1da3_level0_col0" class="col_heading level0 col0" >Status</th>
+      <th id="T_e1da3_level0_col1" class="col_heading level0 col1" >Check</th>
+      <th id="T_e1da3_level0_col2" class="col_heading level0 col2" >Condition</th>
+      <th id="T_e1da3_level0_col3" class="col_heading level0 col3" >More Info</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_726c6_row0_col0" class="data row0 col0" ><div style="color: red;text-align: center">✖</div></td>
-      <td id="T_726c6_row0_col1" class="data row0 col1" >Not more than 0 pairs are correlated above 0.9</td>
-      <td id="T_726c6_row0_col2" class="data row0 col2" >Correlation is greater than 0.9 for pairs [('sal_lun_manana', 'sal_mar_manana'), ('sal_lun_manana', 'sal_mie_manana'), ('sal_lun_manana', 'sal_vie_manana'), ('sal_lun_tarde', 'sal_mar_tarde'), ('sal_lun_tarde', 'sal_mie_tarde'), ('sal_lun_tarde', 'sal_vie_tarde'), ('sal_lun_noche', 'sal_mar_noche'), ('sal_lun_noche', 'sal_mie_noche'), ('sal_mar_manana', 'sal_mie_manana'), ('sal_mar_manana', 'sal_vie_manana'), ('sal_mar_tarde', 'sal_mie_tarde'), ('sal_mar_tarde', 'sal_vie_tarde'), ('sal_mar_noche', 'sal_mie_noche'), ('sal_mie_manana', 'sal_vie_manana'), ('sal_mie_tarde', 'sal_vie_tarde'), ('sal_mie_noche', 'sal_vie_noche'), ('sal_jue_manana', 'sal_lun_manana'), ('sal_jue_manana', 'sal_mar_manana'), ('sal_jue_manana', 'sal_mie_manana'), ('sal_jue_manana', 'sal_vie_manana'), ('sal_jue_tarde', 'sal_lun_tarde'), ('sal_jue_tarde', 'sal_mar_tarde'), ('sal_jue_tarde', 'sal_mie_tarde'), ('sal_jue_tarde', 'sal_vie_tarde'), ('sal_jue_noche', 'sal_lun_noche'), ('sal_jue_noche', 'sal_mar_noche'), ('sal_jue_noche', 'sal_mie_noche'), ('sal_jue_noche', 'sal_vie_noche'), ('lle_lun_manana', 'lle_mar_manana'), ('lle_lun_manana', 'lle_mie_manana'), ('lle_lun_manana', 'lle_vie_manana'), ('lle_lun_noche', 'lle_mar_noche'), ('lle_lun_noche', 'lle_mie_noche'), ('lle_mar_manana', 'lle_mie_manana'), ('lle_mar_manana', 'lle_vie_manana'), ('lle_mar_noche', 'lle_mie_noche'), ('lle_mie_manana', 'lle_vie_manana'), ('lle_mie_noche', 'lle_vie_noche'), ('lle_jue_manana', 'lle_lun_manana'), ('lle_jue_manana', 'lle_mar_manana'), ('lle_jue_manana', 'lle_mie_manana'), ('lle_jue_manana', 'lle_vie_manana'), ('lle_jue_tarde', 'lle_mie_tarde'), ('lle_jue_noche', 'lle_lun_noche'), ('lle_jue_noche', 'lle_mar_noche'), ('lle_jue_noche', 'lle_mie_noche'), ('lle_jue_noche', 'lle_vie_noche'), ('llegadas_dia', 'salidas_dia')]</td>
+      <td id="T_e1da3_row0_col0" class="data row0 col0" ><div style="color: green;text-align: center">✓</div></td>
+      <td id="T_e1da3_row0_col1" class="data row0 col1" ><a href="#Feature-FeatureCorrelation_WOYGIWSE45OSQ80T3FBXQNGHH">Feature-Feature Correlation</a></td>
+      <td id="T_e1da3_row0_col2" class="data row0 col2" >Sin pares inesperados con correlación > 0.9</td>
+      <td id="T_e1da3_row0_col3" class="data row0 col3" >48 pares > 0.9, todos esperados</td>
+    </tr>
+    <tr>
+      <td id="T_e1da3_row1_col0" class="data row1 col0" ><div style="color: green;text-align: center">✓</div></td>
+      <td id="T_e1da3_row1_col1" class="data row1 col1" >Single Value in Column</td>
+      <td id="T_e1da3_row1_col2" class="data row1 col2" >Does not contain only a single value</td>
+      <td id="T_e1da3_row1_col3" class="data row1 col3" >Passed for 59 relevant columns</td>
+    </tr>
+    <tr>
+      <td id="T_e1da3_row2_col0" class="data row2 col0" ><div style="color: green;text-align: center">✓</div></td>
+      <td id="T_e1da3_row2_col1" class="data row2 col1" >Special Characters</td>
+      <td id="T_e1da3_row2_col2" class="data row2 col2" >Ratio of samples containing solely special character is less or equal to 0.1%</td>
+      <td id="T_e1da3_row2_col3" class="data row2 col3" >Passed for 59 relevant columns</td>
+    </tr>
+    <tr>
+      <td id="T_e1da3_row3_col0" class="data row3 col0" ><div style="color: green;text-align: center">✓</div></td>
+      <td id="T_e1da3_row3_col1" class="data row3 col1" >Mixed Nulls</td>
+      <td id="T_e1da3_row3_col2" class="data row3 col2" >Number of different null types is less or equal to 1</td>
+      <td id="T_e1da3_row3_col3" class="data row3 col3" >Passed for 59 relevant columns</td>
+    </tr>
+    <tr>
+      <td id="T_e1da3_row4_col0" class="data row4 col0" ><div style="color: green;text-align: center">✓</div></td>
+      <td id="T_e1da3_row4_col1" class="data row4 col1" >Mixed Data Types</td>
+      <td id="T_e1da3_row4_col2" class="data row4 col2" >Rare data types in column are either more than 10% or less than 1% of the data</td>
+      <td id="T_e1da3_row4_col3" class="data row4 col3" >59 columns passed: found 0 columns with negligible types mix, and 59 columns without any types mix</td>
+    </tr>
+    <tr>
+      <td id="T_e1da3_row5_col0" class="data row5 col0" ><div style="color: green;text-align: center">✓</div></td>
+      <td id="T_e1da3_row5_col1" class="data row5 col1" >String Mismatch</td>
+      <td id="T_e1da3_row5_col2" class="data row5 col2" >No string variants</td>
+      <td id="T_e1da3_row5_col3" class="data row5 col3" >Passed for 1 relevant column</td>
+    </tr>
+    <tr>
+      <td id="T_e1da3_row6_col0" class="data row6 col0" ><div style="color: green;text-align: center">✓</div></td>
+      <td id="T_e1da3_row6_col1" class="data row6 col1" >Data Duplicates</td>
+      <td id="T_e1da3_row6_col2" class="data row6 col2" >Duplicate data ratio is less or equal to 5%</td>
+      <td id="T_e1da3_row6_col3" class="data row6 col3" >Found 0% duplicate data</td>
+    </tr>
+    <tr>
+      <td id="T_e1da3_row7_col0" class="data row7 col0" ><div style="color: green;text-align: center">✓</div></td>
+      <td id="T_e1da3_row7_col1" class="data row7 col1" >String Length Out Of Bounds</td>
+      <td id="T_e1da3_row7_col2" class="data row7 col2" >Ratio of string length outliers is less or equal to 0%</td>
+      <td id="T_e1da3_row7_col3" class="data row7 col3" >No relevant columns to check were found</td>
     </tr>
   </tbody>
 </table>
-<h5><b>Additional Outputs</b></h5><div>                            <div id="f836a26e-00dd-491b-a1a3-1cbf47c30663" class="plotly-graph-div" style="height:525px; width:100%;"></div>            <script type="text/javascript">                require(["plotly"], function(Plotly) {                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("f836a26e-00dd-491b-a1a3-1cbf47c30663")) {                    Plotly.newPlot(                        "f836a26e-00dd-491b-a1a3-1cbf47c30663",                        [{"coloraxis":"coloraxis","name":"0","x":["sal_lun_madrugada","lle_vie_madrugada","lle_mar_madrugada","lle_mar_manana","lle_mar_tarde","lle_mar_noche","lle_mie_madrugada","lle_mie_manana","lle_mie_tarde","lle_mie_noche"],"y":["sal_lun_madrugada","lle_vie_madrugada","lle_mar_madrugada","lle_mar_manana","lle_mar_tarde","lle_mar_noche","lle_mie_madrugada","lle_mie_manana","lle_mie_tarde","lle_mie_noche"],"z":[[1.0,0.1996725431438717,0.15025125613379803,0.3239487003450176,0.12503190821432167,0.3231779095106841,0.18672467808024662,0.32922532759932377,0.13399211666624292,0.3276312240552075],[0.1996725431438717,1.0,0.7534813079664979,0.20848880355879748,0.0003130162594556995,0.3403649976382782,0.8007910475934568,0.22138591943826272,0.01980579832071007,0.3298620331487039],[0.15025125613379803,0.7534813079664979,1.0,0.05486198729182039,0.03415214990756477,0.2036420343335734,0.8431540744853324,0.060442936910995754,0.02493344290471706,0.1813950799566433],[0.3239487003450176,0.20848880355879748,0.05486198729182039,1.0,0.2127960670869983,0.7030220638863366,0.05234163259256153,0.9705922164230137,0.24801133626453165,0.724164056239528],[0.12503190821432167,0.0003130162594556995,0.03415214990756477,0.2127960670869983,1.0,0.07110709527021151,0.07122706552115725,0.20802562409379208,0.8800539083557951,0.036268996585490806],[0.3231779095106841,0.3403649976382782,0.2036420343335734,0.7030220638863366,0.07110709527021151,1.0,0.25180608571088375,0.7045822102425876,0.06815177058634149,0.9629235530635409],[0.18672467808024662,0.8007910475934568,0.8431540744853324,0.05234163259256153,0.07122706552115725,0.25180608571088375,1.0,0.06592458857423623,0.07024125224370938,0.2230501826545159],[0.32922532759932377,0.22138591943826272,0.060442936910995754,0.9705922164230137,0.20802562409379208,0.7045822102425876,0.06592458857423623,1.0,0.22857448353492177,0.7364755591170685],[0.13399211666624292,0.01980579832071007,0.02493344290471706,0.24801133626453165,0.8800539083557951,0.06815177058634149,0.07024125224370938,0.22857448353492177,1.0,0.03467031068978726],[0.3276312240552075,0.3298620331487039,0.1813950799566433,0.724164056239528,0.036268996585490806,0.9629235530635409,0.2230501826545159,0.7364755591170685,0.03467031068978726,1.0]],"type":"heatmap","xaxis":"x","yaxis":"y","hovertemplate":"x: %{x}\u003cbr\u003ey: %{y}\u003cbr\u003ecolor: %{z}\u003cextra\u003e\u003c\u002fextra\u003e"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"scaleanchor":"y","constrain":"domain"},"yaxis":{"anchor":"x","domain":[0.0,1.0],"autorange":"reversed","constrain":"domain"},"coloraxis":{"colorscale":[[0.0,"rgb(3, 35, 51)"],[0.09090909090909091,"rgb(13, 48, 100)"],[0.18181818181818182,"rgb(53, 50, 155)"],[0.2727272727272727,"rgb(93, 62, 153)"],[0.36363636363636365,"rgb(126, 77, 143)"],[0.45454545454545453,"rgb(158, 89, 135)"],[0.5454545454545454,"rgb(193, 100, 121)"],[0.6363636363636364,"rgb(225, 113, 97)"],[0.7272727272727273,"rgb(246, 139, 69)"],[0.8181818181818182,"rgb(251, 173, 60)"],[0.9090909090909091,"rgb(246, 211, 70)"],[1.0,"rgb(231, 250, 90)"]]},"margin":{"t":60}},                        {"responsive": true}                    ).then(function(){
+<hr style="background-color: black;border: 0 none;color: black;height: 1px;"><h2>Check With Conditions Output</h2><h4 id="Feature-FeatureCorrelation_WOYGIWSE45OSQ80T3FBXQNGHH"><b>Feature-Feature Correlation</b></h4><p>    Checks for pairwise correlation between the features. <a href="https://docs.deepchecks.com/0.19/tabular/auto_checks/data_integrity/plot_feature_feature_correlation.html?utm_source=display_output&utm_medium=referral&utm_campaign=check_link" target="_blank">Read More...</a></p><h5><b>Conditions Summary</b></h5><style type="text/css">
+#T_773c5 table {
+  text-align: left;
+  white-space: pre-wrap;
+}
+#T_773c5 thead {
+  text-align: left;
+  white-space: pre-wrap;
+}
+#T_773c5 tbody {
+  text-align: left;
+  white-space: pre-wrap;
+}
+#T_773c5 th {
+  text-align: left;
+  white-space: pre-wrap;
+}
+#T_773c5 td {
+  text-align: left;
+  white-space: pre-wrap;
+}
+</style>
+<table id="T_773c5">
+  <thead>
+    <tr>
+      <th id="T_773c5_level0_col0" class="col_heading level0 col0" >Status</th>
+      <th id="T_773c5_level0_col1" class="col_heading level0 col1" >Condition</th>
+      <th id="T_773c5_level0_col2" class="col_heading level0 col2" >More Info</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_773c5_row0_col0" class="data row0 col0" ><div style="color: green;text-align: center">✓</div></td>
+      <td id="T_773c5_row0_col1" class="data row0 col1" >Sin pares inesperados con correlación > 0.9</td>
+      <td id="T_773c5_row0_col2" class="data row0 col2" >48 pares > 0.9, todos esperados</td>
+    </tr>
+  </tbody>
+</table>
+<h5><b>Additional Outputs</b></h5><div>                            <div id="2093ed4e-b3a8-4ba3-91a4-bb3d98be8782" class="plotly-graph-div" style="height:525px; width:100%;"></div>            <script type="text/javascript">                require(["plotly"], function(Plotly) {                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("2093ed4e-b3a8-4ba3-91a4-bb3d98be8782")) {                    Plotly.newPlot(                        "2093ed4e-b3a8-4ba3-91a4-bb3d98be8782",                        [{"coloraxis":"coloraxis","name":"0","x":["sal_lun_madrugada","lle_vie_madrugada","lle_mar_madrugada","lle_mar_manana","lle_mar_tarde","lle_mar_noche","lle_mie_madrugada","lle_mie_manana","lle_mie_tarde","lle_mie_noche"],"y":["sal_lun_madrugada","lle_vie_madrugada","lle_mar_madrugada","lle_mar_manana","lle_mar_tarde","lle_mar_noche","lle_mie_madrugada","lle_mie_manana","lle_mie_tarde","lle_mie_noche"],"z":[[1.0,0.1996725431438717,0.15025125613379803,0.3239487003450176,0.12503190821432167,0.3231779095106841,0.18672467808024662,0.32922532759932377,0.13399211666624292,0.3276312240552075],[0.1996725431438717,1.0,0.7534813079664979,0.20848880355879748,0.0003130162594556995,0.3403649976382782,0.8007910475934568,0.22138591943826272,0.01980579832071007,0.3298620331487039],[0.15025125613379803,0.7534813079664979,1.0,0.05486198729182039,0.03415214990756477,0.2036420343335734,0.8431540744853324,0.060442936910995754,0.02493344290471706,0.1813950799566433],[0.3239487003450176,0.20848880355879748,0.05486198729182039,1.0,0.2127960670869983,0.7030220638863366,0.05234163259256153,0.9705922164230137,0.24801133626453165,0.724164056239528],[0.12503190821432167,0.0003130162594556995,0.03415214990756477,0.2127960670869983,1.0,0.07110709527021151,0.07122706552115725,0.20802562409379208,0.8800539083557951,0.036268996585490806],[0.3231779095106841,0.3403649976382782,0.2036420343335734,0.7030220638863366,0.07110709527021151,1.0,0.25180608571088375,0.7045822102425876,0.06815177058634149,0.9629235530635409],[0.18672467808024662,0.8007910475934568,0.8431540744853324,0.05234163259256153,0.07122706552115725,0.25180608571088375,1.0,0.06592458857423623,0.07024125224370938,0.2230501826545159],[0.32922532759932377,0.22138591943826272,0.060442936910995754,0.9705922164230137,0.20802562409379208,0.7045822102425876,0.06592458857423623,1.0,0.22857448353492177,0.7364755591170685],[0.13399211666624292,0.01980579832071007,0.02493344290471706,0.24801133626453165,0.8800539083557951,0.06815177058634149,0.07024125224370938,0.22857448353492177,1.0,0.03467031068978726],[0.3276312240552075,0.3298620331487039,0.1813950799566433,0.724164056239528,0.036268996585490806,0.9629235530635409,0.2230501826545159,0.7364755591170685,0.03467031068978726,1.0]],"type":"heatmap","xaxis":"x","yaxis":"y","hovertemplate":"x: %{x}\u003cbr\u003ey: %{y}\u003cbr\u003ecolor: %{z}\u003cextra\u003e\u003c\u002fextra\u003e"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"scaleanchor":"y","constrain":"domain"},"yaxis":{"anchor":"x","domain":[0.0,1.0],"autorange":"reversed","constrain":"domain"},"coloraxis":{"colorscale":[[0.0,"rgb(3, 35, 51)"],[0.09090909090909091,"rgb(13, 48, 100)"],[0.18181818181818182,"rgb(53, 50, 155)"],[0.2727272727272727,"rgb(93, 62, 153)"],[0.36363636363636365,"rgb(126, 77, 143)"],[0.45454545454545453,"rgb(158, 89, 135)"],[0.5454545454545454,"rgb(193, 100, 121)"],[0.6363636363636364,"rgb(225, 113, 97)"],[0.7272727272727273,"rgb(246, 139, 69)"],[0.8181818181818182,"rgb(251, 173, 60)"],[0.9090909090909091,"rgb(246, 211, 70)"],[1.0,"rgb(231, 250, 90)"]]},"margin":{"t":60}},                        {"responsive": true}                    ).then(function(){
 
-var gd = document.getElementById('f836a26e-00dd-491b-a1a3-1cbf47c30663');
+var gd = document.getElementById('2093ed4e-b3a8-4ba3-91a4-bb3d98be8782');
 var x = new MutationObserver(function (mutations, observer) {{
         var display = window.getComputedStyle(gd).display;
         if (!display || display === 'none') {{
@@ -188,491 +188,491 @@ if (outputEl) {{
     x.observe(outputEl, {childList: true});
 }}
 
-                        })                };                });            </script>        </div><div>* Displayed as absolute values.</div><br><a href="#summary_T229NFDI4DFKSOU84WKSHBX8T" style="font-size: 14px;">Go to top</a><hr style="background-color: black;border: 0 none;color: black;height: 1px;"><h2>Check Without Conditions Output</h2><h4 id="OutlierSampleDetection_T229NFDI4DFKSOU84WKSHBX8T"><b>Outlier Sample Detection</b></h4><p>Detects outliers in a dataset using the LoOP algorithm. <a href="https://docs.deepchecks.com/0.19/tabular/auto_checks/data_integrity/plot_outlier_sample_detection.html?utm_source=display_output&utm_medium=referral&utm_campaign=check_link" target="_blank">Read More...</a></p><h5><b>Additional Outputs</b></h5><div><span>
+                        })                };                });            </script>        </div><div>* Displayed as absolute values.</div><br><a href="#summary_WOYGIWSE45OSQ80T3FBXQNGHH" style="font-size: 14px;">Go to top</a><hr style="background-color: black;border: 0 none;color: black;height: 1px;"><h2>Check Without Conditions Output</h2><h4 id="OutlierSampleDetection_WOYGIWSE45OSQ80T3FBXQNGHH"><b>Outlier Sample Detection</b></h4><p>Detects outliers in a dataset using the LoOP algorithm. <a href="https://docs.deepchecks.com/0.19/tabular/auto_checks/data_integrity/plot_outlier_sample_detection.html?utm_source=display_output&utm_medium=referral&utm_campaign=check_link" target="_blank">Read More...</a></p><h5><b>Additional Outputs</b></h5><div><span>
                     The Outlier Probability Score is calculated by the LoOP algorithm which measures the local deviation
                     of density of a given sample with respect to its neighbors. These outlier scores are directly
                     interpretable as a probability of an object being an outlier (see
                     <a href="https://www.dbs.ifi.lmu.de/Publikationen/Papers/LoOP1649.pdf"
                     target="_blank" rel="noopener noreferrer">link</a> for more information).<br><br>
                     </span></div><style type="text/css">
-#T_938da table {
+#T_8d095 table {
   text-align: left;
   white-space: pre-wrap;
 }
-#T_938da thead {
+#T_8d095 thead {
   text-align: left;
   white-space: pre-wrap;
 }
-#T_938da tbody {
+#T_8d095 tbody {
   text-align: left;
   white-space: pre-wrap;
 }
-#T_938da th {
+#T_8d095 th {
   text-align: left;
   white-space: pre-wrap;
 }
-#T_938da td {
+#T_8d095 td {
   text-align: left;
   white-space: pre-wrap;
 }
 </style>
-<table id="T_938da">
+<table id="T_8d095">
   <thead>
     <tr>
       <th class="blank level0" >&nbsp;</th>
-      <th id="T_938da_level0_col0" class="col_heading level0 col0" >Outlier Probability Score</th>
-      <th id="T_938da_level0_col1" class="col_heading level0 col1" >sal_lun_madrugada</th>
-      <th id="T_938da_level0_col2" class="col_heading level0 col2" >sal_lun_manana</th>
-      <th id="T_938da_level0_col3" class="col_heading level0 col3" >sal_lun_tarde</th>
-      <th id="T_938da_level0_col4" class="col_heading level0 col4" >sal_lun_noche</th>
-      <th id="T_938da_level0_col5" class="col_heading level0 col5" >sal_mar_madrugada</th>
-      <th id="T_938da_level0_col6" class="col_heading level0 col6" >sal_mar_manana</th>
-      <th id="T_938da_level0_col7" class="col_heading level0 col7" >sal_mar_tarde</th>
-      <th id="T_938da_level0_col8" class="col_heading level0 col8" >sal_mar_noche</th>
-      <th id="T_938da_level0_col9" class="col_heading level0 col9" >sal_mie_madrugada</th>
-      <th id="T_938da_level0_col10" class="col_heading level0 col10" >sal_mie_manana</th>
-      <th id="T_938da_level0_col11" class="col_heading level0 col11" >sal_mie_tarde</th>
-      <th id="T_938da_level0_col12" class="col_heading level0 col12" >sal_mie_noche</th>
-      <th id="T_938da_level0_col13" class="col_heading level0 col13" >sal_jue_madrugada</th>
-      <th id="T_938da_level0_col14" class="col_heading level0 col14" >sal_jue_manana</th>
-      <th id="T_938da_level0_col15" class="col_heading level0 col15" >sal_jue_tarde</th>
-      <th id="T_938da_level0_col16" class="col_heading level0 col16" >sal_jue_noche</th>
-      <th id="T_938da_level0_col17" class="col_heading level0 col17" >sal_vie_madrugada</th>
-      <th id="T_938da_level0_col18" class="col_heading level0 col18" >sal_vie_manana</th>
-      <th id="T_938da_level0_col19" class="col_heading level0 col19" >sal_vie_tarde</th>
-      <th id="T_938da_level0_col20" class="col_heading level0 col20" >sal_vie_noche</th>
-      <th id="T_938da_level0_col21" class="col_heading level0 col21" >sal_sab_madrugada</th>
-      <th id="T_938da_level0_col22" class="col_heading level0 col22" >sal_sab_manana</th>
-      <th id="T_938da_level0_col23" class="col_heading level0 col23" >sal_sab_tarde</th>
-      <th id="T_938da_level0_col24" class="col_heading level0 col24" >sal_sab_noche</th>
-      <th id="T_938da_level0_col25" class="col_heading level0 col25" >sal_dom_madrugada</th>
-      <th id="T_938da_level0_col26" class="col_heading level0 col26" >sal_dom_manana</th>
-      <th id="T_938da_level0_col27" class="col_heading level0 col27" >sal_dom_tarde</th>
-      <th id="T_938da_level0_col28" class="col_heading level0 col28" >sal_dom_noche</th>
-      <th id="T_938da_level0_col29" class="col_heading level0 col29" >lle_lun_madrugada</th>
-      <th id="T_938da_level0_col30" class="col_heading level0 col30" >lle_lun_manana</th>
-      <th id="T_938da_level0_col31" class="col_heading level0 col31" >lle_lun_tarde</th>
-      <th id="T_938da_level0_col32" class="col_heading level0 col32" >lle_lun_noche</th>
-      <th id="T_938da_level0_col33" class="col_heading level0 col33" >lle_mar_madrugada</th>
-      <th id="T_938da_level0_col34" class="col_heading level0 col34" >lle_mar_manana</th>
-      <th id="T_938da_level0_col35" class="col_heading level0 col35" >lle_mar_tarde</th>
-      <th id="T_938da_level0_col36" class="col_heading level0 col36" >lle_mar_noche</th>
-      <th id="T_938da_level0_col37" class="col_heading level0 col37" >lle_mie_madrugada</th>
-      <th id="T_938da_level0_col38" class="col_heading level0 col38" >lle_mie_manana</th>
-      <th id="T_938da_level0_col39" class="col_heading level0 col39" >lle_mie_tarde</th>
-      <th id="T_938da_level0_col40" class="col_heading level0 col40" >lle_mie_noche</th>
-      <th id="T_938da_level0_col41" class="col_heading level0 col41" >lle_jue_madrugada</th>
-      <th id="T_938da_level0_col42" class="col_heading level0 col42" >lle_jue_manana</th>
-      <th id="T_938da_level0_col43" class="col_heading level0 col43" >lle_jue_tarde</th>
-      <th id="T_938da_level0_col44" class="col_heading level0 col44" >lle_jue_noche</th>
-      <th id="T_938da_level0_col45" class="col_heading level0 col45" >lle_vie_madrugada</th>
-      <th id="T_938da_level0_col46" class="col_heading level0 col46" >lle_vie_manana</th>
-      <th id="T_938da_level0_col47" class="col_heading level0 col47" >lle_vie_tarde</th>
-      <th id="T_938da_level0_col48" class="col_heading level0 col48" >lle_vie_noche</th>
-      <th id="T_938da_level0_col49" class="col_heading level0 col49" >lle_sab_madrugada</th>
-      <th id="T_938da_level0_col50" class="col_heading level0 col50" >lle_sab_manana</th>
-      <th id="T_938da_level0_col51" class="col_heading level0 col51" >lle_sab_tarde</th>
-      <th id="T_938da_level0_col52" class="col_heading level0 col52" >lle_sab_noche</th>
-      <th id="T_938da_level0_col53" class="col_heading level0 col53" >lle_dom_madrugada</th>
-      <th id="T_938da_level0_col54" class="col_heading level0 col54" >lle_dom_manana</th>
-      <th id="T_938da_level0_col55" class="col_heading level0 col55" >lle_dom_tarde</th>
-      <th id="T_938da_level0_col56" class="col_heading level0 col56" >lle_dom_noche</th>
-      <th id="T_938da_level0_col57" class="col_heading level0 col57" >salidas_dia</th>
-      <th id="T_938da_level0_col58" class="col_heading level0 col58" >llegadas_dia</th>
-      <th id="T_938da_level0_col59" class="col_heading level0 col59" >balance</th>
+      <th id="T_8d095_level0_col0" class="col_heading level0 col0" >Outlier Probability Score</th>
+      <th id="T_8d095_level0_col1" class="col_heading level0 col1" >sal_lun_madrugada</th>
+      <th id="T_8d095_level0_col2" class="col_heading level0 col2" >sal_lun_manana</th>
+      <th id="T_8d095_level0_col3" class="col_heading level0 col3" >sal_lun_tarde</th>
+      <th id="T_8d095_level0_col4" class="col_heading level0 col4" >sal_lun_noche</th>
+      <th id="T_8d095_level0_col5" class="col_heading level0 col5" >sal_mar_madrugada</th>
+      <th id="T_8d095_level0_col6" class="col_heading level0 col6" >sal_mar_manana</th>
+      <th id="T_8d095_level0_col7" class="col_heading level0 col7" >sal_mar_tarde</th>
+      <th id="T_8d095_level0_col8" class="col_heading level0 col8" >sal_mar_noche</th>
+      <th id="T_8d095_level0_col9" class="col_heading level0 col9" >sal_mie_madrugada</th>
+      <th id="T_8d095_level0_col10" class="col_heading level0 col10" >sal_mie_manana</th>
+      <th id="T_8d095_level0_col11" class="col_heading level0 col11" >sal_mie_tarde</th>
+      <th id="T_8d095_level0_col12" class="col_heading level0 col12" >sal_mie_noche</th>
+      <th id="T_8d095_level0_col13" class="col_heading level0 col13" >sal_jue_madrugada</th>
+      <th id="T_8d095_level0_col14" class="col_heading level0 col14" >sal_jue_manana</th>
+      <th id="T_8d095_level0_col15" class="col_heading level0 col15" >sal_jue_tarde</th>
+      <th id="T_8d095_level0_col16" class="col_heading level0 col16" >sal_jue_noche</th>
+      <th id="T_8d095_level0_col17" class="col_heading level0 col17" >sal_vie_madrugada</th>
+      <th id="T_8d095_level0_col18" class="col_heading level0 col18" >sal_vie_manana</th>
+      <th id="T_8d095_level0_col19" class="col_heading level0 col19" >sal_vie_tarde</th>
+      <th id="T_8d095_level0_col20" class="col_heading level0 col20" >sal_vie_noche</th>
+      <th id="T_8d095_level0_col21" class="col_heading level0 col21" >sal_sab_madrugada</th>
+      <th id="T_8d095_level0_col22" class="col_heading level0 col22" >sal_sab_manana</th>
+      <th id="T_8d095_level0_col23" class="col_heading level0 col23" >sal_sab_tarde</th>
+      <th id="T_8d095_level0_col24" class="col_heading level0 col24" >sal_sab_noche</th>
+      <th id="T_8d095_level0_col25" class="col_heading level0 col25" >sal_dom_madrugada</th>
+      <th id="T_8d095_level0_col26" class="col_heading level0 col26" >sal_dom_manana</th>
+      <th id="T_8d095_level0_col27" class="col_heading level0 col27" >sal_dom_tarde</th>
+      <th id="T_8d095_level0_col28" class="col_heading level0 col28" >sal_dom_noche</th>
+      <th id="T_8d095_level0_col29" class="col_heading level0 col29" >lle_lun_madrugada</th>
+      <th id="T_8d095_level0_col30" class="col_heading level0 col30" >lle_lun_manana</th>
+      <th id="T_8d095_level0_col31" class="col_heading level0 col31" >lle_lun_tarde</th>
+      <th id="T_8d095_level0_col32" class="col_heading level0 col32" >lle_lun_noche</th>
+      <th id="T_8d095_level0_col33" class="col_heading level0 col33" >lle_mar_madrugada</th>
+      <th id="T_8d095_level0_col34" class="col_heading level0 col34" >lle_mar_manana</th>
+      <th id="T_8d095_level0_col35" class="col_heading level0 col35" >lle_mar_tarde</th>
+      <th id="T_8d095_level0_col36" class="col_heading level0 col36" >lle_mar_noche</th>
+      <th id="T_8d095_level0_col37" class="col_heading level0 col37" >lle_mie_madrugada</th>
+      <th id="T_8d095_level0_col38" class="col_heading level0 col38" >lle_mie_manana</th>
+      <th id="T_8d095_level0_col39" class="col_heading level0 col39" >lle_mie_tarde</th>
+      <th id="T_8d095_level0_col40" class="col_heading level0 col40" >lle_mie_noche</th>
+      <th id="T_8d095_level0_col41" class="col_heading level0 col41" >lle_jue_madrugada</th>
+      <th id="T_8d095_level0_col42" class="col_heading level0 col42" >lle_jue_manana</th>
+      <th id="T_8d095_level0_col43" class="col_heading level0 col43" >lle_jue_tarde</th>
+      <th id="T_8d095_level0_col44" class="col_heading level0 col44" >lle_jue_noche</th>
+      <th id="T_8d095_level0_col45" class="col_heading level0 col45" >lle_vie_madrugada</th>
+      <th id="T_8d095_level0_col46" class="col_heading level0 col46" >lle_vie_manana</th>
+      <th id="T_8d095_level0_col47" class="col_heading level0 col47" >lle_vie_tarde</th>
+      <th id="T_8d095_level0_col48" class="col_heading level0 col48" >lle_vie_noche</th>
+      <th id="T_8d095_level0_col49" class="col_heading level0 col49" >lle_sab_madrugada</th>
+      <th id="T_8d095_level0_col50" class="col_heading level0 col50" >lle_sab_manana</th>
+      <th id="T_8d095_level0_col51" class="col_heading level0 col51" >lle_sab_tarde</th>
+      <th id="T_8d095_level0_col52" class="col_heading level0 col52" >lle_sab_noche</th>
+      <th id="T_8d095_level0_col53" class="col_heading level0 col53" >lle_dom_madrugada</th>
+      <th id="T_8d095_level0_col54" class="col_heading level0 col54" >lle_dom_manana</th>
+      <th id="T_8d095_level0_col55" class="col_heading level0 col55" >lle_dom_tarde</th>
+      <th id="T_8d095_level0_col56" class="col_heading level0 col56" >lle_dom_noche</th>
+      <th id="T_8d095_level0_col57" class="col_heading level0 col57" >salidas_dia</th>
+      <th id="T_8d095_level0_col58" class="col_heading level0 col58" >llegadas_dia</th>
+      <th id="T_8d095_level0_col59" class="col_heading level0 col59" >balance</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th id="T_938da_level0_row0" class="row_heading level0 row0" >58</th>
-      <td id="T_938da_row0_col0" class="data row0 col0" >0.73</td>
-      <td id="T_938da_row0_col1" class="data row0 col1" >0.01</td>
-      <td id="T_938da_row0_col2" class="data row0 col2" >0.05</td>
-      <td id="T_938da_row0_col3" class="data row0 col3" >0.04</td>
-      <td id="T_938da_row0_col4" class="data row0 col4" >0.04</td>
-      <td id="T_938da_row0_col5" class="data row0 col5" >0.01</td>
-      <td id="T_938da_row0_col6" class="data row0 col6" >0.05</td>
-      <td id="T_938da_row0_col7" class="data row0 col7" >0.04</td>
-      <td id="T_938da_row0_col8" class="data row0 col8" >0.04</td>
-      <td id="T_938da_row0_col9" class="data row0 col9" >0.01</td>
-      <td id="T_938da_row0_col10" class="data row0 col10" >0.06</td>
-      <td id="T_938da_row0_col11" class="data row0 col11" >0.04</td>
-      <td id="T_938da_row0_col12" class="data row0 col12" >0.05</td>
-      <td id="T_938da_row0_col13" class="data row0 col13" >0.01</td>
-      <td id="T_938da_row0_col14" class="data row0 col14" >0.06</td>
-      <td id="T_938da_row0_col15" class="data row0 col15" >0.05</td>
-      <td id="T_938da_row0_col16" class="data row0 col16" >0.04</td>
-      <td id="T_938da_row0_col17" class="data row0 col17" >0.01</td>
-      <td id="T_938da_row0_col18" class="data row0 col18" >0.06</td>
-      <td id="T_938da_row0_col19" class="data row0 col19" >0.04</td>
-      <td id="T_938da_row0_col20" class="data row0 col20" >0.05</td>
-      <td id="T_938da_row0_col21" class="data row0 col21" >0.01</td>
-      <td id="T_938da_row0_col22" class="data row0 col22" >0.04</td>
-      <td id="T_938da_row0_col23" class="data row0 col23" >0.04</td>
-      <td id="T_938da_row0_col24" class="data row0 col24" >0.03</td>
-      <td id="T_938da_row0_col25" class="data row0 col25" >0.00</td>
-      <td id="T_938da_row0_col26" class="data row0 col26" >0.06</td>
-      <td id="T_938da_row0_col27" class="data row0 col27" >0.04</td>
-      <td id="T_938da_row0_col28" class="data row0 col28" >0.01</td>
-      <td id="T_938da_row0_col29" class="data row0 col29" >0.00</td>
-      <td id="T_938da_row0_col30" class="data row0 col30" >0.03</td>
-      <td id="T_938da_row0_col31" class="data row0 col31" >0.04</td>
-      <td id="T_938da_row0_col32" class="data row0 col32" >0.08</td>
-      <td id="T_938da_row0_col33" class="data row0 col33" >0.00</td>
-      <td id="T_938da_row0_col34" class="data row0 col34" >0.05</td>
-      <td id="T_938da_row0_col35" class="data row0 col35" >0.03</td>
-      <td id="T_938da_row0_col36" class="data row0 col36" >0.07</td>
-      <td id="T_938da_row0_col37" class="data row0 col37" >0.00</td>
-      <td id="T_938da_row0_col38" class="data row0 col38" >0.05</td>
-      <td id="T_938da_row0_col39" class="data row0 col39" >0.03</td>
-      <td id="T_938da_row0_col40" class="data row0 col40" >0.09</td>
-      <td id="T_938da_row0_col41" class="data row0 col41" >0.00</td>
-      <td id="T_938da_row0_col42" class="data row0 col42" >0.04</td>
-      <td id="T_938da_row0_col43" class="data row0 col43" >0.04</td>
-      <td id="T_938da_row0_col44" class="data row0 col44" >0.07</td>
-      <td id="T_938da_row0_col45" class="data row0 col45" >0.00</td>
-      <td id="T_938da_row0_col46" class="data row0 col46" >0.04</td>
-      <td id="T_938da_row0_col47" class="data row0 col47" >0.04</td>
-      <td id="T_938da_row0_col48" class="data row0 col48" >0.08</td>
-      <td id="T_938da_row0_col49" class="data row0 col49" >0.00</td>
-      <td id="T_938da_row0_col50" class="data row0 col50" >0.03</td>
-      <td id="T_938da_row0_col51" class="data row0 col51" >0.04</td>
-      <td id="T_938da_row0_col52" class="data row0 col52" >0.04</td>
-      <td id="T_938da_row0_col53" class="data row0 col53" >0.00</td>
-      <td id="T_938da_row0_col54" class="data row0 col54" >0.03</td>
-      <td id="T_938da_row0_col55" class="data row0 col55" >0.04</td>
-      <td id="T_938da_row0_col56" class="data row0 col56" >0.02</td>
-      <td id="T_938da_row0_col57" class="data row0 col57" >9.01</td>
-      <td id="T_938da_row0_col58" class="data row0 col58" >6.47</td>
-      <td id="T_938da_row0_col59" class="data row0 col59" >-0.16</td>
+      <th id="T_8d095_level0_row0" class="row_heading level0 row0" >58</th>
+      <td id="T_8d095_row0_col0" class="data row0 col0" >0.73</td>
+      <td id="T_8d095_row0_col1" class="data row0 col1" >0.01</td>
+      <td id="T_8d095_row0_col2" class="data row0 col2" >0.05</td>
+      <td id="T_8d095_row0_col3" class="data row0 col3" >0.04</td>
+      <td id="T_8d095_row0_col4" class="data row0 col4" >0.04</td>
+      <td id="T_8d095_row0_col5" class="data row0 col5" >0.01</td>
+      <td id="T_8d095_row0_col6" class="data row0 col6" >0.05</td>
+      <td id="T_8d095_row0_col7" class="data row0 col7" >0.04</td>
+      <td id="T_8d095_row0_col8" class="data row0 col8" >0.04</td>
+      <td id="T_8d095_row0_col9" class="data row0 col9" >0.01</td>
+      <td id="T_8d095_row0_col10" class="data row0 col10" >0.06</td>
+      <td id="T_8d095_row0_col11" class="data row0 col11" >0.04</td>
+      <td id="T_8d095_row0_col12" class="data row0 col12" >0.05</td>
+      <td id="T_8d095_row0_col13" class="data row0 col13" >0.01</td>
+      <td id="T_8d095_row0_col14" class="data row0 col14" >0.06</td>
+      <td id="T_8d095_row0_col15" class="data row0 col15" >0.05</td>
+      <td id="T_8d095_row0_col16" class="data row0 col16" >0.04</td>
+      <td id="T_8d095_row0_col17" class="data row0 col17" >0.01</td>
+      <td id="T_8d095_row0_col18" class="data row0 col18" >0.06</td>
+      <td id="T_8d095_row0_col19" class="data row0 col19" >0.04</td>
+      <td id="T_8d095_row0_col20" class="data row0 col20" >0.05</td>
+      <td id="T_8d095_row0_col21" class="data row0 col21" >0.01</td>
+      <td id="T_8d095_row0_col22" class="data row0 col22" >0.04</td>
+      <td id="T_8d095_row0_col23" class="data row0 col23" >0.04</td>
+      <td id="T_8d095_row0_col24" class="data row0 col24" >0.03</td>
+      <td id="T_8d095_row0_col25" class="data row0 col25" >0.00</td>
+      <td id="T_8d095_row0_col26" class="data row0 col26" >0.06</td>
+      <td id="T_8d095_row0_col27" class="data row0 col27" >0.04</td>
+      <td id="T_8d095_row0_col28" class="data row0 col28" >0.01</td>
+      <td id="T_8d095_row0_col29" class="data row0 col29" >0.00</td>
+      <td id="T_8d095_row0_col30" class="data row0 col30" >0.03</td>
+      <td id="T_8d095_row0_col31" class="data row0 col31" >0.04</td>
+      <td id="T_8d095_row0_col32" class="data row0 col32" >0.08</td>
+      <td id="T_8d095_row0_col33" class="data row0 col33" >0.00</td>
+      <td id="T_8d095_row0_col34" class="data row0 col34" >0.05</td>
+      <td id="T_8d095_row0_col35" class="data row0 col35" >0.03</td>
+      <td id="T_8d095_row0_col36" class="data row0 col36" >0.07</td>
+      <td id="T_8d095_row0_col37" class="data row0 col37" >0.00</td>
+      <td id="T_8d095_row0_col38" class="data row0 col38" >0.05</td>
+      <td id="T_8d095_row0_col39" class="data row0 col39" >0.03</td>
+      <td id="T_8d095_row0_col40" class="data row0 col40" >0.09</td>
+      <td id="T_8d095_row0_col41" class="data row0 col41" >0.00</td>
+      <td id="T_8d095_row0_col42" class="data row0 col42" >0.04</td>
+      <td id="T_8d095_row0_col43" class="data row0 col43" >0.04</td>
+      <td id="T_8d095_row0_col44" class="data row0 col44" >0.07</td>
+      <td id="T_8d095_row0_col45" class="data row0 col45" >0.00</td>
+      <td id="T_8d095_row0_col46" class="data row0 col46" >0.04</td>
+      <td id="T_8d095_row0_col47" class="data row0 col47" >0.04</td>
+      <td id="T_8d095_row0_col48" class="data row0 col48" >0.08</td>
+      <td id="T_8d095_row0_col49" class="data row0 col49" >0.00</td>
+      <td id="T_8d095_row0_col50" class="data row0 col50" >0.03</td>
+      <td id="T_8d095_row0_col51" class="data row0 col51" >0.04</td>
+      <td id="T_8d095_row0_col52" class="data row0 col52" >0.04</td>
+      <td id="T_8d095_row0_col53" class="data row0 col53" >0.00</td>
+      <td id="T_8d095_row0_col54" class="data row0 col54" >0.03</td>
+      <td id="T_8d095_row0_col55" class="data row0 col55" >0.04</td>
+      <td id="T_8d095_row0_col56" class="data row0 col56" >0.02</td>
+      <td id="T_8d095_row0_col57" class="data row0 col57" >9.01</td>
+      <td id="T_8d095_row0_col58" class="data row0 col58" >6.47</td>
+      <td id="T_8d095_row0_col59" class="data row0 col59" >-0.16</td>
     </tr>
     <tr>
-      <th id="T_938da_level0_row1" class="row_heading level0 row1" >343</th>
-      <td id="T_938da_row1_col0" class="data row1 col0" >0.71</td>
-      <td id="T_938da_row1_col1" class="data row1 col1" >0.01</td>
-      <td id="T_938da_row1_col2" class="data row1 col2" >0.06</td>
-      <td id="T_938da_row1_col3" class="data row1 col3" >0.06</td>
-      <td id="T_938da_row1_col4" class="data row1 col4" >0.02</td>
-      <td id="T_938da_row1_col5" class="data row1 col5" >0.00</td>
-      <td id="T_938da_row1_col6" class="data row1 col6" >0.06</td>
-      <td id="T_938da_row1_col7" class="data row1 col7" >0.08</td>
-      <td id="T_938da_row1_col8" class="data row1 col8" >0.02</td>
-      <td id="T_938da_row1_col9" class="data row1 col9" >0.01</td>
-      <td id="T_938da_row1_col10" class="data row1 col10" >0.06</td>
-      <td id="T_938da_row1_col11" class="data row1 col11" >0.07</td>
-      <td id="T_938da_row1_col12" class="data row1 col12" >0.03</td>
-      <td id="T_938da_row1_col13" class="data row1 col13" >0.00</td>
-      <td id="T_938da_row1_col14" class="data row1 col14" >0.07</td>
-      <td id="T_938da_row1_col15" class="data row1 col15" >0.07</td>
-      <td id="T_938da_row1_col16" class="data row1 col16" >0.02</td>
-      <td id="T_938da_row1_col17" class="data row1 col17" >0.01</td>
-      <td id="T_938da_row1_col18" class="data row1 col18" >0.06</td>
-      <td id="T_938da_row1_col19" class="data row1 col19" >0.07</td>
-      <td id="T_938da_row1_col20" class="data row1 col20" >0.03</td>
-      <td id="T_938da_row1_col21" class="data row1 col21" >0.00</td>
-      <td id="T_938da_row1_col22" class="data row1 col22" >0.05</td>
-      <td id="T_938da_row1_col23" class="data row1 col23" >0.06</td>
-      <td id="T_938da_row1_col24" class="data row1 col24" >0.02</td>
-      <td id="T_938da_row1_col25" class="data row1 col25" >0.00</td>
-      <td id="T_938da_row1_col26" class="data row1 col26" >0.03</td>
-      <td id="T_938da_row1_col27" class="data row1 col27" >0.03</td>
-      <td id="T_938da_row1_col28" class="data row1 col28" >0.01</td>
-      <td id="T_938da_row1_col29" class="data row1 col29" >0.01</td>
-      <td id="T_938da_row1_col30" class="data row1 col30" >0.04</td>
-      <td id="T_938da_row1_col31" class="data row1 col31" >0.04</td>
-      <td id="T_938da_row1_col32" class="data row1 col32" >0.06</td>
-      <td id="T_938da_row1_col33" class="data row1 col33" >0.01</td>
-      <td id="T_938da_row1_col34" class="data row1 col34" >0.04</td>
-      <td id="T_938da_row1_col35" class="data row1 col35" >0.05</td>
-      <td id="T_938da_row1_col36" class="data row1 col36" >0.08</td>
-      <td id="T_938da_row1_col37" class="data row1 col37" >0.01</td>
-      <td id="T_938da_row1_col38" class="data row1 col38" >0.04</td>
-      <td id="T_938da_row1_col39" class="data row1 col39" >0.04</td>
-      <td id="T_938da_row1_col40" class="data row1 col40" >0.07</td>
-      <td id="T_938da_row1_col41" class="data row1 col41" >0.01</td>
-      <td id="T_938da_row1_col42" class="data row1 col42" >0.04</td>
-      <td id="T_938da_row1_col43" class="data row1 col43" >0.05</td>
-      <td id="T_938da_row1_col44" class="data row1 col44" >0.07</td>
-      <td id="T_938da_row1_col45" class="data row1 col45" >0.01</td>
-      <td id="T_938da_row1_col46" class="data row1 col46" >0.04</td>
-      <td id="T_938da_row1_col47" class="data row1 col47" >0.05</td>
-      <td id="T_938da_row1_col48" class="data row1 col48" >0.06</td>
-      <td id="T_938da_row1_col49" class="data row1 col49" >0.01</td>
-      <td id="T_938da_row1_col50" class="data row1 col50" >0.02</td>
-      <td id="T_938da_row1_col51" class="data row1 col51" >0.06</td>
-      <td id="T_938da_row1_col52" class="data row1 col52" >0.03</td>
-      <td id="T_938da_row1_col53" class="data row1 col53" >0.00</td>
-      <td id="T_938da_row1_col54" class="data row1 col54" >0.01</td>
-      <td id="T_938da_row1_col55" class="data row1 col55" >0.03</td>
-      <td id="T_938da_row1_col56" class="data row1 col56" >0.02</td>
-      <td id="T_938da_row1_col57" class="data row1 col57" >5.10</td>
-      <td id="T_938da_row1_col58" class="data row1 col58" >5.20</td>
-      <td id="T_938da_row1_col59" class="data row1 col59" >0.01</td>
+      <th id="T_8d095_level0_row1" class="row_heading level0 row1" >343</th>
+      <td id="T_8d095_row1_col0" class="data row1 col0" >0.71</td>
+      <td id="T_8d095_row1_col1" class="data row1 col1" >0.01</td>
+      <td id="T_8d095_row1_col2" class="data row1 col2" >0.06</td>
+      <td id="T_8d095_row1_col3" class="data row1 col3" >0.06</td>
+      <td id="T_8d095_row1_col4" class="data row1 col4" >0.02</td>
+      <td id="T_8d095_row1_col5" class="data row1 col5" >0.00</td>
+      <td id="T_8d095_row1_col6" class="data row1 col6" >0.06</td>
+      <td id="T_8d095_row1_col7" class="data row1 col7" >0.08</td>
+      <td id="T_8d095_row1_col8" class="data row1 col8" >0.02</td>
+      <td id="T_8d095_row1_col9" class="data row1 col9" >0.01</td>
+      <td id="T_8d095_row1_col10" class="data row1 col10" >0.06</td>
+      <td id="T_8d095_row1_col11" class="data row1 col11" >0.07</td>
+      <td id="T_8d095_row1_col12" class="data row1 col12" >0.03</td>
+      <td id="T_8d095_row1_col13" class="data row1 col13" >0.00</td>
+      <td id="T_8d095_row1_col14" class="data row1 col14" >0.07</td>
+      <td id="T_8d095_row1_col15" class="data row1 col15" >0.07</td>
+      <td id="T_8d095_row1_col16" class="data row1 col16" >0.02</td>
+      <td id="T_8d095_row1_col17" class="data row1 col17" >0.01</td>
+      <td id="T_8d095_row1_col18" class="data row1 col18" >0.06</td>
+      <td id="T_8d095_row1_col19" class="data row1 col19" >0.07</td>
+      <td id="T_8d095_row1_col20" class="data row1 col20" >0.03</td>
+      <td id="T_8d095_row1_col21" class="data row1 col21" >0.00</td>
+      <td id="T_8d095_row1_col22" class="data row1 col22" >0.05</td>
+      <td id="T_8d095_row1_col23" class="data row1 col23" >0.06</td>
+      <td id="T_8d095_row1_col24" class="data row1 col24" >0.02</td>
+      <td id="T_8d095_row1_col25" class="data row1 col25" >0.00</td>
+      <td id="T_8d095_row1_col26" class="data row1 col26" >0.03</td>
+      <td id="T_8d095_row1_col27" class="data row1 col27" >0.03</td>
+      <td id="T_8d095_row1_col28" class="data row1 col28" >0.01</td>
+      <td id="T_8d095_row1_col29" class="data row1 col29" >0.01</td>
+      <td id="T_8d095_row1_col30" class="data row1 col30" >0.04</td>
+      <td id="T_8d095_row1_col31" class="data row1 col31" >0.04</td>
+      <td id="T_8d095_row1_col32" class="data row1 col32" >0.06</td>
+      <td id="T_8d095_row1_col33" class="data row1 col33" >0.01</td>
+      <td id="T_8d095_row1_col34" class="data row1 col34" >0.04</td>
+      <td id="T_8d095_row1_col35" class="data row1 col35" >0.05</td>
+      <td id="T_8d095_row1_col36" class="data row1 col36" >0.08</td>
+      <td id="T_8d095_row1_col37" class="data row1 col37" >0.01</td>
+      <td id="T_8d095_row1_col38" class="data row1 col38" >0.04</td>
+      <td id="T_8d095_row1_col39" class="data row1 col39" >0.04</td>
+      <td id="T_8d095_row1_col40" class="data row1 col40" >0.07</td>
+      <td id="T_8d095_row1_col41" class="data row1 col41" >0.01</td>
+      <td id="T_8d095_row1_col42" class="data row1 col42" >0.04</td>
+      <td id="T_8d095_row1_col43" class="data row1 col43" >0.05</td>
+      <td id="T_8d095_row1_col44" class="data row1 col44" >0.07</td>
+      <td id="T_8d095_row1_col45" class="data row1 col45" >0.01</td>
+      <td id="T_8d095_row1_col46" class="data row1 col46" >0.04</td>
+      <td id="T_8d095_row1_col47" class="data row1 col47" >0.05</td>
+      <td id="T_8d095_row1_col48" class="data row1 col48" >0.06</td>
+      <td id="T_8d095_row1_col49" class="data row1 col49" >0.01</td>
+      <td id="T_8d095_row1_col50" class="data row1 col50" >0.02</td>
+      <td id="T_8d095_row1_col51" class="data row1 col51" >0.06</td>
+      <td id="T_8d095_row1_col52" class="data row1 col52" >0.03</td>
+      <td id="T_8d095_row1_col53" class="data row1 col53" >0.00</td>
+      <td id="T_8d095_row1_col54" class="data row1 col54" >0.01</td>
+      <td id="T_8d095_row1_col55" class="data row1 col55" >0.03</td>
+      <td id="T_8d095_row1_col56" class="data row1 col56" >0.02</td>
+      <td id="T_8d095_row1_col57" class="data row1 col57" >5.10</td>
+      <td id="T_8d095_row1_col58" class="data row1 col58" >5.20</td>
+      <td id="T_8d095_row1_col59" class="data row1 col59" >0.01</td>
     </tr>
     <tr>
-      <th id="T_938da_level0_row2" class="row_heading level0 row2" >322</th>
-      <td id="T_938da_row2_col0" class="data row2 col0" >0.70</td>
-      <td id="T_938da_row2_col1" class="data row2 col1" >0.00</td>
-      <td id="T_938da_row2_col2" class="data row2 col2" >0.06</td>
-      <td id="T_938da_row2_col3" class="data row2 col3" >0.05</td>
-      <td id="T_938da_row2_col4" class="data row2 col4" >0.03</td>
-      <td id="T_938da_row2_col5" class="data row2 col5" >0.00</td>
-      <td id="T_938da_row2_col6" class="data row2 col6" >0.07</td>
-      <td id="T_938da_row2_col7" class="data row2 col7" >0.06</td>
-      <td id="T_938da_row2_col8" class="data row2 col8" >0.04</td>
-      <td id="T_938da_row2_col9" class="data row2 col9" >0.00</td>
-      <td id="T_938da_row2_col10" class="data row2 col10" >0.07</td>
-      <td id="T_938da_row2_col11" class="data row2 col11" >0.07</td>
-      <td id="T_938da_row2_col12" class="data row2 col12" >0.03</td>
-      <td id="T_938da_row2_col13" class="data row2 col13" >0.00</td>
-      <td id="T_938da_row2_col14" class="data row2 col14" >0.07</td>
-      <td id="T_938da_row2_col15" class="data row2 col15" >0.06</td>
-      <td id="T_938da_row2_col16" class="data row2 col16" >0.03</td>
-      <td id="T_938da_row2_col17" class="data row2 col17" >0.00</td>
-      <td id="T_938da_row2_col18" class="data row2 col18" >0.05</td>
-      <td id="T_938da_row2_col19" class="data row2 col19" >0.05</td>
-      <td id="T_938da_row2_col20" class="data row2 col20" >0.03</td>
-      <td id="T_938da_row2_col21" class="data row2 col21" >0.00</td>
-      <td id="T_938da_row2_col22" class="data row2 col22" >0.04</td>
-      <td id="T_938da_row2_col23" class="data row2 col23" >0.05</td>
-      <td id="T_938da_row2_col24" class="data row2 col24" >0.02</td>
-      <td id="T_938da_row2_col25" class="data row2 col25" >0.00</td>
-      <td id="T_938da_row2_col26" class="data row2 col26" >0.03</td>
-      <td id="T_938da_row2_col27" class="data row2 col27" >0.04</td>
-      <td id="T_938da_row2_col28" class="data row2 col28" >0.02</td>
-      <td id="T_938da_row2_col29" class="data row2 col29" >0.00</td>
-      <td id="T_938da_row2_col30" class="data row2 col30" >0.02</td>
-      <td id="T_938da_row2_col31" class="data row2 col31" >0.04</td>
-      <td id="T_938da_row2_col32" class="data row2 col32" >0.10</td>
-      <td id="T_938da_row2_col33" class="data row2 col33" >0.00</td>
-      <td id="T_938da_row2_col34" class="data row2 col34" >0.03</td>
-      <td id="T_938da_row2_col35" class="data row2 col35" >0.04</td>
-      <td id="T_938da_row2_col36" class="data row2 col36" >0.10</td>
-      <td id="T_938da_row2_col37" class="data row2 col37" >0.00</td>
-      <td id="T_938da_row2_col38" class="data row2 col38" >0.03</td>
-      <td id="T_938da_row2_col39" class="data row2 col39" >0.05</td>
-      <td id="T_938da_row2_col40" class="data row2 col40" >0.11</td>
-      <td id="T_938da_row2_col41" class="data row2 col41" >0.00</td>
-      <td id="T_938da_row2_col42" class="data row2 col42" >0.03</td>
-      <td id="T_938da_row2_col43" class="data row2 col43" >0.05</td>
-      <td id="T_938da_row2_col44" class="data row2 col44" >0.09</td>
-      <td id="T_938da_row2_col45" class="data row2 col45" >0.00</td>
-      <td id="T_938da_row2_col46" class="data row2 col46" >0.02</td>
-      <td id="T_938da_row2_col47" class="data row2 col47" >0.04</td>
-      <td id="T_938da_row2_col48" class="data row2 col48" >0.08</td>
-      <td id="T_938da_row2_col49" class="data row2 col49" >0.00</td>
-      <td id="T_938da_row2_col50" class="data row2 col50" >0.01</td>
-      <td id="T_938da_row2_col51" class="data row2 col51" >0.04</td>
-      <td id="T_938da_row2_col52" class="data row2 col52" >0.03</td>
-      <td id="T_938da_row2_col53" class="data row2 col53" >0.00</td>
-      <td id="T_938da_row2_col54" class="data row2 col54" >0.02</td>
-      <td id="T_938da_row2_col55" class="data row2 col55" >0.03</td>
-      <td id="T_938da_row2_col56" class="data row2 col56" >0.02</td>
-      <td id="T_938da_row2_col57" class="data row2 col57" >3.61</td>
-      <td id="T_938da_row2_col58" class="data row2 col58" >4.31</td>
-      <td id="T_938da_row2_col59" class="data row2 col59" >0.09</td>
+      <th id="T_8d095_level0_row2" class="row_heading level0 row2" >322</th>
+      <td id="T_8d095_row2_col0" class="data row2 col0" >0.70</td>
+      <td id="T_8d095_row2_col1" class="data row2 col1" >0.00</td>
+      <td id="T_8d095_row2_col2" class="data row2 col2" >0.06</td>
+      <td id="T_8d095_row2_col3" class="data row2 col3" >0.05</td>
+      <td id="T_8d095_row2_col4" class="data row2 col4" >0.03</td>
+      <td id="T_8d095_row2_col5" class="data row2 col5" >0.00</td>
+      <td id="T_8d095_row2_col6" class="data row2 col6" >0.07</td>
+      <td id="T_8d095_row2_col7" class="data row2 col7" >0.06</td>
+      <td id="T_8d095_row2_col8" class="data row2 col8" >0.04</td>
+      <td id="T_8d095_row2_col9" class="data row2 col9" >0.00</td>
+      <td id="T_8d095_row2_col10" class="data row2 col10" >0.07</td>
+      <td id="T_8d095_row2_col11" class="data row2 col11" >0.07</td>
+      <td id="T_8d095_row2_col12" class="data row2 col12" >0.03</td>
+      <td id="T_8d095_row2_col13" class="data row2 col13" >0.00</td>
+      <td id="T_8d095_row2_col14" class="data row2 col14" >0.07</td>
+      <td id="T_8d095_row2_col15" class="data row2 col15" >0.06</td>
+      <td id="T_8d095_row2_col16" class="data row2 col16" >0.03</td>
+      <td id="T_8d095_row2_col17" class="data row2 col17" >0.00</td>
+      <td id="T_8d095_row2_col18" class="data row2 col18" >0.05</td>
+      <td id="T_8d095_row2_col19" class="data row2 col19" >0.05</td>
+      <td id="T_8d095_row2_col20" class="data row2 col20" >0.03</td>
+      <td id="T_8d095_row2_col21" class="data row2 col21" >0.00</td>
+      <td id="T_8d095_row2_col22" class="data row2 col22" >0.04</td>
+      <td id="T_8d095_row2_col23" class="data row2 col23" >0.05</td>
+      <td id="T_8d095_row2_col24" class="data row2 col24" >0.02</td>
+      <td id="T_8d095_row2_col25" class="data row2 col25" >0.00</td>
+      <td id="T_8d095_row2_col26" class="data row2 col26" >0.03</td>
+      <td id="T_8d095_row2_col27" class="data row2 col27" >0.04</td>
+      <td id="T_8d095_row2_col28" class="data row2 col28" >0.02</td>
+      <td id="T_8d095_row2_col29" class="data row2 col29" >0.00</td>
+      <td id="T_8d095_row2_col30" class="data row2 col30" >0.02</td>
+      <td id="T_8d095_row2_col31" class="data row2 col31" >0.04</td>
+      <td id="T_8d095_row2_col32" class="data row2 col32" >0.10</td>
+      <td id="T_8d095_row2_col33" class="data row2 col33" >0.00</td>
+      <td id="T_8d095_row2_col34" class="data row2 col34" >0.03</td>
+      <td id="T_8d095_row2_col35" class="data row2 col35" >0.04</td>
+      <td id="T_8d095_row2_col36" class="data row2 col36" >0.10</td>
+      <td id="T_8d095_row2_col37" class="data row2 col37" >0.00</td>
+      <td id="T_8d095_row2_col38" class="data row2 col38" >0.03</td>
+      <td id="T_8d095_row2_col39" class="data row2 col39" >0.05</td>
+      <td id="T_8d095_row2_col40" class="data row2 col40" >0.11</td>
+      <td id="T_8d095_row2_col41" class="data row2 col41" >0.00</td>
+      <td id="T_8d095_row2_col42" class="data row2 col42" >0.03</td>
+      <td id="T_8d095_row2_col43" class="data row2 col43" >0.05</td>
+      <td id="T_8d095_row2_col44" class="data row2 col44" >0.09</td>
+      <td id="T_8d095_row2_col45" class="data row2 col45" >0.00</td>
+      <td id="T_8d095_row2_col46" class="data row2 col46" >0.02</td>
+      <td id="T_8d095_row2_col47" class="data row2 col47" >0.04</td>
+      <td id="T_8d095_row2_col48" class="data row2 col48" >0.08</td>
+      <td id="T_8d095_row2_col49" class="data row2 col49" >0.00</td>
+      <td id="T_8d095_row2_col50" class="data row2 col50" >0.01</td>
+      <td id="T_8d095_row2_col51" class="data row2 col51" >0.04</td>
+      <td id="T_8d095_row2_col52" class="data row2 col52" >0.03</td>
+      <td id="T_8d095_row2_col53" class="data row2 col53" >0.00</td>
+      <td id="T_8d095_row2_col54" class="data row2 col54" >0.02</td>
+      <td id="T_8d095_row2_col55" class="data row2 col55" >0.03</td>
+      <td id="T_8d095_row2_col56" class="data row2 col56" >0.02</td>
+      <td id="T_8d095_row2_col57" class="data row2 col57" >3.61</td>
+      <td id="T_8d095_row2_col58" class="data row2 col58" >4.31</td>
+      <td id="T_8d095_row2_col59" class="data row2 col59" >0.09</td>
     </tr>
     <tr>
-      <th id="T_938da_level0_row3" class="row_heading level0 row3" >134</th>
-      <td id="T_938da_row3_col0" class="data row3 col0" >0.69</td>
-      <td id="T_938da_row3_col1" class="data row3 col1" >0.00</td>
-      <td id="T_938da_row3_col2" class="data row3 col2" >0.04</td>
-      <td id="T_938da_row3_col3" class="data row3 col3" >0.06</td>
-      <td id="T_938da_row3_col4" class="data row3 col4" >0.04</td>
-      <td id="T_938da_row3_col5" class="data row3 col5" >0.00</td>
-      <td id="T_938da_row3_col6" class="data row3 col6" >0.04</td>
-      <td id="T_938da_row3_col7" class="data row3 col7" >0.06</td>
-      <td id="T_938da_row3_col8" class="data row3 col8" >0.05</td>
-      <td id="T_938da_row3_col9" class="data row3 col9" >0.00</td>
-      <td id="T_938da_row3_col10" class="data row3 col10" >0.05</td>
-      <td id="T_938da_row3_col11" class="data row3 col11" >0.06</td>
-      <td id="T_938da_row3_col12" class="data row3 col12" >0.05</td>
-      <td id="T_938da_row3_col13" class="data row3 col13" >0.00</td>
-      <td id="T_938da_row3_col14" class="data row3 col14" >0.04</td>
-      <td id="T_938da_row3_col15" class="data row3 col15" >0.05</td>
-      <td id="T_938da_row3_col16" class="data row3 col16" >0.04</td>
-      <td id="T_938da_row3_col17" class="data row3 col17" >0.00</td>
-      <td id="T_938da_row3_col18" class="data row3 col18" >0.04</td>
-      <td id="T_938da_row3_col19" class="data row3 col19" >0.06</td>
-      <td id="T_938da_row3_col20" class="data row3 col20" >0.05</td>
-      <td id="T_938da_row3_col21" class="data row3 col21" >0.00</td>
-      <td id="T_938da_row3_col22" class="data row3 col22" >0.04</td>
-      <td id="T_938da_row3_col23" class="data row3 col23" >0.06</td>
-      <td id="T_938da_row3_col24" class="data row3 col24" >0.04</td>
-      <td id="T_938da_row3_col25" class="data row3 col25" >0.00</td>
-      <td id="T_938da_row3_col26" class="data row3 col26" >0.05</td>
-      <td id="T_938da_row3_col27" class="data row3 col27" >0.04</td>
-      <td id="T_938da_row3_col28" class="data row3 col28" >0.03</td>
-      <td id="T_938da_row3_col29" class="data row3 col29" >0.01</td>
-      <td id="T_938da_row3_col30" class="data row3 col30" >0.03</td>
-      <td id="T_938da_row3_col31" class="data row3 col31" >0.05</td>
-      <td id="T_938da_row3_col32" class="data row3 col32" >0.06</td>
-      <td id="T_938da_row3_col33" class="data row3 col33" >0.00</td>
-      <td id="T_938da_row3_col34" class="data row3 col34" >0.03</td>
-      <td id="T_938da_row3_col35" class="data row3 col35" >0.05</td>
-      <td id="T_938da_row3_col36" class="data row3 col36" >0.07</td>
-      <td id="T_938da_row3_col37" class="data row3 col37" >0.00</td>
-      <td id="T_938da_row3_col38" class="data row3 col38" >0.03</td>
-      <td id="T_938da_row3_col39" class="data row3 col39" >0.05</td>
-      <td id="T_938da_row3_col40" class="data row3 col40" >0.07</td>
-      <td id="T_938da_row3_col41" class="data row3 col41" >0.01</td>
-      <td id="T_938da_row3_col42" class="data row3 col42" >0.03</td>
-      <td id="T_938da_row3_col43" class="data row3 col43" >0.05</td>
-      <td id="T_938da_row3_col44" class="data row3 col44" >0.06</td>
-      <td id="T_938da_row3_col45" class="data row3 col45" >0.01</td>
-      <td id="T_938da_row3_col46" class="data row3 col46" >0.03</td>
-      <td id="T_938da_row3_col47" class="data row3 col47" >0.05</td>
-      <td id="T_938da_row3_col48" class="data row3 col48" >0.06</td>
-      <td id="T_938da_row3_col49" class="data row3 col49" >0.01</td>
-      <td id="T_938da_row3_col50" class="data row3 col50" >0.03</td>
-      <td id="T_938da_row3_col51" class="data row3 col51" >0.05</td>
-      <td id="T_938da_row3_col52" class="data row3 col52" >0.04</td>
-      <td id="T_938da_row3_col53" class="data row3 col53" >0.01</td>
-      <td id="T_938da_row3_col54" class="data row3 col54" >0.02</td>
-      <td id="T_938da_row3_col55" class="data row3 col55" >0.04</td>
-      <td id="T_938da_row3_col56" class="data row3 col56" >0.04</td>
-      <td id="T_938da_row3_col57" class="data row3 col57" >7.99</td>
-      <td id="T_938da_row3_col58" class="data row3 col58" >6.50</td>
-      <td id="T_938da_row3_col59" class="data row3 col59" >-0.10</td>
+      <th id="T_8d095_level0_row3" class="row_heading level0 row3" >134</th>
+      <td id="T_8d095_row3_col0" class="data row3 col0" >0.69</td>
+      <td id="T_8d095_row3_col1" class="data row3 col1" >0.00</td>
+      <td id="T_8d095_row3_col2" class="data row3 col2" >0.04</td>
+      <td id="T_8d095_row3_col3" class="data row3 col3" >0.06</td>
+      <td id="T_8d095_row3_col4" class="data row3 col4" >0.04</td>
+      <td id="T_8d095_row3_col5" class="data row3 col5" >0.00</td>
+      <td id="T_8d095_row3_col6" class="data row3 col6" >0.04</td>
+      <td id="T_8d095_row3_col7" class="data row3 col7" >0.06</td>
+      <td id="T_8d095_row3_col8" class="data row3 col8" >0.05</td>
+      <td id="T_8d095_row3_col9" class="data row3 col9" >0.00</td>
+      <td id="T_8d095_row3_col10" class="data row3 col10" >0.05</td>
+      <td id="T_8d095_row3_col11" class="data row3 col11" >0.06</td>
+      <td id="T_8d095_row3_col12" class="data row3 col12" >0.05</td>
+      <td id="T_8d095_row3_col13" class="data row3 col13" >0.00</td>
+      <td id="T_8d095_row3_col14" class="data row3 col14" >0.04</td>
+      <td id="T_8d095_row3_col15" class="data row3 col15" >0.05</td>
+      <td id="T_8d095_row3_col16" class="data row3 col16" >0.04</td>
+      <td id="T_8d095_row3_col17" class="data row3 col17" >0.00</td>
+      <td id="T_8d095_row3_col18" class="data row3 col18" >0.04</td>
+      <td id="T_8d095_row3_col19" class="data row3 col19" >0.06</td>
+      <td id="T_8d095_row3_col20" class="data row3 col20" >0.05</td>
+      <td id="T_8d095_row3_col21" class="data row3 col21" >0.00</td>
+      <td id="T_8d095_row3_col22" class="data row3 col22" >0.04</td>
+      <td id="T_8d095_row3_col23" class="data row3 col23" >0.06</td>
+      <td id="T_8d095_row3_col24" class="data row3 col24" >0.04</td>
+      <td id="T_8d095_row3_col25" class="data row3 col25" >0.00</td>
+      <td id="T_8d095_row3_col26" class="data row3 col26" >0.05</td>
+      <td id="T_8d095_row3_col27" class="data row3 col27" >0.04</td>
+      <td id="T_8d095_row3_col28" class="data row3 col28" >0.03</td>
+      <td id="T_8d095_row3_col29" class="data row3 col29" >0.01</td>
+      <td id="T_8d095_row3_col30" class="data row3 col30" >0.03</td>
+      <td id="T_8d095_row3_col31" class="data row3 col31" >0.05</td>
+      <td id="T_8d095_row3_col32" class="data row3 col32" >0.06</td>
+      <td id="T_8d095_row3_col33" class="data row3 col33" >0.00</td>
+      <td id="T_8d095_row3_col34" class="data row3 col34" >0.03</td>
+      <td id="T_8d095_row3_col35" class="data row3 col35" >0.05</td>
+      <td id="T_8d095_row3_col36" class="data row3 col36" >0.07</td>
+      <td id="T_8d095_row3_col37" class="data row3 col37" >0.00</td>
+      <td id="T_8d095_row3_col38" class="data row3 col38" >0.03</td>
+      <td id="T_8d095_row3_col39" class="data row3 col39" >0.05</td>
+      <td id="T_8d095_row3_col40" class="data row3 col40" >0.07</td>
+      <td id="T_8d095_row3_col41" class="data row3 col41" >0.01</td>
+      <td id="T_8d095_row3_col42" class="data row3 col42" >0.03</td>
+      <td id="T_8d095_row3_col43" class="data row3 col43" >0.05</td>
+      <td id="T_8d095_row3_col44" class="data row3 col44" >0.06</td>
+      <td id="T_8d095_row3_col45" class="data row3 col45" >0.01</td>
+      <td id="T_8d095_row3_col46" class="data row3 col46" >0.03</td>
+      <td id="T_8d095_row3_col47" class="data row3 col47" >0.05</td>
+      <td id="T_8d095_row3_col48" class="data row3 col48" >0.06</td>
+      <td id="T_8d095_row3_col49" class="data row3 col49" >0.01</td>
+      <td id="T_8d095_row3_col50" class="data row3 col50" >0.03</td>
+      <td id="T_8d095_row3_col51" class="data row3 col51" >0.05</td>
+      <td id="T_8d095_row3_col52" class="data row3 col52" >0.04</td>
+      <td id="T_8d095_row3_col53" class="data row3 col53" >0.01</td>
+      <td id="T_8d095_row3_col54" class="data row3 col54" >0.02</td>
+      <td id="T_8d095_row3_col55" class="data row3 col55" >0.04</td>
+      <td id="T_8d095_row3_col56" class="data row3 col56" >0.04</td>
+      <td id="T_8d095_row3_col57" class="data row3 col57" >7.99</td>
+      <td id="T_8d095_row3_col58" class="data row3 col58" >6.50</td>
+      <td id="T_8d095_row3_col59" class="data row3 col59" >-0.10</td>
     </tr>
     <tr>
-      <th id="T_938da_level0_row4" class="row_heading level0 row4" >44</th>
-      <td id="T_938da_row4_col0" class="data row4 col0" >0.62</td>
-      <td id="T_938da_row4_col1" class="data row4 col1" >0.00</td>
-      <td id="T_938da_row4_col2" class="data row4 col2" >0.05</td>
-      <td id="T_938da_row4_col3" class="data row4 col3" >0.06</td>
-      <td id="T_938da_row4_col4" class="data row4 col4" >0.03</td>
-      <td id="T_938da_row4_col5" class="data row4 col5" >0.00</td>
-      <td id="T_938da_row4_col6" class="data row4 col6" >0.05</td>
-      <td id="T_938da_row4_col7" class="data row4 col7" >0.07</td>
-      <td id="T_938da_row4_col8" class="data row4 col8" >0.03</td>
-      <td id="T_938da_row4_col9" class="data row4 col9" >0.00</td>
-      <td id="T_938da_row4_col10" class="data row4 col10" >0.06</td>
-      <td id="T_938da_row4_col11" class="data row4 col11" >0.07</td>
-      <td id="T_938da_row4_col12" class="data row4 col12" >0.03</td>
-      <td id="T_938da_row4_col13" class="data row4 col13" >0.00</td>
-      <td id="T_938da_row4_col14" class="data row4 col14" >0.05</td>
-      <td id="T_938da_row4_col15" class="data row4 col15" >0.07</td>
-      <td id="T_938da_row4_col16" class="data row4 col16" >0.03</td>
-      <td id="T_938da_row4_col17" class="data row4 col17" >0.00</td>
-      <td id="T_938da_row4_col18" class="data row4 col18" >0.05</td>
-      <td id="T_938da_row4_col19" class="data row4 col19" >0.06</td>
-      <td id="T_938da_row4_col20" class="data row4 col20" >0.03</td>
-      <td id="T_938da_row4_col21" class="data row4 col21" >0.00</td>
-      <td id="T_938da_row4_col22" class="data row4 col22" >0.04</td>
-      <td id="T_938da_row4_col23" class="data row4 col23" >0.12</td>
-      <td id="T_938da_row4_col24" class="data row4 col24" >0.02</td>
-      <td id="T_938da_row4_col25" class="data row4 col25" >0.00</td>
-      <td id="T_938da_row4_col26" class="data row4 col26" >0.02</td>
-      <td id="T_938da_row4_col27" class="data row4 col27" >0.03</td>
-      <td id="T_938da_row4_col28" class="data row4 col28" >0.01</td>
-      <td id="T_938da_row4_col29" class="data row4 col29" >0.00</td>
-      <td id="T_938da_row4_col30" class="data row4 col30" >0.06</td>
-      <td id="T_938da_row4_col31" class="data row4 col31" >0.05</td>
-      <td id="T_938da_row4_col32" class="data row4 col32" >0.04</td>
-      <td id="T_938da_row4_col33" class="data row4 col33" >0.00</td>
-      <td id="T_938da_row4_col34" class="data row4 col34" >0.07</td>
-      <td id="T_938da_row4_col35" class="data row4 col35" >0.05</td>
-      <td id="T_938da_row4_col36" class="data row4 col36" >0.04</td>
-      <td id="T_938da_row4_col37" class="data row4 col37" >0.00</td>
-      <td id="T_938da_row4_col38" class="data row4 col38" >0.07</td>
-      <td id="T_938da_row4_col39" class="data row4 col39" >0.05</td>
-      <td id="T_938da_row4_col40" class="data row4 col40" >0.04</td>
-      <td id="T_938da_row4_col41" class="data row4 col41" >0.00</td>
-      <td id="T_938da_row4_col42" class="data row4 col42" >0.06</td>
-      <td id="T_938da_row4_col43" class="data row4 col43" >0.05</td>
-      <td id="T_938da_row4_col44" class="data row4 col44" >0.04</td>
-      <td id="T_938da_row4_col45" class="data row4 col45" >0.00</td>
-      <td id="T_938da_row4_col46" class="data row4 col46" >0.06</td>
-      <td id="T_938da_row4_col47" class="data row4 col47" >0.05</td>
-      <td id="T_938da_row4_col48" class="data row4 col48" >0.04</td>
-      <td id="T_938da_row4_col49" class="data row4 col49" >0.00</td>
-      <td id="T_938da_row4_col50" class="data row4 col50" >0.05</td>
-      <td id="T_938da_row4_col51" class="data row4 col51" >0.10</td>
-      <td id="T_938da_row4_col52" class="data row4 col52" >0.02</td>
-      <td id="T_938da_row4_col53" class="data row4 col53" >0.00</td>
-      <td id="T_938da_row4_col54" class="data row4 col54" >0.03</td>
-      <td id="T_938da_row4_col55" class="data row4 col55" >0.03</td>
-      <td id="T_938da_row4_col56" class="data row4 col56" >0.01</td>
-      <td id="T_938da_row4_col57" class="data row4 col57" >28.29</td>
-      <td id="T_938da_row4_col58" class="data row4 col58" >31.53</td>
-      <td id="T_938da_row4_col59" class="data row4 col59" >0.05</td>
+      <th id="T_8d095_level0_row4" class="row_heading level0 row4" >44</th>
+      <td id="T_8d095_row4_col0" class="data row4 col0" >0.62</td>
+      <td id="T_8d095_row4_col1" class="data row4 col1" >0.00</td>
+      <td id="T_8d095_row4_col2" class="data row4 col2" >0.05</td>
+      <td id="T_8d095_row4_col3" class="data row4 col3" >0.06</td>
+      <td id="T_8d095_row4_col4" class="data row4 col4" >0.03</td>
+      <td id="T_8d095_row4_col5" class="data row4 col5" >0.00</td>
+      <td id="T_8d095_row4_col6" class="data row4 col6" >0.05</td>
+      <td id="T_8d095_row4_col7" class="data row4 col7" >0.07</td>
+      <td id="T_8d095_row4_col8" class="data row4 col8" >0.03</td>
+      <td id="T_8d095_row4_col9" class="data row4 col9" >0.00</td>
+      <td id="T_8d095_row4_col10" class="data row4 col10" >0.06</td>
+      <td id="T_8d095_row4_col11" class="data row4 col11" >0.07</td>
+      <td id="T_8d095_row4_col12" class="data row4 col12" >0.03</td>
+      <td id="T_8d095_row4_col13" class="data row4 col13" >0.00</td>
+      <td id="T_8d095_row4_col14" class="data row4 col14" >0.05</td>
+      <td id="T_8d095_row4_col15" class="data row4 col15" >0.07</td>
+      <td id="T_8d095_row4_col16" class="data row4 col16" >0.03</td>
+      <td id="T_8d095_row4_col17" class="data row4 col17" >0.00</td>
+      <td id="T_8d095_row4_col18" class="data row4 col18" >0.05</td>
+      <td id="T_8d095_row4_col19" class="data row4 col19" >0.06</td>
+      <td id="T_8d095_row4_col20" class="data row4 col20" >0.03</td>
+      <td id="T_8d095_row4_col21" class="data row4 col21" >0.00</td>
+      <td id="T_8d095_row4_col22" class="data row4 col22" >0.04</td>
+      <td id="T_8d095_row4_col23" class="data row4 col23" >0.12</td>
+      <td id="T_8d095_row4_col24" class="data row4 col24" >0.02</td>
+      <td id="T_8d095_row4_col25" class="data row4 col25" >0.00</td>
+      <td id="T_8d095_row4_col26" class="data row4 col26" >0.02</td>
+      <td id="T_8d095_row4_col27" class="data row4 col27" >0.03</td>
+      <td id="T_8d095_row4_col28" class="data row4 col28" >0.01</td>
+      <td id="T_8d095_row4_col29" class="data row4 col29" >0.00</td>
+      <td id="T_8d095_row4_col30" class="data row4 col30" >0.06</td>
+      <td id="T_8d095_row4_col31" class="data row4 col31" >0.05</td>
+      <td id="T_8d095_row4_col32" class="data row4 col32" >0.04</td>
+      <td id="T_8d095_row4_col33" class="data row4 col33" >0.00</td>
+      <td id="T_8d095_row4_col34" class="data row4 col34" >0.07</td>
+      <td id="T_8d095_row4_col35" class="data row4 col35" >0.05</td>
+      <td id="T_8d095_row4_col36" class="data row4 col36" >0.04</td>
+      <td id="T_8d095_row4_col37" class="data row4 col37" >0.00</td>
+      <td id="T_8d095_row4_col38" class="data row4 col38" >0.07</td>
+      <td id="T_8d095_row4_col39" class="data row4 col39" >0.05</td>
+      <td id="T_8d095_row4_col40" class="data row4 col40" >0.04</td>
+      <td id="T_8d095_row4_col41" class="data row4 col41" >0.00</td>
+      <td id="T_8d095_row4_col42" class="data row4 col42" >0.06</td>
+      <td id="T_8d095_row4_col43" class="data row4 col43" >0.05</td>
+      <td id="T_8d095_row4_col44" class="data row4 col44" >0.04</td>
+      <td id="T_8d095_row4_col45" class="data row4 col45" >0.00</td>
+      <td id="T_8d095_row4_col46" class="data row4 col46" >0.06</td>
+      <td id="T_8d095_row4_col47" class="data row4 col47" >0.05</td>
+      <td id="T_8d095_row4_col48" class="data row4 col48" >0.04</td>
+      <td id="T_8d095_row4_col49" class="data row4 col49" >0.00</td>
+      <td id="T_8d095_row4_col50" class="data row4 col50" >0.05</td>
+      <td id="T_8d095_row4_col51" class="data row4 col51" >0.10</td>
+      <td id="T_8d095_row4_col52" class="data row4 col52" >0.02</td>
+      <td id="T_8d095_row4_col53" class="data row4 col53" >0.00</td>
+      <td id="T_8d095_row4_col54" class="data row4 col54" >0.03</td>
+      <td id="T_8d095_row4_col55" class="data row4 col55" >0.03</td>
+      <td id="T_8d095_row4_col56" class="data row4 col56" >0.01</td>
+      <td id="T_8d095_row4_col57" class="data row4 col57" >28.29</td>
+      <td id="T_8d095_row4_col58" class="data row4 col58" >31.53</td>
+      <td id="T_8d095_row4_col59" class="data row4 col59" >0.05</td>
     </tr>
   </tbody>
 </table>
-<br><a href="#summary_T229NFDI4DFKSOU84WKSHBX8T" style="font-size: 14px;">Go to top</a><hr style="background-color: black;border: 0 none;color: black;height: 1px;"><h2>Other Checks That Weren't Displayed</h2>
+<br><a href="#summary_WOYGIWSE45OSQ80T3FBXQNGHH" style="font-size: 14px;">Go to top</a><hr style="background-color: black;border: 0 none;color: black;height: 1px;"><h2>Other Checks That Weren't Displayed</h2>
 <style type="text/css">
-#T_714c1 table {
+#T_94a07 table {
   text-align: left;
   white-space: pre-wrap;
 }
-#T_714c1 thead {
+#T_94a07 thead {
   text-align: left;
   white-space: pre-wrap;
 }
-#T_714c1 tbody {
+#T_94a07 tbody {
   text-align: left;
   white-space: pre-wrap;
 }
-#T_714c1 th {
+#T_94a07 th {
   text-align: left;
   white-space: pre-wrap;
 }
-#T_714c1 td {
+#T_94a07 td {
   text-align: left;
   white-space: pre-wrap;
 }
 </style>
-<table id="T_714c1">
+<table id="T_94a07">
   <thead>
     <tr>
-      <th id="T_714c1_level0_col0" class="col_heading level0 col0" >Check</th>
-      <th id="T_714c1_level0_col1" class="col_heading level0 col1" >Reason</th>
+      <th id="T_94a07_level0_col0" class="col_heading level0 col0" >Check</th>
+      <th id="T_94a07_level0_col1" class="col_heading level0 col1" >Reason</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td id="T_714c1_row0_col0" class="data row0 col0" >Conflicting Labels - Train Dataset</td>
-      <td id="T_714c1_row0_col1" class="data row0 col1" >Dataset does not contain a label column. see <a href="https://docs.deepchecks.com/0.19/user-guide/tabular/dataset_object.html?html?utm_source=display_output&utm_medium=referral&utm_campaign=check_link" target="_blank">Dataset docs</a></td>
+      <td id="T_94a07_row0_col0" class="data row0 col0" >Conflicting Labels - Train Dataset</td>
+      <td id="T_94a07_row0_col1" class="data row0 col1" >Dataset does not contain a label column. see <a href="https://docs.deepchecks.com/0.19/user-guide/tabular/dataset_object.html?html?utm_source=display_output&utm_medium=referral&utm_campaign=check_link" target="_blank">Dataset docs</a></td>
     </tr>
     <tr>
-      <td id="T_714c1_row1_col0" class="data row1 col0" >Feature Label Correlation - Train Dataset</td>
-      <td id="T_714c1_row1_col1" class="data row1 col1" >Dataset does not contain a label column. see <a href="https://docs.deepchecks.com/0.19/user-guide/tabular/dataset_object.html?html?utm_source=display_output&utm_medium=referral&utm_campaign=check_link" target="_blank">Dataset docs</a></td>
+      <td id="T_94a07_row1_col0" class="data row1 col0" >Feature Label Correlation - Train Dataset</td>
+      <td id="T_94a07_row1_col1" class="data row1 col1" >Dataset does not contain a label column. see <a href="https://docs.deepchecks.com/0.19/user-guide/tabular/dataset_object.html?html?utm_source=display_output&utm_medium=referral&utm_campaign=check_link" target="_blank">Dataset docs</a></td>
     </tr>
     <tr>
-      <td id="T_714c1_row2_col0" class="data row2 col0" >Identifier Label Correlation - Train Dataset</td>
-      <td id="T_714c1_row2_col1" class="data row2 col1" >Dataset does not contain a label column. see <a href="https://docs.deepchecks.com/0.19/user-guide/tabular/dataset_object.html?html?utm_source=display_output&utm_medium=referral&utm_campaign=check_link" target="_blank">Dataset docs</a></td>
+      <td id="T_94a07_row2_col0" class="data row2 col0" >Identifier Label Correlation - Train Dataset</td>
+      <td id="T_94a07_row2_col1" class="data row2 col1" >Dataset does not contain a label column. see <a href="https://docs.deepchecks.com/0.19/user-guide/tabular/dataset_object.html?html?utm_source=display_output&utm_medium=referral&utm_campaign=check_link" target="_blank">Dataset docs</a></td>
     </tr>
     <tr>
-      <td id="T_714c1_row3_col0" class="data row3 col0" >Single Value in Column</td>
-      <td id="T_714c1_row3_col1" class="data row3 col1" >Nothing found</td>
+      <td id="T_94a07_row3_col0" class="data row3 col0" >Single Value in Column</td>
+      <td id="T_94a07_row3_col1" class="data row3 col1" >Nothing found</td>
     </tr>
     <tr>
-      <td id="T_714c1_row4_col0" class="data row4 col0" >Special Characters</td>
-      <td id="T_714c1_row4_col1" class="data row4 col1" >Nothing found</td>
+      <td id="T_94a07_row4_col0" class="data row4 col0" >Special Characters</td>
+      <td id="T_94a07_row4_col1" class="data row4 col1" >Nothing found</td>
     </tr>
     <tr>
-      <td id="T_714c1_row5_col0" class="data row5 col0" >Mixed Nulls</td>
-      <td id="T_714c1_row5_col1" class="data row5 col1" >Nothing found</td>
+      <td id="T_94a07_row5_col0" class="data row5 col0" >Mixed Nulls</td>
+      <td id="T_94a07_row5_col1" class="data row5 col1" >Nothing found</td>
     </tr>
     <tr>
-      <td id="T_714c1_row6_col0" class="data row6 col0" >Mixed Data Types</td>
-      <td id="T_714c1_row6_col1" class="data row6 col1" >Nothing found</td>
+      <td id="T_94a07_row6_col0" class="data row6 col0" >Mixed Data Types</td>
+      <td id="T_94a07_row6_col1" class="data row6 col1" >Nothing found</td>
     </tr>
     <tr>
-      <td id="T_714c1_row7_col0" class="data row7 col0" >String Mismatch</td>
-      <td id="T_714c1_row7_col1" class="data row7 col1" >Nothing found</td>
+      <td id="T_94a07_row7_col0" class="data row7 col0" >String Mismatch</td>
+      <td id="T_94a07_row7_col1" class="data row7 col1" >Nothing found</td>
     </tr>
     <tr>
-      <td id="T_714c1_row8_col0" class="data row8 col0" >Data Duplicates</td>
-      <td id="T_714c1_row8_col1" class="data row8 col1" >Nothing found</td>
+      <td id="T_94a07_row8_col0" class="data row8 col0" >Data Duplicates</td>
+      <td id="T_94a07_row8_col1" class="data row8 col1" >Nothing found</td>
     </tr>
     <tr>
-      <td id="T_714c1_row9_col0" class="data row9 col0" >String Length Out Of Bounds</td>
-      <td id="T_714c1_row9_col1" class="data row9 col1" >Nothing found</td>
+      <td id="T_94a07_row9_col0" class="data row9 col0" >String Length Out Of Bounds</td>
+      <td id="T_94a07_row9_col1" class="data row9 col1" >Nothing found</td>
     </tr>
   </tbody>
 </table>
-<br><a href="#summary_T229NFDI4DFKSOU84WKSHBX8T" style="font-size: 14px;">Go to top</a>
+<br><a href="#summary_WOYGIWSE45OSQ80T3FBXQNGHH" style="font-size: 14px;">Go to top</a>
             </body>
             </html>

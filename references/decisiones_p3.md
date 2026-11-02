@@ -154,3 +154,63 @@ Los dos se evalúan **en el espacio del perfil de uso**:
 `AgglomerativeClustering` (permite grupos dentro de grupos para planear por niveles) y
 `GaussianMixture` (da la probabilidad de pertenecer a cada grupo, útil para estaciones que
 mezclan usos).
+
+## 7. Validación de datos con DeepChecks: qué bloquea y qué solo se vigila
+
+- **Fecha:** 2026-11-01
+- **Estado:** vigente
+
+### Contexto
+
+`scripts/validar_datos_p3.py` corre las suites `data_integrity` y `train_test_validation` de
+DeepChecks sobre `data/processed/p3_perfiles.parquet`, con el entorno aparte
+`.venv-deepchecks` (ver `requirements-deepchecks.txt`). Con las condiciones por defecto, la
+primera corrida dio tres hallazgos (`reports/deepchecks/p3_hallazgos.txt`); pasaron los de
+nulos, duplicados, tipos y columnas constantes.
+
+### Decisión
+
+| Hallazgo (condiciones por defecto) | Decisión |
+|---|---|
+| **Correlación entre variables:** 48 pares con correlación > 0.9 | Se acepta por diseño. La condición se cambia por una que solo falla con pares que el diseño no explica |
+| **Drift por variable:** `sal_jue_noche` (KS 0.22) y `lle_sab_noche` (KS 0.23), umbral 0.2 | Se acepta como hallazgo menor y se reporta como advertencia; no se sube el umbral |
+| **Drift multivariado:** 0.49 (AUC 0.74) entre entrenamiento y prueba, umbral 0.25 | Se documenta como limitación, se reporta como advertencia y se vigila con la estabilidad del modelo |
+
+Los chequeos de integridad **bloquean**: si una condición falla, el script termina con código
+1. Los de drift **solo advierten**: se muestran en la salida y en el reporte HTML, pero no
+detienen el pipeline.
+
+### Por qué
+
+- **Las 48 correlaciones salen del diseño del perfil (decisión 2).** 47 son la misma franja en
+  dos días entre semana (por ejemplo `sal_lun_manana` y `sal_mar_manana`): una estación que se
+  usa para ir al trabajo se usa igual de lunes a viernes. La otra es `salidas_dia` con
+  `llegadas_dia`: casi todas las bicicletas que salen de una estación regresan a ella. Con la
+  condición por defecto el reporte fallaría siempre y dejaría de leerse; la nueva sigue
+  fallando si aparece una correlación que no corresponde, por ejemplo por un error en
+  `perfil_de_uso`. Costo aceptado: para KMeans, esas cinco columnas casi iguales por franja
+  hacen que el patrón entre semana pese más en la distancia que el de fin de semana, lo cual
+  es razonable porque son 5 de los 7 días.
+- **El drift por variable es pequeño en la práctica.** La mediana de `sal_jue_noche` pasa de
+  0.049 en entrenamiento a 0.044 en prueba: medio punto porcentual de los viajes. Subir el
+  umbral solo para que pase ocultaría un cambio mayor más adelante.
+- **El drift multivariado es real, no un artefacto.** Un clasificador distingue los perfiles
+  de entrenamiento de los de prueba con AUC 0.74. No se explica por las estaciones nuevas: con
+  solo las 365 que están en ambos periodos el drift es 0.56 (AUC 0.78). También aparece entre
+  periodos vecinos (validación contra prueba: 0.35). Es decir, las mismas estaciones cambiaron
+  su patrón de uso. Dos causas probables: entrenamiento promedia 3.5 años (2022–2025) y prueba
+  solo cubre abril–septiembre de 2026 (estacionalidad), y el uso del sistema cambió en ese
+  tiempo. Además, las 64 estaciones que solo tienen perfil en prueba (decisión 3) son muy
+  distintas (mediana de 4.9 salidas al día contra 24.8 de las demás) y reciben un grupo
+  aprendido sin ellas.
+- **El drift no detiene el pipeline porque ya hay métricas que miden su efecto.**
+  `test_ari_estabilidad` y `test_silhouette` (decisión 6) dicen si los grupos siguen siendo
+  útiles en prueba. Si un pipeline falla siempre por drift esperado, el equipo aprende a
+  ignorarlo.
+
+### Pendiente
+
+- Probar entrenar con una ventana reciente (por ejemplo, los últimos 12 meses) para que el
+  perfil de entrenamiento se parezca más al de prueba. Cambia la decisión 4 y obliga a
+  reentrenar y registrar de nuevo.
+- Definir un umbral de drift multivariado a partir del cual se reentrena (monitoreo).
