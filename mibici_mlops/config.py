@@ -86,6 +86,12 @@ P1_BUSQUEDA_HGB = {
 # Nombre del modelo de P1 en el Model Registry.
 P1_MODELO_REGISTRADO = "mibici-equipo43-p1-demanda"
 
+# Servicio: el modelo que sirve la API, por nombre y alias del Model Registry. exportar lo
+# descarga en SERVICIO_MODELO_DIR para empaquetarlo en la imagen. Ver la sección de despliegue del
+# README.
+SERVICIO_MODELO_URI = f"models:/{P1_MODELO_REGISTRADO}@champion"
+SERVICIO_MODELO_DIR = MODELS_DIR / "servicio" / "p1"
+
 # P2: etiqueta de riesgo y baseline de frecuencia. Ver references/decisiones_p2.md, decisiones 2
 # (ventana), 3 (semanas de historia), 4 (reinicio e inventario inicial) y 5 (umbral).
 # La hora de reinicio debe coincidir con el inicio de una ventana.

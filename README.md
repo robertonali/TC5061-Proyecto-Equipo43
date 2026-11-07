@@ -236,6 +236,170 @@ modelo = mlflow.pyfunc.load_model("models:/mibici-equipo43-p2-riesgo@champion")
 Cada pregunta se registra con `mlflow run . -e register -P question=<p1|p2|p3>` (ver la sección
 de cada una).
 
+## Despliegue: recuperar el modelo del Model Registry
+
+La API sirve el `champion` de P1 (demanda por estación y día):
+`models:/mibici-equipo43-p1-demanda@champion` (`SERVICIO_MODELO_URI` en `config.py`). Se recupera
+del registry por **nombre y alias**, nunca por la ruta de un run: promover otra versión es mover
+el alias `champion` y volver a exportar, sin tocar el código.
+
+**Opción elegida: empaquetar en la imagen el modelo descargado del registry.** Antes de construir
+la imagen, con el [servidor de MLflow](#mlflow-servidor-de-tracking-local) corriendo y P1
+registrado (`mlflow run . -e register -P question=p1`):
+
+```powershell
+python -m mibici_mlops.api.modelo exportar   # descarga el champion en models/servicio/p1/
+python -m mibici_mlops.api.modelo probar     # lo carga como la API y predice 3 filas reales
+```
+
+`exportar` resuelve a qué versión apunta el alias y descarga esa versión fija, junto con
+`version.json` (nombre, alias, versión y run de origen) para que la API diga qué versión sirve.
+`models/` está en `.gitignore`: la copia no se versiona, se regenera con `exportar`. Con `--uri`
+se exporta otra versión, por alias o por número de versión:
+
+```powershell
+python -m mibici_mlops.api.modelo exportar --uri models:/mibici-equipo43-p1-demanda@challenger
+python -m mibici_mlops.api.modelo exportar --uri models:/mibici-equipo43-p1-demanda/2
+```
+
+Por número, `version.json` (y `/modelo`) registra `"alias": null`: la versión quedó fija a mano y
+no la siguió ningún alias.
+
+**Por qué esta opción y no leer el registry desde el contenedor:**
+
+- **Funciona igual en cualquier máquina:** el contenedor no necesita el servidor de MLflow (que
+  corre en la computadora de un integrante, con `mlflow.db` local) ni acceso a red para arrancar.
+- **Reproducible:** la imagen lleva una versión fija del modelo. Si alguien mueve el alias, una
+  imagen ya construida no cambia de modelo sin avisar; para cambiarlo se reconstruye la imagen.
+
+**Alternativa soportada (registry en vivo):** si se define `MODELO_URI`, la API ignora la copia
+empaquetada y carga del registry al arrancar:
+
+```powershell
+podman run -e MLFLOW_TRACKING_URI=http://host.containers.internal:5000 `
+  -e MODELO_URI=models:/mibici-equipo43-p1-demanda@champion ...
+```
+
+La lógica de carga está en [mibici_mlops/api/modelo.py](mibici_mlops/api/modelo.py).
+
+### La API
+
+[mibici_mlops/api/app.py](mibici_mlops/api/app.py) (FastAPI) carga el modelo una vez al arrancar
+y expone:
+
+| Endpoint | Qué hace |
+|---|---|
+| `GET /salud` | El servicio está arriba y qué versión del modelo tiene cargada |
+| `GET /modelo` | Nombre, alias, versión y run de origen del modelo que sirve |
+| `POST /prediccion` | Viajes esperados para una o varias estaciones-día |
+
+Los esquemas de entrada y salida están en [mibici_mlops/api/esquemas.py](mibici_mlops/api/esquemas.py)
+(Pydantic). Cada fila trae las 9 variables del modelo (`COLUMNAS_P1`) y, opcionalmente,
+`estacion_id`, que el modelo no usa y la respuesta devuelve para identificar cada predicción. Se
+rechaza con `422` una fila con columnas de más o de menos, o fuera de rango: `dia_semana` de 0
+(lunes) a 6, `mes` de 1 a 12, banderas en 0 o 1, `es_fin_de_semana` coherente con `dia_semana`,
+`capacidad` positiva, ubicación dentro de Guadalajara y viajes de la última semana no negativos.
+Las predicciones negativas se recortan a 0 (es un conteo de viajes).
+
+Para levantarla sin contenedor, después de `exportar`:
+
+```powershell
+uvicorn mibici_mlops.api.app:app --port 8000
+```
+
+La documentación interactiva queda en http://127.0.0.1:8000/docs.
+
+Pruebas (`python -m pytest tests/test_api.py tests/test_api_modelo_real.py`):
+
+- `tests/test_api.py` usa un modelo falso y no necesita el servidor de MLflow: respuestas, recorte
+  de negativos, filas inválidas (incluidos `NaN` e `Infinity`, que el JSON de FastAPI admite y se
+  rechazan con `422`) y los formatos de URI del registry.
+- `tests/test_api_modelo_real.py` levanta la API con el modelo exportado y compara sus predicciones
+  con las del modelo cargado directamente en 400 filas reales. Se salta si no hay modelo exportado
+  o datos de P1.
+
+### Contenedor
+
+El [Containerfile](Containerfile) (estándar OCI; sirve igual con Podman y con Docker) parte de
+`python:3.13.9-slim`, la versión de Python con la que se guardó el modelo, instala solo
+[requirements-api.txt](requirements-api.txt) (sin DVC, deepchecks ni notebooks) y copia el paquete
+y el modelo exportado. Corre como un usuario sin privilegios y tiene un `HEALTHCHECK` contra
+`/salud`. [.dockerignore](.dockerignore), que leen los dos motores, deja fuera todo lo demás
+(datos, `.venv`, `mlruns/`, `mlflow.db`, `.env`).
+
+**1. Exportar el modelo** (con el servidor de MLflow corriendo y P1 registrado):
+
+```powershell
+python -m mibici_mlops.api.modelo exportar
+```
+
+**2. Construir la imagen:**
+
+```powershell
+podman build -t mibici-api -f Containerfile .
+# o: docker build -t mibici-api -f Containerfile .
+```
+
+**3. Levantar el contenedor:**
+
+```powershell
+podman run --rm -d --name mibici-api -p 8000:8000 mibici-api
+# o: docker run --rm -d --name mibici-api -p 8000:8000 mibici-api
+```
+
+Al arrancar, MLflow avisa que `psutil` y `pytest` no están instalados: aparecen en el
+`requirements.txt` que infirió al guardar el modelo, pero el modelo no los usa para predecir, así
+que no se agregan a la imagen.
+
+**4. Consumir la API:**
+
+```powershell
+curl.exe http://127.0.0.1:8000/modelo
+curl.exe -X POST http://127.0.0.1:8000/prediccion -H "Content-Type: application/json" `
+  -d '{\"filas\": [{\"estacion_id\": 512, \"dia_semana\": 3, \"mes\": 8, \"es_fin_de_semana\": 0, \"es_feriado\": 0, \"capacidad\": 15, \"lat\": 20.69256, \"lon\": -103.36436, \"lag_7d\": 4, \"media_7d\": 4.0}]}'
+```
+
+Respuesta:
+
+```json
+{
+  "modelo": {
+    "nombre": "mibici-equipo43-p1-demanda",
+    "alias": "champion",
+    "version": "1",
+    "run_id": "54b6e4b6fc0a49129690261e56d5f1dc",
+    "origen": "imagen"
+  },
+  "predicciones": [{"estacion_id": 512, "viajes": 6.46}]
+}
+```
+
+(La versión y el run dependen del registry del que se exportó.) Una fila inválida, por ejemplo
+con `"dia_semana": 9`, regresa `422` con el campo que falló. Para detener el contenedor:
+`podman stop mibici-api` (o `docker stop`).
+
+Para usar el registry en vivo en lugar del modelo empaquetado, se agrega
+`-e MLFLOW_TRACKING_URI=... -e MODELO_URI=models:/mibici-equipo43-p1-demanda@champion` al `run`. El
+host se llama `host.containers.internal` con Podman y `host.docker.internal` con Docker, y el
+servidor de MLflow debe escuchar en `0.0.0.0` (no solo en `127.0.0.1`) para que el contenedor lo
+alcance.
+
+### Estrategia de despliegue: API en línea, usada por lotes
+
+P1 se predice una vez al día, al cierre (23:59), para el día siguiente: por naturaleza es
+inferencia **por lotes** (las 468 estaciones activas de una vez). Aun así se despliega como una **API
+REST** que predice en el momento, y el proceso diario la usa mandando todas las estaciones en una
+sola petición (`POST /prediccion` acepta hasta 5,000 filas):
+
+- **Un solo camino para los dos usos:** el lote diario y las consultas sueltas (una estación, otro
+  día, un escenario con feriado) usan el mismo modelo, la misma validación y la misma respuesta.
+- **El costo de predecir es mínimo:** una tabla de cientos de filas se predice en milisegundos, así
+  que no hace falta infraestructura de lotes (colas, almacenamiento de resultados).
+- **Validación en la frontera:** Pydantic rechaza las filas mal formadas antes de llegar al modelo,
+  y la respuesta dice qué versión del registry predijo, para rastrear cada predicción.
+- **Si el volumen creciera** (p. ej. predicciones por hora para todo el año), el mismo
+  `cargar_modelo()` puede correr como un job por lotes que lea y escriba parquet, sin pasar por HTTP.
+
 ## P1: demanda de viajes por estación y día
 
 **Pregunta:** ¿cuántos viajes iniciarán en cada estación durante el día siguiente? La usa

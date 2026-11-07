@@ -6,7 +6,9 @@ dvc[gdrive]==3.67.1
 pydrive2==1.21.1
 pyopenssl==26.4.0
 bandit==1.9.4
+fastapi==0.146.0
 folium==0.20.0
+httpx==0.28.1
 ipykernel==7.4.0
 loguru==0.7.3
 matplotlib==3.11.2
@@ -24,4 +26,5 @@ scikit-learn==1.9.1
 seaborn==0.13.2
 tqdm==4.70.1
 typer==0.27.3
+uvicorn==0.54.0
 -e .

@@ -1,0 +1,20 @@
+# Dependencias de la imagen de la API (Containerfile): solo lo que hace falta para cargar el modelo
+# de P1 y servirlo. Las versiones son las mismas de requirements.txt y de los requirements.txt que
+# MLflow guarda con el modelo (models/servicio/p1/requirements.txt); si cambian allá, cambiarlas aquí.
+# mlflow-skinny en lugar de mlflow: tiene pyfunc, el cliente y el registry, sin el servidor ni la UI.
+mlflow-skinny==3.17.2
+numpy==2.5.4
+pandas==3.0.6
+scikit-learn==1.9.1
+scipy==1.18.1
+skops==0.16.0
+
+fastapi==0.146.0
+pydantic==2.14.1
+uvicorn==0.54.0
+
+# Las importa el paquete mibici_mlops (config.py y features.py).
+loguru==0.7.3
+python-dotenv==1.2.4
+tqdm==4.70.1
+typer==0.27.3
