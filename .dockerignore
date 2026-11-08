@@ -5,5 +5,5 @@
 *
 !requirements-api.txt
 !mibici_mlops/
-!models/servicio/p1/
+!models/servicio/
 **/__pycache__

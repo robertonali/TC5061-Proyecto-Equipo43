@@ -1,7 +1,7 @@
 """Pruebas de la API: validación de entradas, formato de la respuesta y recorte de negativos.
 
 Usan un modelo falso en lugar del exportado del registry, así que corren sin servidor de MLflow
-ni models/servicio/p1/.
+ni models/servicio/p1/ ni models/servicio/p3/. Las de P3 están en test_api_p3.py.
 """
 
 import json
@@ -13,7 +13,7 @@ import pandas as pd
 import pytest
 
 from mibici_mlops.api import modelo as modulo_modelo
-from mibici_mlops.api.app import app, obtener_modelo
+from mibici_mlops.api.app import app, obtener_modelo, obtener_modelo_p3
 from mibici_mlops.api.modelo import metadatos, separar_uri
 from mibici_mlops.features import COLUMNAS_P1
 
@@ -24,6 +24,24 @@ INFO = {
     "run_id": "abc123",
     "origen": "imagen",
 }
+
+
+INFO_P3 = {
+    "nombre": "mibici-equipo43-p3-clusters",
+    "alias": "champion",
+    "version": "1",
+    "run_id": "def456",
+    "origen": "imagen",
+}
+
+
+class ModeloP3Falso:
+    """Solo para que la API arranque en las pruebas de P1; las de P3 están en test_api_p3.py."""
+
+    metadata = None
+
+    def predict(self, tabla: pd.DataFrame) -> np.ndarray:
+        return np.zeros(len(tabla), dtype=int)
 
 
 class ModeloFalso:
@@ -45,6 +63,7 @@ def modelo():
 def cliente(modelo):
     # Sin `with`, TestClient no corre el arranque, que cargaría el modelo real.
     app.dependency_overrides[obtener_modelo] = lambda: (modelo, INFO)
+    app.dependency_overrides[obtener_modelo_p3] = lambda: (ModeloP3Falso(), INFO_P3)
     yield TestClient(app)
     app.dependency_overrides.clear()
 
@@ -66,7 +85,11 @@ def fila(**cambios) -> dict:
 
 
 def test_salud_y_modelo(cliente):
-    assert cliente.get("/salud").json() == {"estado": "ok", "version_modelo": "3"}
+    assert cliente.get("/salud").json() == {
+        "estado": "ok",
+        "version_modelo": "3",
+        "version_modelo_p3": "1",
+    }
     assert cliente.get("/modelo").json() == INFO
 
 
