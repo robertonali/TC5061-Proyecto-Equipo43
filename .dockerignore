@@ -1,0 +1,9 @@
+# Contexto de construcción del Containerfile. Lo leen Docker y Podman (Podman también acepta
+# .containerignore, pero con .dockerignore basta un solo archivo para los dos).
+# Lista blanca: se excluye todo y se incluye solo lo que copia el Containerfile. Así no entran los
+# datos (varios GB), .venv, mlruns/, mlflow.db ni .env.
+*
+!requirements-api.txt
+!mibici_mlops/
+!models/servicio/p1/
+**/__pycache__
