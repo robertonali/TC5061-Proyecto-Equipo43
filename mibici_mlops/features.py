@@ -71,6 +71,11 @@ COLUMNAS_P2 = [
     "frec_sin_riesgo",
 ]
 
+# Variables de los modelos candidatos de P2 (decisión 8): todas se conocen a las 4:00, cuando se
+# predice. frec_sin_riesgo no entra porque es 1 menos las otras dos frecuencias. Las usan
+# train_p2.py y la API (mibici_mlops/api/p2.py), que valida exactamente estas columnas.
+VARIABLES_P2 = ["hora", "dia_semana", "feriado", "capacidad", "frec_se_vacia", "frec_se_llena"]
+
 
 def dia_de_simulacion(momentos: pd.Series) -> pd.Series:
     """Día de la simulación de cada momento: de las P2_HORA_REINICIO a la misma hora del siguiente.
