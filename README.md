@@ -236,6 +236,88 @@ modelo = mlflow.pyfunc.load_model("models:/mibici-equipo43-p2-riesgo@champion")
 Cada pregunta se registra con `mlflow run . -e register -P question=<p1|p2|p3>` (ver la sección
 de cada una).
 
+## Despliegue: recuperar el modelo del Model Registry
+
+La API sirve el `champion` de P1 (demanda por estación y día):
+`models:/mibici-equipo43-p1-demanda@champion` (`SERVICIO_MODELO_URI` en `config.py`). Se recupera
+del registry por **nombre y alias**, nunca por la ruta de un run: promover otra versión es mover
+el alias `champion` y volver a exportar, sin tocar el código.
+
+**Opción elegida: empaquetar en la imagen el modelo descargado del registry.** Antes de construir
+la imagen, con el [servidor de MLflow](#mlflow-servidor-de-tracking-local) corriendo y P1
+registrado (`mlflow run . -e register -P question=p1`):
+
+```powershell
+python -m mibici_mlops.api.modelo exportar   # descarga el champion en models/servicio/p1/
+python -m mibici_mlops.api.modelo probar     # lo carga como la API y predice 3 filas reales
+```
+
+`exportar` resuelve a qué versión apunta el alias y descarga esa versión fija, junto con
+`version.json` (nombre, alias, versión y run de origen) para que la API diga qué versión sirve.
+`models/` está en `.gitignore`: la copia no se versiona, se regenera con `exportar`. Con `--uri`
+se exporta otra versión, por alias o por número de versión:
+
+```powershell
+python -m mibici_mlops.api.modelo exportar --uri models:/mibici-equipo43-p1-demanda@challenger
+python -m mibici_mlops.api.modelo exportar --uri models:/mibici-equipo43-p1-demanda/2
+```
+
+Por número, `version.json` (y `/modelo`) registra `"alias": null`: la versión quedó fija a mano y
+no la siguió ningún alias.
+
+**Por qué esta opción y no leer el registry desde el contenedor:**
+
+- **Funciona igual en cualquier máquina:** el contenedor no necesita el servidor de MLflow (que
+  corre en la computadora de un integrante, con `mlflow.db` local) ni acceso a red para arrancar.
+- **Reproducible:** la imagen lleva una versión fija del modelo. Si alguien mueve el alias, una
+  imagen ya construida no cambia de modelo sin avisar; para cambiarlo se reconstruye la imagen.
+
+**Alternativa soportada (registry en vivo):** si se define `MODELO_URI`, la API ignora la copia
+empaquetada y carga del registry al arrancar:
+
+```powershell
+podman run -e MLFLOW_TRACKING_URI=http://host.containers.internal:5000 `
+  -e MODELO_URI=models:/mibici-equipo43-p1-demanda@champion ...
+```
+
+La lógica de carga está en [mibici_mlops/api/modelo.py](mibici_mlops/api/modelo.py).
+
+### La API
+
+[mibici_mlops/api/app.py](mibici_mlops/api/app.py) (FastAPI) carga el modelo una vez al arrancar
+y expone:
+
+| Endpoint | Qué hace |
+|---|---|
+| `GET /salud` | El servicio está arriba y qué versión del modelo tiene cargada |
+| `GET /modelo` | Nombre, alias, versión y run de origen del modelo que sirve |
+| `POST /prediccion` | Viajes esperados para una o varias estaciones-día |
+
+Los esquemas de entrada y salida están en [mibici_mlops/api/esquemas.py](mibici_mlops/api/esquemas.py)
+(Pydantic). Cada fila trae las 9 variables del modelo (`COLUMNAS_P1`) y, opcionalmente,
+`estacion_id`, que el modelo no usa y la respuesta devuelve para identificar cada predicción. Se
+rechaza con `422` una fila con columnas de más o de menos, o fuera de rango: `dia_semana` de 0
+(lunes) a 6, `mes` de 1 a 12, banderas en 0 o 1, `es_fin_de_semana` coherente con `dia_semana`,
+`capacidad` positiva, ubicación dentro de Guadalajara y viajes de la última semana no negativos.
+Las predicciones negativas se recortan a 0 (es un conteo de viajes).
+
+Para levantarla sin contenedor, después de `exportar`:
+
+```powershell
+uvicorn mibici_mlops.api.app:app --port 8000
+```
+
+La documentación interactiva queda en http://127.0.0.1:8000/docs.
+
+Pruebas (`python -m pytest tests/test_api.py tests/test_api_modelo_real.py`):
+
+- `tests/test_api.py` usa un modelo falso y no necesita el servidor de MLflow: respuestas, recorte
+  de negativos, filas inválidas (incluidos `NaN` e `Infinity`, que el JSON de FastAPI admite y se
+  rechazan con `422`) y los formatos de URI del registry.
+- `tests/test_api_modelo_real.py` levanta la API con el modelo exportado y compara sus predicciones
+  con las del modelo cargado directamente en 400 filas reales. Se salta si no hay modelo exportado
+  o datos de P1.
+
 ## P1: demanda de viajes por estación y día
 
 **Pregunta:** ¿cuántos viajes iniciarán en cada estación durante el día siguiente? La usa
