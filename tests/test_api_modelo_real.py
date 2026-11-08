@@ -1,7 +1,8 @@
 """Prueba de integración: la API con el modelo exportado del registry, sobre filas reales.
 
-Se salta si no hay modelo exportado en models/servicio/p1/ (`python -m mibici_mlops.api.modelo
-exportar`) o si no están los datos de P1 (data/processed/p1_estacion_dia.parquet).
+Se salta si falta alguno de los dos modelos exportados (la API carga P1 y P2 al arrancar; ver
+`python -m mibici_mlops.api.modelo exportar`) o si no están los datos de P1
+(data/processed/p1_estacion_dia.parquet).
 """
 
 import json
@@ -13,14 +14,16 @@ import pandas as pd
 import pytest
 
 from mibici_mlops.api.app import app
-from mibici_mlops.config import P1_FEATURES_PATH, SERVICIO_MODELO_DIR
+from mibici_mlops.config import P1_FEATURES_PATH, P2_SERVICIO_MODELO_DIR, SERVICIO_MODELO_DIR
 from mibici_mlops.features import COLUMNAS_P1
 
 N_FILAS = 400
 
 pytestmark = pytest.mark.skipif(
-    not (SERVICIO_MODELO_DIR / "MLmodel").exists() or not P1_FEATURES_PATH.exists(),
-    reason="Falta el modelo exportado en models/servicio/p1/ o los datos de P1",
+    not (SERVICIO_MODELO_DIR / "MLmodel").exists()
+    or not (P2_SERVICIO_MODELO_DIR / "MLmodel").exists()
+    or not P1_FEATURES_PATH.exists(),
+    reason="Faltan los modelos exportados en models/servicio/p1/ y p2/ o los datos de P1",
 )
 
 
@@ -29,6 +32,7 @@ def cliente():
     # Con `with`, TestClient corre el arranque de la API, que carga el modelo como en producción.
     with pytest.MonkeyPatch.context() as mp:
         mp.delenv("MODELO_URI", raising=False)  # la copia empaquetada, no el registry en vivo
+        mp.delenv("MODELO_URI_P2", raising=False)
         with TestClient(app) as cliente:
             yield cliente
 
@@ -42,7 +46,7 @@ def test_sirve_la_version_exportada(cliente):
     info = cliente.get("/modelo").json()
     assert info["origen"] == "imagen"
     assert info["nombre"] == "mibici-equipo43-p1-demanda"
-    assert cliente.get("/salud").json() == {"estado": "ok", "version_modelo": info["version"]}
+    assert cliente.get("/salud").json()["modelos"]["p1"] == info["version"]
 
 
 def test_predicciones_iguales_al_modelo_cargado_directamente(cliente, filas_reales):
