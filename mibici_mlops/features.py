@@ -315,6 +315,11 @@ def columnas_perfil(prefijo: str) -> list[str]:
     return [f"{prefijo}_{dia}_{franja}" for dia in DIAS_SEMANA for franja in P3_FRANJAS]
 
 
+# Variables del modelo de P3: las 28 fracciones de salidas y las 28 de llegadas del perfil de uso,
+# en el orden en que se calculan. No hay variable objetivo: los grupos no tienen etiqueta.
+COLUMNAS_P3 = [*columnas_perfil("sal"), *columnas_perfil("lle")]
+
+
 def franja_del_dia(momentos: pd.Series) -> np.ndarray:
     """Número de la franja del día de cada momento: 0 = madrugada, 1 = mañana, etc.
 

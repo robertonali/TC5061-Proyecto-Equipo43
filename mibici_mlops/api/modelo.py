@@ -1,11 +1,13 @@
-"""Recupera del Model Registry los modelos que sirve la API: P1 (demanda) y P2 (riesgo).
+"""Recupera del Model Registry los modelos que sirve la API: P1 (demanda), P2 (riesgo) y P3
+(grupos de estaciones).
 
 Cada modelo se identifica por nombre y alias (el `champion` de su pregunta: SERVICIO_MODELO_URI y
-P2_SERVICIO_MODELO_URI en config.py) o por nombre y número de versión
+P2_SERVICIO_MODELO_URI y P3_SERVICIO_MODELO_URI en config.py) o por nombre y número de versión
 (models:/mibici-equipo43-p1-demanda/3). Hay dos formas de llegar a él, y la API usa la primera
 que aplique:
 
-1. Si la variable de entorno del modelo está definida (MODELO_URI para P1, MODELO_URI_P2 para P2),
+1. Si la variable de entorno del modelo está definida (MODELO_URI para P1, MODELO_URI_P2 para P2,
+   MODELO_URI_P3 para P3),
    se carga del registry en el momento de arrancar (p. ej.
    MODELO_URI=models:/mibici-equipo43-p1-demanda@champion con
    MLFLOW_TRACKING_URI=http://host.containers.internal:5000). Requiere el servidor de MLflow.
@@ -19,10 +21,12 @@ para que la API diga qué versión del registry está sirviendo.
 Uso (con el servidor de MLflow levantado):
     python -m mibici_mlops.api.modelo exportar                  # P1
     python -m mibici_mlops.api.modelo exportar --question p2    # P2
+    python -m mibici_mlops.api.modelo exportar --question p3    # P3
     python -m mibici_mlops.api.modelo exportar --uri models:/mibici-equipo43-p1-demanda@challenger
     python -m mibici_mlops.api.modelo exportar --question p2 --uri models:/mibici-equipo43-p2-riesgo/2
     python -m mibici_mlops.api.modelo probar
     python -m mibici_mlops.api.modelo probar --question p2
+    python -m mibici_mlops.api.modelo probar --question p3
 """
 
 import json
@@ -42,10 +46,13 @@ from mibici_mlops.config import (
     P2_SERVICIO_MODELO_DIR,
     P2_SERVICIO_MODELO_URI,
     P2_VENTANAS_PATH,
+    P3_PERFILES_PATH,
+    P3_SERVICIO_MODELO_DIR,
+    P3_SERVICIO_MODELO_URI,
     SERVICIO_MODELO_DIR,
     SERVICIO_MODELO_URI,
 )
-from mibici_mlops.features import COLUMNAS_P1, VARIABLES_P2
+from mibici_mlops.features import COLUMNAS_P1, COLUMNAS_P3, VARIABLES_P2
 
 app = typer.Typer()
 
@@ -74,6 +81,17 @@ SERVICIOS = {
         "datos": P2_VENTANAS_PATH,
         "columnas": VARIABLES_P2,
         "objetivo": "clase",
+    },
+    "p3": {
+        "uri": P3_SERVICIO_MODELO_URI,
+        "directorio": P3_SERVICIO_MODELO_DIR,
+        "variable": "MODELO_URI_P3",
+        # pyfunc basta: la API de P3 solo usa `predict` (el número de grupo).
+        "cargador": mlflow.pyfunc.load_model,
+        "datos": P3_PERFILES_PATH,
+        "columnas": COLUMNAS_P3,
+        # Sin variable objetivo: los grupos no tienen etiqueta.
+        "objetivo": None,
     },
 }
 
@@ -124,8 +142,8 @@ def metadatos(uri: str) -> dict:
 def cargar_modelo(question: str = "p1") -> tuple[object, dict]:
     """El modelo que sirve la API para una pregunta y sus metadatos (nombre, alias, versión, run).
 
-    Se carga con el `cargador` de su servicio: pyfunc para P1 y el estimador de scikit-learn para
-    P2, que necesita `predict_proba`.
+    Se carga con el `cargador` de su servicio: pyfunc para P1 y P3, y el estimador de scikit-learn
+    para P2, que necesita `predict_proba`.
     """
     servicio = servicio_de(question)
     uri = os.getenv(servicio["variable"])
@@ -196,9 +214,10 @@ def probar(question: Question = "p1"):
     servicio = servicio_cli(question)
     modelo, info = cargar_modelo(question)
     columnas, objetivo = servicio["columnas"], servicio["objetivo"]
-    ejemplo = pd.read_parquet(servicio["datos"], columns=[*columnas, objetivo]).tail(3)
+    leer = [*columnas, objetivo] if objetivo else columnas
+    ejemplo = pd.read_parquet(servicio["datos"], columns=leer).tail(3)
     ejemplo["prediccion"] = modelo.predict(ejemplo[columnas])
-    mostrar = [objetivo, "prediccion"]
+    mostrar = [objetivo, "prediccion"] if objetivo else ["prediccion"]
     if hasattr(modelo, "predict_proba"):  # P2: también la probabilidad de cada clase
         probabilidades = pd.DataFrame(
             modelo.predict_proba(ejemplo[columnas]), columns=modelo.classes_, index=ejemplo.index

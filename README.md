@@ -238,25 +238,28 @@ de cada una).
 
 ## Despliegue: recuperar los modelos del Model Registry
 
-Una sola API sirve los modelos en producción (`champion`) de dos preguntas:
+Una sola API sirve los modelos en producción (`champion`) de tres preguntas:
 
 | Pregunta | Modelo en el registry | Constante en `config.py` | Copia exportada |
 |---|---|---|---|
 | P1, demanda por estación y día | `models:/mibici-equipo43-p1-demanda@champion` | `SERVICIO_MODELO_URI` | `models/servicio/p1/` |
 | P2, riesgo de vaciado o llenado por estación y ventana de 2 h | `models:/mibici-equipo43-p2-riesgo@champion` | `P2_SERVICIO_MODELO_URI` | `models/servicio/p2/` |
+| P3, grupo de una estación según su perfil de uso (clustering) | `models:/mibici-equipo43-p3-clusters@champion` | `P3_SERVICIO_MODELO_URI` | `models/servicio/p3/` |
 
 Cada uno se recupera del registry por **nombre y alias**, nunca por la ruta de un run: promover
 otra versión es mover el alias `champion` y volver a exportar, sin tocar el código.
 
 **Opción elegida: empaquetar en la imagen los modelos descargados del registry.** Antes de
 construir la imagen, con el [servidor de MLflow](#mlflow-servidor-de-tracking-local) corriendo y
-P1 y P2 registrados (`mlflow run . -e register -P question=p1` y `-P question=p2`):
+P1, P2 y P3 registrados (`mlflow run . -e register -P question=p1`, `p2` y `p3`):
 
 ```powershell
 python -m mibici_mlops.api.modelo exportar                 # P1: el champion en models/servicio/p1/
 python -m mibici_mlops.api.modelo exportar --question p2   # P2: el champion en models/servicio/p2/
+python -m mibici_mlops.api.modelo exportar --question p3   # P3: el champion en models/servicio/p3/
 python -m mibici_mlops.api.modelo probar                   # carga P1 como la API y predice 3 filas reales
 python -m mibici_mlops.api.modelo probar --question p2     # lo mismo con P2, con la probabilidad de cada clase
+python -m mibici_mlops.api.modelo probar --question p3     # asigna grupo a 3 estaciones reales
 ```
 
 `exportar` resuelve a qué versión apunta el alias y descarga esa versión fija, junto con
@@ -280,20 +283,21 @@ no la siguió ningún alias.
 - **Reproducible:** la imagen lleva una versión fija del modelo. Si alguien mueve el alias, una
   imagen ya construida no cambia de modelo sin avisar; para cambiarlo se reconstruye la imagen.
 
-**Alternativa soportada (registry en vivo):** si se define `MODELO_URI` (P1) o `MODELO_URI_P2`
-(P2), la API ignora la copia empaquetada de ese modelo y lo carga del registry al arrancar:
+**Alternativa soportada (registry en vivo):** si se define `MODELO_URI` (P1), `MODELO_URI_P2`
+(P2) o `MODELO_URI_P3` (P3), la API ignora la copia empaquetada de ese modelo y lo carga del registry al arrancar:
 
 ```powershell
 podman run -e MLFLOW_TRACKING_URI=http://host.containers.internal:5000 `
   -e MODELO_URI=models:/mibici-equipo43-p1-demanda@champion `
-  -e MODELO_URI_P2=models:/mibici-equipo43-p2-riesgo@champion ...
+  -e MODELO_URI_P2=models:/mibici-equipo43-p2-riesgo@champion `
+  -e MODELO_URI_P3=models:/mibici-equipo43-p3-clusters@champion ...
 ```
 
 La lógica de carga está en [mibici_mlops/api/modelo.py](mibici_mlops/api/modelo.py).
 
 ### La API
 
-[mibici_mlops/api/app.py](mibici_mlops/api/app.py) (FastAPI) carga los dos modelos una vez al
+[mibici_mlops/api/app.py](mibici_mlops/api/app.py) (FastAPI) carga los tres modelos una vez al
 arrancar (si falta alguno, no arranca y el log dice qué exportar) y expone:
 
 | Endpoint | Qué hace |
@@ -303,11 +307,14 @@ arrancar (si falta alguno, no arranca y el log dice qué exportar) y expone:
 | `POST /prediccion` | P1: viajes esperados para una o varias estaciones-día |
 | `GET /p2/modelo` | P2: nombre, alias, versión y run de origen del modelo que sirve |
 | `POST /p2/prediccion` | P2: clase de riesgo y probabilidad de cada clase para una o varias estaciones-ventana |
+| `GET /p3/modelo` | P3: nombre, alias, versión y run de origen del modelo que sirve |
+| `POST /p3/prediccion` | P3: grupo de una o varias estaciones a partir de su perfil de uso |
 
 Cada pregunta vive en su módulo: los endpoints de P1 en `app.py`, con sus esquemas de Pydantic en
 [esquemas.py](mibici_mlops/api/esquemas.py), y los de P2 en
 [mibici_mlops/api/p2.py](mibici_mlops/api/p2.py), un `APIRouter` con prefijo `/p2` que `app.py`
-monta. P3 puede sumarse igual, con su módulo y su prefijo.
+monta. P3 sigue el mismo patrón en [mibici_mlops/api/p3.py](mibici_mlops/api/p3.py), con prefijo
+`/p3`.
 
 **P1.** Cada fila trae las 9 variables del modelo (`COLUMNAS_P1`) y, opcionalmente, `estacion_id`,
 que el modelo no usa y la respuesta devuelve para identificar cada predicción. Se rechaza con `422`
@@ -336,6 +343,16 @@ de P2). Las probabilidades permiten ordenar las estaciones por riesgo, que es co
 rebalanceo arma su lista (decisión 11 de P2). Para tenerlas, el modelo de P2 se carga con
 `mlflow.sklearn` en lugar de `pyfunc`, que solo da la clase.
 
+**P3.** Cada fila es el **perfil de uso** de una estación (`COLUMNAS_P3` en `features.py`, la misma
+tabla `data/processed/p3_perfiles.parquet` con la que se entrenó): 56 fracciones, 28 de salidas
+(`sal_<día>_<franja>`) y 28 de llegadas (`lle_<día>_<franja>`), una por día de la semana (`lun` a
+`dom`) y franja del día (`madrugada`, `manana`, `tarde`, `noche`), más `estacion_id` opcional. Se
+rechaza con `422` una fila con columnas de más o de menos, con una fracción fuera de 0 a 1, con
+`NaN` o `Infinity`, o cuyo bloque de salidas o de llegadas no sume 1 (con tolerancia de 0.001, para
+perfiles redondeados a 4 decimales). Hasta 5,000 perfiles por petición. Los números de grupo
+(`cluster`) son los del modelo servido: no se conservan entre versiones, así que se leen junto con
+`modelo.version`.
+
 Para levantarla sin contenedor, después de `exportar`:
 
 ```powershell
@@ -344,17 +361,19 @@ uvicorn mibici_mlops.api.app:app --port 8000
 
 La documentación interactiva queda en http://127.0.0.1:8000/docs.
 
-Pruebas (`python -m pytest tests/test_api.py tests/test_api_p2.py tests/test_api_modelo_real.py
-tests/test_api_p2_modelo_real.py`):
+Pruebas (`python -m pytest tests/test_api.py tests/test_api_p2.py tests/test_api_p3.py
+tests/test_api_modelo_real.py tests/test_api_p2_modelo_real.py tests/test_api_p3_modelo_real.py`):
 
-- `tests/test_api.py` (P1) y `tests/test_api_p2.py` (P2) usan modelos falsos y no necesitan el
+- `tests/test_api.py` (P1), `tests/test_api_p2.py` (P2) y `tests/test_api_p3.py` (P3) usan modelos
+  falsos y no necesitan el
   servidor de MLflow: respuestas, recorte de negativos (P1), orden de las clases y regla de
-  desempate (P2), filas inválidas (incluidos `NaN` e `Infinity`, que el JSON de FastAPI admite y se
+  desempate (P2), orden de las 56 columnas y suma de cada bloque (P3), filas inválidas (incluidos `NaN` e `Infinity`, que el JSON de FastAPI admite y se
   rechazan con `422`), el lote diario completo, los formatos de URI del registry y
   `exportar --question p2` contra un registry falso.
-- `tests/test_api_modelo_real.py` y `tests/test_api_p2_modelo_real.py` levantan la API con los
+- `tests/test_api_modelo_real.py`, `tests/test_api_p2_modelo_real.py` y
+  `tests/test_api_p3_modelo_real.py` levantan la API con los
   modelos exportados y comparan sus predicciones (P2: sus probabilidades) con las del modelo
-  cargado directamente en 400 filas reales. Se saltan si falta alguno de los modelos exportados o
+  cargado directamente en 400 filas reales (P3: perfiles de validación). Se saltan si falta alguno de los modelos exportados o
   los datos.
 
 ### Contenedor
@@ -362,15 +381,16 @@ tests/test_api_p2_modelo_real.py`):
 El [Containerfile](Containerfile) (estándar OCI; sirve igual con Podman y con Docker) parte de
 `python:3.13.9-slim`, la versión de Python con la que se guardaron los modelos, instala solo
 [requirements-api.txt](requirements-api.txt) (sin DVC, deepchecks ni notebooks) y copia el paquete
-y la carpeta `models/servicio/` con los dos modelos exportados. Corre como un usuario sin
+y la carpeta `models/servicio/` con los tres modelos exportados. Corre como un usuario sin
 privilegios y tiene un `HEALTHCHECK` contra `/salud`. [.dockerignore](.dockerignore), que leen los
 dos motores, deja fuera todo lo demás (datos, `.venv`, `mlruns/`, `mlflow.db`, `.env`).
 
-**1. Exportar los modelos** (con el servidor de MLflow corriendo y P1 y P2 registrados):
+**1. Exportar los modelos** (con el servidor de MLflow corriendo y P1, P2 y P3 registrados):
 
 ```powershell
 python -m mibici_mlops.api.modelo exportar
 python -m mibici_mlops.api.modelo exportar --question p2
+python -m mibici_mlops.api.modelo exportar --question p3
 ```
 
 **2. Construir la imagen:**
@@ -451,11 +471,37 @@ Respuesta (del contenedor construido en esta entrega; la captura está en
 
 Una ventana que empieza en hora impar (`"hora": 7`) regresa `422` con el mensaje `Input should be
 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20 or 22`, y unas frecuencias que suman más de 1, `422` con la
-explicación. Para detener el contenedor: `podman stop mibici-api` (o `docker stop`).
+explicación.
+
+**P3**, el perfil de uso de la estación 244. Las 56 fracciones se mandan desde un archivo,
+[references/ejemplo_p3_peticion.json](references/ejemplo_p3_peticion.json):
+
+```powershell
+curl.exe -X POST http://127.0.0.1:8000/p3/prediccion -H "Content-Type: application/json" `
+  --data-binary "@references/ejemplo_p3_peticion.json"
+```
+
+Respuesta (champion versión 1, que agrupa las estaciones en 3 grupos):
+
+```json
+{
+  "modelo": {
+    "nombre": "mibici-equipo43-p3-clusters",
+    "alias": "champion",
+    "version": "1",
+    "run_id": "98d5e87a6b474312b569bd1f3e2ca735",
+    "origen": "imagen"
+  },
+  "predicciones": [{"estacion_id": 244, "cluster": 1}]
+}
+```
+
+Un perfil cuyas salidas no suman 1 regresa `422` con la suma que recibió. Para detener el contenedor: `podman stop mibici-api` (o `docker stop`).
 
 Para usar el registry en vivo en lugar de los modelos empaquetados, se agrega
 `-e MLFLOW_TRACKING_URI=... -e MODELO_URI=models:/mibici-equipo43-p1-demanda@champion
--e MODELO_URI_P2=models:/mibici-equipo43-p2-riesgo@champion` al `run`. El
+-e MODELO_URI_P2=models:/mibici-equipo43-p2-riesgo@champion
+-e MODELO_URI_P3=models:/mibici-equipo43-p3-clusters@champion` al `run`. El
 host se llama `host.containers.internal` con Podman y `host.docker.internal` con Docker, y el
 servidor de MLflow debe escuchar en `0.0.0.0` (no solo en `127.0.0.1`) para que el contenedor lo
 alcance.
@@ -484,6 +530,14 @@ primero y si llevar o retirar bicicletas. Servir P1 y P2 en la misma API y la mi
 duplicar contenedor, dependencias y pruebas; como P2 vive en su propio módulo (`api/p2.py`), se
 puede separar en un servicio aparte si la arquitectura lo pide, sin reescribirlo (decisión 11 de
 P2).
+
+**P3 se sirve en la misma imagen, pero su uso es distinto:** el perfil de una estación se calcula
+con meses de viajes y cambia poco, así que no se consulta en tiempo real. El caso de uso es **por
+lotes y bajo demanda**: planeación urbana recalcula los perfiles cuando hay datos nuevos o evalúa
+una estación candidata, y manda todos los perfiles juntos a `POST /p3/prediccion` (hasta 5,000 por
+petición). Se despliega como API, y no como un job aparte, por las mismas razones que P1: un solo
+camino con la misma validación, y la respuesta dice qué versión del registry asignó cada grupo. Eso
+importa más aquí que en P1, porque los números de grupo no se conservan entre versiones del modelo.
 
 ## P1: demanda de viajes por estación y día
 

@@ -1,6 +1,7 @@
-# Dependencias de la imagen de la API (Containerfile): solo lo que hace falta para cargar el modelo
-# de P1 y servirlo. Las versiones son las mismas de requirements.txt y de los requirements.txt que
-# MLflow guarda con el modelo (models/servicio/p1/requirements.txt); si cambian allá, cambiarlas aquí.
+# Dependencias de la imagen de la API (Containerfile): solo lo que hace falta para cargar los
+# modelos de P1 y de P3 y servirlos. Las versiones son las mismas de requirements.txt y de los
+# requirements.txt que MLflow guarda con cada modelo (models/servicio/p1/requirements.txt y
+# models/servicio/p3/requirements.txt); si cambian allá, cambiarlas aquí.
 # mlflow-skinny en lugar de mlflow: tiene pyfunc, el cliente y el registry, sin el servidor ni la UI.
 mlflow-skinny==3.17.2
 numpy==2.5.4
