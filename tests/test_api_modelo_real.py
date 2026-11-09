@@ -1,6 +1,6 @@
 """Prueba de integración: la API con el modelo exportado del registry, sobre filas reales.
 
-Se salta si falta alguno de los dos modelos exportados (la API carga P1 y P2 al arrancar; ver
+Se salta si falta alguno de los modelos exportados (la API carga P1, P2 y P3 al arrancar; ver
 `python -m mibici_mlops.api.modelo exportar`) o si no están los datos de P1
 (data/processed/p1_estacion_dia.parquet).
 """
@@ -14,7 +14,12 @@ import pandas as pd
 import pytest
 
 from mibici_mlops.api.app import app
-from mibici_mlops.config import P1_FEATURES_PATH, P2_SERVICIO_MODELO_DIR, SERVICIO_MODELO_DIR
+from mibici_mlops.config import (
+    P1_FEATURES_PATH,
+    P2_SERVICIO_MODELO_DIR,
+    P3_SERVICIO_MODELO_DIR,
+    SERVICIO_MODELO_DIR,
+)
 from mibici_mlops.features import COLUMNAS_P1
 
 N_FILAS = 400
@@ -22,8 +27,9 @@ N_FILAS = 400
 pytestmark = pytest.mark.skipif(
     not (SERVICIO_MODELO_DIR / "MLmodel").exists()
     or not (P2_SERVICIO_MODELO_DIR / "MLmodel").exists()
+    or not (P3_SERVICIO_MODELO_DIR / "MLmodel").exists()
     or not P1_FEATURES_PATH.exists(),
-    reason="Faltan los modelos exportados en models/servicio/p1/ y p2/ o los datos de P1",
+    reason="Faltan los modelos exportados en models/servicio/ (p1, p2 y p3) o los datos de P1",
 )
 
 
@@ -33,6 +39,7 @@ def cliente():
     with pytest.MonkeyPatch.context() as mp:
         mp.delenv("MODELO_URI", raising=False)  # la copia empaquetada, no el registry en vivo
         mp.delenv("MODELO_URI_P2", raising=False)
+        mp.delenv("MODELO_URI_P3", raising=False)
         with TestClient(app) as cliente:
             yield cliente
 

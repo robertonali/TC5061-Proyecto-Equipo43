@@ -13,7 +13,7 @@ import pandas as pd
 import pytest
 
 from mibici_mlops.api import modelo as modulo_modelo
-from mibici_mlops.api import p2
+from mibici_mlops.api import p2, p3
 from mibici_mlops.api.app import app, obtener_modelo
 from mibici_mlops.api.modelo import metadatos, separar_uri
 from mibici_mlops.features import COLUMNAS_P1
@@ -45,9 +45,11 @@ def modelo():
 @pytest.fixture
 def cliente(modelo):
     # Sin `with`, TestClient no corre el arranque, que cargaría los modelos reales. /salud también
-    # pregunta por el modelo de P2 (sus pruebas están en test_api_p2.py); aquí basta su versión.
+    # pregunta por los modelos de P2 y P3 (sus pruebas están en test_api_p2.py y test_api_p3.py);
+    # aquí basta su versión.
     app.dependency_overrides[obtener_modelo] = lambda: (modelo, INFO)
     app.dependency_overrides[p2.obtener_modelo_p2] = lambda: (None, {"version": "1"})
+    app.dependency_overrides[p3.obtener_modelo_p3] = lambda: (None, {"version": "2"})
     yield TestClient(app)
     app.dependency_overrides.clear()
 
@@ -69,7 +71,10 @@ def fila(**cambios) -> dict:
 
 
 def test_salud_y_modelo(cliente):
-    assert cliente.get("/salud").json() == {"estado": "ok", "modelos": {"p1": "3", "p2": "1"}}
+    assert cliente.get("/salud").json() == {
+        "estado": "ok",
+        "modelos": {"p1": "3", "p2": "1", "p3": "2"},
+    }
     assert cliente.get("/modelo").json() == INFO
 
 

@@ -17,7 +17,7 @@ import pytest
 from typer.testing import CliRunner
 
 from mibici_mlops.api import modelo as modulo_modelo
-from mibici_mlops.api import p2
+from mibici_mlops.api import p2, p3
 from mibici_mlops.api.app import app, obtener_modelo
 from mibici_mlops.features import CLASES_P2, VARIABLES_P2
 
@@ -65,6 +65,7 @@ def cliente(modelo):
     # Sin `with`, TestClient no corre el arranque, que cargaría los modelos reales.
     app.dependency_overrides[obtener_modelo] = lambda: (None, INFO_P1)
     app.dependency_overrides[p2.obtener_modelo_p2] = lambda: (modelo, INFO_P2)
+    app.dependency_overrides[p3.obtener_modelo_p3] = lambda: (None, {"version": "2"})
     yield TestClient(app)
     app.dependency_overrides.clear()
 
@@ -82,8 +83,11 @@ def fila(**cambios) -> dict:
     return {**base, **cambios}
 
 
-def test_salud_reporta_la_version_de_los_dos_modelos(cliente):
-    assert cliente.get("/salud").json() == {"estado": "ok", "modelos": {"p1": "3", "p2": "1"}}
+def test_salud_reporta_la_version_de_cada_modelo(cliente):
+    assert cliente.get("/salud").json() == {
+        "estado": "ok",
+        "modelos": {"p1": "3", "p2": "1", "p3": "2"},
+    }
 
 
 def test_modelo_de_p2(cliente):
@@ -247,8 +251,8 @@ class ClienteFalso:
 
 
 def test_servicio_desconocido():
-    with pytest.raises(ValueError, match="opciones: p1, p2"):
-        modulo_modelo.servicio_de("p9")
+    with pytest.raises(ValueError, match="opciones: p1, p2, p3"):
+        modulo_modelo.servicio_de("p4")
 
 
 def test_cargar_modelo_p2_desde_el_registry_en_vivo(monkeypatch):
@@ -323,4 +327,4 @@ def test_exportar_por_pregunta_usa_el_champion_y_la_carpeta_de_p2(monkeypatch, t
 def test_exportar_rechaza_una_pregunta_sin_servicio():
     resultado = CliRunner().invoke(modulo_modelo.app, ["exportar", "--question", "p9"])
     assert resultado.exit_code != 0
-    assert "opciones: p1, p2" in resultado.output
+    assert "opciones: p1, p2, p3" in resultado.output

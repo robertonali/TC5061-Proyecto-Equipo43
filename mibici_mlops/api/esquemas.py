@@ -5,18 +5,11 @@ Una fila de entrada es una estación-día con las mismas variables que usa el mo
 cómo se construyen esas variables: el día de la semana es `dt.dayofweek` (0 = lunes), las
 banderas son 0 o 1, y la ubicación cae dentro del área de servicio de MiBici en Guadalajara.
 Una fila que no cumple se rechaza con 422 antes de llegar al modelo.
-
-Para P3, una fila es el perfil de uso de una estación: 28 fracciones de sus salidas (`sal_*`) y 28
-de sus llegadas (`lle_*`), una por día de la semana y franja del día (COLUMNAS_P3 en features.py,
-tabla data/processed/p3_perfiles.parquet). Cada bloque de 28 suma 1, porque son proporciones del
-total de viajes de la estación.
 """
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, create_model, model_validator
-
-from mibici_mlops.features import COLUMNAS_P3, columnas_perfil
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # Área de servicio de MiBici con margen: las estaciones del periodo de entrenamiento están entre
 # 20.64 y 20.74 de latitud y entre -103.43 y -103.30 de longitud.
@@ -105,92 +98,3 @@ class Prediccion(BaseModel):
 class RespuestaPrediccion(BaseModel):
     modelo: InfoModelo
     predicciones: list[Prediccion]
-
-
-# ---------------------------------------------------------------------------------------------
-# P3: grupo de una estación según su perfil de uso
-# ---------------------------------------------------------------------------------------------
-
-# Las fracciones del perfil se calculan con float64 y suman 1 sin más error que el de redondeo;
-# la tolerancia deja pasar perfiles que un cliente redondeó a 4 o 5 decimales.
-TOLERANCIA_SUMA = 1e-3
-
-
-def ejemplo_perfil() -> dict:
-    """Un perfil válido para la documentación interactiva: viajes repartidos por igual."""
-    fraccion = 1 / len(columnas_perfil("sal"))
-    return {"estacion_id": 512, **dict.fromkeys(COLUMNAS_P3, fraccion)}
-
-
-class _PerfilBase(BaseModel):
-    """Base del perfil de uso de una estación. Los 56 campos se agregan en `PerfilEstacion`."""
-
-    model_config = ConfigDict(
-        extra="forbid",
-        allow_inf_nan=False,
-        json_schema_extra={"examples": [ejemplo_perfil()]},
-    )
-
-    estacion_id: int | None = Field(
-        None,
-        description="Identificador de la estación. No lo usa el modelo; se devuelve tal cual.",
-    )
-
-    @model_validator(mode="after")
-    def cada_bloque_suma_uno(self) -> "_PerfilBase":
-        for prefijo, nombre in (("sal", "salidas"), ("lle", "llegadas")):
-            suma = sum(getattr(self, columna) for columna in columnas_perfil(prefijo))
-            if abs(suma - 1) > TOLERANCIA_SUMA:
-                raise ValueError(
-                    f"Las 28 fracciones de {nombre} ({prefijo}_*) deben sumar 1, no {suma:.4f}"
-                )
-        return self
-
-
-PerfilEstacion = create_model(
-    "PerfilEstacion",
-    __base__=_PerfilBase,
-    __doc__=(
-        "Perfil de uso de una estación: la fracción de sus salidas (`sal_<día>_<franja>`) y de sus "
-        "llegadas (`lle_<día>_<franja>`) en cada día de la semana y franja del día "
-        "(madrugada 0-6 h, mañana 6-12 h, tarde 12-18 h, noche 18-24 h)."
-    ),
-    **{
-        columna: (
-            float,
-            Field(
-                ge=0,
-                le=1,
-                description=(
-                    f"Fracción de {'las salidas' if columna.startswith('sal') else 'las llegadas'}"
-                    f" de la estación en {columna.split('_', 1)[1].replace('_', ', ')}."
-                ),
-            ),
-        )
-        for columna in COLUMNAS_P3
-    },
-)
-
-
-class SolicitudClusters(BaseModel):
-    """Los perfiles de las estaciones a agrupar. Pueden mandarse todas juntas."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    filas: list[PerfilEstacion] = Field(min_length=1, max_length=5000)
-
-
-class Cluster(BaseModel):
-    estacion_id: int | None
-    cluster: int = Field(
-        ge=0,
-        description=(
-            "Número del grupo al que pertenece la estación. Los números son del modelo servido: "
-            "no se conservan entre versiones (mira `version` en `modelo`)."
-        ),
-    )
-
-
-class RespuestaClusters(BaseModel):
-    modelo: InfoModelo
-    predicciones: list[Cluster]

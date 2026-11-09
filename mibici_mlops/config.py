@@ -129,9 +129,9 @@ P3_MIN_VIAJES = 500
 P3_GRUPOS = 3
 P3_GRUPOS_BUSQUEDA = range(2, 9)
 P3_MODELO_REGISTRADO = "mibici-equipo43-p3-clusters"
-# Servicio: el modelo de P3 que sirve la API, igual que SERVICIO_MODELO_URI para P1.
-SERVICIO_P3_MODELO_URI = f"models:/{P3_MODELO_REGISTRADO}@champion"
-SERVICIO_P3_MODELO_DIR = MODELS_DIR / "servicio" / "p3"
+# Servicio: el modelo de P3 que sirve la API, igual que P2_SERVICIO_MODELO_URI para P2.
+P3_SERVICIO_MODELO_URI = f"models:/{P3_MODELO_REGISTRADO}@champion"
+P3_SERVICIO_MODELO_DIR = MODELS_DIR / "servicio" / "p3"
 
 REPORTS_DIR = PROJ_ROOT / "reports"
 FIGURES_DIR = REPORTS_DIR / "figures"
