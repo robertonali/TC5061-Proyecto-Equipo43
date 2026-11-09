@@ -78,7 +78,7 @@ from mibici_mlops.config import (
     PROJ_ROOT,
     SEMILLA,
 )
-from mibici_mlops.features import CLASES_P2
+from mibici_mlops.features import CLASES_P2, VARIABLES_P2
 from mibici_mlops.modeling.registro import (
     etiquetas_run,
     registrar_manifiesto,
@@ -93,9 +93,8 @@ NOMBRES = {"se_vacia": "Se vacía", "se_llena": "Se llena", "sin_riesgo": "Sin r
 # Conjuntos en que se evalúa cada modelo: prefijo de sus métricas → nombre en las gráficas.
 NOMBRES_CONJUNTO = {"val": "validación", "test": "prueba"}
 
-# Variables de los candidatos (decisión 8): todas se conocen a las 4:00, cuando se predice.
-# frec_sin_riesgo no entra porque es 1 menos las otras dos frecuencias.
-VARIABLES = ["hora", "dia_semana", "feriado", "capacidad", "frec_se_vacia", "frec_se_llena"]
+# Variables de los candidatos (decisión 8): VARIABLES_P2 de features.py, compartidas con la API.
+VARIABLES = VARIABLES_P2
 CATEGORICAS = ["hora", "dia_semana"]
 
 # MLflow guarda los modelos de scikit-learn con skops, que al cargarlos rechaza los tipos que no

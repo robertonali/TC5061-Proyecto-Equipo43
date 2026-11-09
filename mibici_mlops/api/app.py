@@ -1,12 +1,19 @@
-"""API REST que sirve el modelo de P1: viajes que iniciarán en cada estación el día siguiente.
+"""API REST que sirve los modelos en producción del equipo 43.
 
-El modelo se carga una sola vez al arrancar (ver `cargar_modelo` en modelo.py): la copia del
-`champion` empaquetada en la imagen o, si se define MODELO_URI, la versión del registry.
+- P1: viajes que iniciarán en cada estación el día siguiente (este archivo).
+- P2: riesgo de que una estación se vacíe o se llene en una ventana de 2 horas (p2.py, con el
+  prefijo /p2).
+
+Cada modelo se carga una sola vez al arrancar (ver `cargar_modelo` en modelo.py): la copia del
+`champion` empaquetada en la imagen o, si se define su variable de entorno (MODELO_URI,
+MODELO_URI_P2), la versión del registry. Si falta alguno, la API no arranca.
 
 Endpoints:
-    GET  /salud       el servicio está arriba y tiene un modelo cargado
-    GET  /modelo      nombre, alias, versión y run de origen del modelo que sirve
-    POST /prediccion  viajes esperados para una o varias estaciones-día
+    GET  /salud          el servicio está arriba y qué versión tiene cargada de cada modelo
+    GET  /modelo         nombre, alias, versión y run de origen del modelo de P1
+    POST /prediccion     viajes esperados para una o varias estaciones-día
+    GET  /p2/modelo      lo mismo para el modelo de P2
+    POST /p2/prediccion  clase de riesgo y probabilidades para una o varias estaciones-ventana
 
 Uso local:
     uvicorn mibici_mlops.api.app:app --port 8000
@@ -24,6 +31,7 @@ from fastapi.responses import JSONResponse
 import numpy as np
 import pandas as pd
 
+from mibici_mlops.api import p2
 from mibici_mlops.api.esquemas import (
     InfoModelo,
     Prediccion,
@@ -36,19 +44,26 @@ from mibici_mlops.features import COLUMNAS_P1
 
 @asynccontextmanager
 async def ciclo_de_vida(app: FastAPI):
-    app.state.modelo, app.state.info = cargar_modelo()
+    app.state.modelo, app.state.info = cargar_modelo("p1")
+    app.state.modelo_p2, app.state.info_p2 = p2.cargar()
     yield
 
 
 app = FastAPI(
-    title="MiBici: demanda por estación y día (P1)",
+    title="MiBici: modelos del equipo 43",
     description=(
-        "Predice cuántos viajes iniciarán en cada estación de MiBici durante un día, a partir del "
-        "calendario, la estación y sus viajes de la última semana. Equipo 43."
+        "Sirve los modelos en producción (`champion`) del Model Registry. P1: cuántos viajes "
+        "iniciarán en cada estación de MiBici durante un día, a partir del calendario, la estación "
+        "y sus viajes de la última semana. P2: si una estación se quedará sin bicicletas o sin "
+        "anclajes en una ventana de 2 horas, con la probabilidad de cada clase."
     ),
-    version="1.0.0",
+    version="1.1.0",
     lifespan=ciclo_de_vida,
 )
+# Cada pregunta agrega su router en su propio módulo, con su prefijo (/p2, /p3…).
+app.include_router(p2.router)
+
+TAG_P1 = "P1: demanda por estación y día"
 
 
 def a_json_valido(valor):
@@ -92,17 +107,18 @@ def a_tabla(solicitud: SolicitudPrediccion, modelo) -> pd.DataFrame:
     return tabla
 
 
-@app.get("/salud")
-def salud(modelo: Modelo) -> dict:
-    return {"estado": "ok", "version_modelo": modelo[1]["version"]}
+@app.get("/salud", tags=["Servicio"])
+def salud(modelo: Modelo, modelo_p2: p2.ModeloP2) -> dict:
+    """El servicio está arriba y qué versión del registry tiene cargada de cada modelo."""
+    return {"estado": "ok", "modelos": {"p1": modelo[1]["version"], "p2": modelo_p2[1]["version"]}}
 
 
-@app.get("/modelo")
+@app.get("/modelo", tags=[TAG_P1])
 def info_modelo(modelo: Modelo) -> InfoModelo:
     return InfoModelo(**modelo[1])
 
 
-@app.post("/prediccion")
+@app.post("/prediccion", tags=[TAG_P1])
 def predecir(solicitud: SolicitudPrediccion, modelo: Modelo) -> RespuestaPrediccion:
     """Viajes esperados por estación-día. Los negativos se recortan a 0 (es un conteo)."""
     pyfunc, info = modelo

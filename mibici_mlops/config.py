@@ -115,6 +115,11 @@ P2_HIPERPARAMETROS = {
 P2_BUSQUEDA_HGB = {"learning_rate": [0.05, 0.1], "max_leaf_nodes": [31, 63, 127]}
 # Nombre del modelo de P2 en el Model Registry (decisión 9).
 P2_MODELO_REGISTRADO = "mibici-equipo43-p2-riesgo"
+# Servicio: el modelo de P2 que sirve la API, por nombre y alias del Model Registry, y dónde lo deja
+# `exportar --question p2` para empaquetarlo en la imagen (decisión 11; ver la sección de despliegue
+# del README).
+P2_SERVICIO_MODELO_URI = f"models:/{P2_MODELO_REGISTRADO}@champion"
+P2_SERVICIO_MODELO_DIR = MODELS_DIR / "servicio" / "p2"
 
 # P3: perfil de uso de cada estación y número de grupos. Ver references/decisiones_p3.md,
 # decisiones 2 (franjas), 3 (mínimo de viajes) y 5 (número de grupos).
