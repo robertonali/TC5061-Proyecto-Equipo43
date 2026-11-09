@@ -705,3 +705,83 @@ manifiesto de la ingesta, gráficas y configuración, en subcarpetas y sin datos
 - Todos los runs de esta entrega se lanzaron con el commit `b6edd95`, sin cambios sin commit.
 - MLflow toma del sistema operativo el usuario interno del run (`user_id`); para no guardarlo, las
   corridas se lanzaron con la variable `LOGNAME=equipo43` (ver el README).
+
+## 11. Despliegue de P2: un endpoint en la API del equipo, con probabilidades y el modelo en la imagen
+
+- **Fecha:** 2026-11-08
+- **Estado:** vigente
+- **Aplica a:** el servicio del modelo de P2 (`mibici_mlops/api/p2.py`, Containerfile y README).
+
+### Contexto
+
+La cuarta entrega pide servir al menos un modelo del Model Registry como API REST con FastAPI, con
+validación de entradas y salidas, dentro de un contenedor (Podman o Docker), y documentarlo con un
+ejemplo de petición y respuesta. Manuel ya había desplegado el `champion` de P1
+(`mibici_mlops/api/`, Containerfile, `requirements-api.txt`) con el modelo empaquetado en la
+imagen. P2 debía sumarse sin duplicar esa infraestructura ni romper lo de P1, y el responsable de
+P3 iba a hacer lo mismo en paralelo.
+
+### Decisión
+
+- **Un endpoint más en la misma API y la misma imagen**, no un servicio aparte: `POST
+  /p2/prediccion` y `GET /p2/modelo`, en un módulo propio (`api/p2.py`) con sus esquemas de
+  Pydantic y su router, que `app.py` monta con el prefijo `/p2`. `GET /salud` reporta la versión
+  cargada de cada modelo. `exportar --question p2` descarga el `champion` de
+  `mibici-equipo43-p2-riesgo` a `models/servicio/p2/` y el Containerfile copia `models/servicio/`
+  completo.
+- **Entrada:** las 6 variables del modelo por estación-ventana (`VARIABLES_P2`, que pasa a
+  `features.py` para que la API y `train_p2.py` usen la misma lista), con los rangos con que se
+  construyen: hora par de 0 a 22, día de la semana de 0 a 6, feriado booleano, capacidad entera
+  positiva, frecuencias entre 0 y 1 que no suman más de 1, sin columnas extra ni NaN; hasta 10,000
+  filas por petición. `estacion_id` es opcional y se devuelve tal cual.
+- **Salida:** por fila, la clase y la probabilidad de cada una de las tres clases, redondeada a 3
+  decimales, más nombre, alias, versión y run del modelo. La clase se decide con la misma regla que
+  en el entrenamiento (`predecir` de `train_p2.py`, decisión 7): la de mayor probabilidad y, en
+  empate, el riesgo. Para tener `predict_proba`, el modelo se carga con `mlflow.sklearn.load_model`
+  y no con `pyfunc`.
+- **Estrategia de despliegue:** la misma que P1, una API en línea que se usa por lotes. El lote de
+  P2 se manda a las 4:00 (decisión 6): las 12 ventanas del día de cada estación activa (468 × 12 =
+  5,616 filas) en una sola petición.
+
+### Por qué
+
+- **Un endpoint y no otro servicio:** la actividad pide "al menos un modelo"; dos contenedores
+  duplicarían Containerfile, dependencias, pruebas y README para el mismo stack (scikit-learn
+  1.9.1, Python 3.13). El router en su propio módulo permite separar P2 en un servicio aparte más
+  adelante, si la arquitectura de microservicios lo pide, sin reescribirlo.
+- **Probabilidades y no solo la clase:** el equipo de rebalanceo tiene camiones limitados; con la
+  probabilidad puede ordenar las estaciones y atender primero las que con más seguridad se vaciarán
+  o llenarán, y ajustar el umbral sin volver a entrenar. La clase sola pierde esa información. El
+  modelo del registry devuelve la clase con `predict`; el estimador de scikit-learn, con
+  `predict_proba`, da las dos cosas.
+- **Validar la suma de frecuencias:** `frec_se_vacia` y `frec_se_llena` son fracciones de las
+  mismas 4 semanas; una suma mayor que 1 es un cliente mal armado, no un escenario posible. Las
+  horas impares tampoco existen en el entrenamiento: el modelo las trataría como una categoría que
+  nunca vio.
+- **El modelo dentro de la imagen:** la misma razón que P1 (reproducible y sin depender del
+  servidor de MLflow de un integrante); `MODELO_URI_P2` permite usar el registry en vivo cuando
+  haga falta.
+
+### Alternativas descartadas
+
+- **Servicio y contenedor propios de P2** (`Containerfile.p2`): duplicación sin beneficio esta
+  semana; queda como camino si la siguiente entrega separa los modelos.
+- **Que la API calcule hora, día de la semana y feriado a partir de la fecha de la ventana:** cómodo
+  para el cliente, pero `es_feriado` depende de una lista de feriados por año que hay que mantener;
+  con las variables explícitas la API valida y el cliente decide. Se puede agregar después como
+  entrada alternativa.
+- **Volver a registrar el modelo con `predict_proba` como función de pyfunc:** crearía una versión
+  nueva en el registry solo por la forma de servirlo; cargar el estimador de scikit-learn resuelve
+  lo mismo sin tocar el registry.
+
+### Consecuencias
+
+- `features.py` y `train_p2.py` comparten `VARIABLES_P2`; `config.py` gana
+  `P2_SERVICIO_MODELO_URI` y `P2_SERVICIO_MODELO_DIR`.
+- Para construir la imagen hay que exportar los dos modelos (P1 y P2): si falta uno, la API no
+  arranca y lo dice en el log. Cada integrante necesita ambos `champion` en su registry local; los
+  `mlflow run` del README los regeneran en minutos.
+- `GET /salud` cambió de `{"estado", "version_modelo"}` a `{"estado", "modelos": {"p1", "p2"}}`;
+  las pruebas de P1 se ajustaron.
+- Pruebas nuevas: `tests/test_api_p2.py` (modelo falso) y `tests/test_api_p2_modelo_real.py` (el
+  modelo exportado sobre 400 ventanas reales).

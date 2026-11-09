@@ -1,10 +1,10 @@
-# Imagen de la API de MiBici: P1 (demanda por estación y día) y P3 (grupos de estaciones).
-# Compatible con Podman y Docker.
+# Imagen de la API del equipo 43: P1 (demanda por estación y día) y P2 (riesgo de que una estación
+# se vacíe o se llene). Compatible con Podman y Docker.
 #
-# Antes de construir, exporta del Model Registry el modelo (o los modelos) que se empaquetan (ver
-# la sección de despliegue del README):
-#     python -m mibici_mlops.api.modelo exportar --pregunta p3
-#     python -m mibici_mlops.api.modelo exportar --pregunta p1    # opcional
+# Antes de construir, exporta del Model Registry los modelos que se empaquetan (ver la sección de
+# despliegue del README):
+#     python -m mibici_mlops.api.modelo exportar                  # P1, en models/servicio/p1/
+#     python -m mibici_mlops.api.modelo exportar --question p2    # P2, en models/servicio/p2/
 # Construir y correr:
 #     podman build -t mibici-api -f Containerfile .
 #     podman run --rm -p 8000:8000 mibici-api
@@ -26,8 +26,8 @@ COPY requirements-api.txt .
 RUN pip install -r requirements-api.txt
 
 # El paquete se usa desde /app (sin instalarlo): config.py toma /app como raíz del proyecto, así
-# que los modelos quedan en /app/models/servicio/p1 y /app/models/servicio/p3, donde los busca
-# cargar_modelo(). Se copia la carpeta entera: la API sirve los modelos que estén exportados.
+# que los modelos quedan en /app/models/servicio/p1 y /app/models/servicio/p2, donde los busca
+# cargar_modelo(). La API no arranca si falta alguno de los dos.
 COPY mibici_mlops/ mibici_mlops/
 COPY models/servicio/ models/servicio/
 
