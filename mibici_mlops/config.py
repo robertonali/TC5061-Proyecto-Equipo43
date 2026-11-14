@@ -136,6 +136,14 @@ P3_SERVICIO_MODELO_DIR = MODELS_DIR / "servicio" / "p3"
 REPORTS_DIR = PROJ_ROOT / "reports"
 FIGURES_DIR = REPORTS_DIR / "figures"
 
+# Monitoreo de los datos de P1 con Evidently (entrega 8). Referencia: el conjunto de
+# entrenamiento, con el que se ajustó el modelo `champion`. Actual: los 12 meses que siguen al
+# corte del entrenamiento, que el modelo vería en producción. Un año completo hace que la
+# estacionalidad no se confunda con drift. Ver references/decisiones_p1.md, decisión 8.
+P1_MONITOREO_INICIO = FECHA_INICIO_VALIDACION
+P1_MONITOREO_FIN = FECHA_FIN
+EVIDENTLY_DIR = REPORTS_DIR / "evidently"
+
 # If tqdm is installed, configure loguru with tqdm.write
 # https://github.com/Delgan/loguru/issues/135
 try:

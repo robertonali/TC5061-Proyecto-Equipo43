@@ -888,6 +888,42 @@ detalle del run de KMeans, el mapa de grupos como artefacto y la comparación co
 y las de la entrega 2 en `reports/figures/mlflow2_p3_*.png` (además, Model Registry, linaje y la
 API del modelo servido).
 
+## Monitoreo de datos con Evidently
+
+Vigila si los datos que recibiría el modelo de P1 en producción se alejan de los de
+entrenamiento. Evidently 0.7.23 corre en el `.venv` del proyecto (acepta pandas 3 y numpy 2, a
+diferencia de DeepChecks).
+
+| Conjunto | Periodo | Por qué |
+|---|---|---|
+| Referencia | 2022-03-08 a 2025-09-30 | Es el conjunto con el que se entrenó el modelo `champion` |
+| Actual | 2025-10-01 a 2026-09-30 | Los 12 meses posteriores al corte: lo que el modelo vería en producción. Un año completo evita que la estacionalidad (`mes`) parezca drift |
+
+Los periodos están en `config.py` (`P1_MONITOREO_INICIO`, `P1_MONITOREO_FIN`) y la decisión
+completa, en la decisión 8 de [references/decisiones_p1.md](references/decisiones_p1.md).
+
+```powershell
+python -m mibici_mlops.monitoreo p1    # o: make monitoreo
+```
+
+Lee `data/processed/p1_estacion_dia.parquet` y guarda en `reports/evidently/`:
+
+- [p1_drift_calidad.html](reports/evidently/p1_drift_calidad.html): reporte de Evidently con
+  el drift por variable (`DataDriftPreset`) y la calidad de los datos de ambos conjuntos
+  (`DataSummaryPreset`: faltantes, duplicados, columnas constantes, estadísticas por columna).
+- [p1_drift_resumen.json](reports/evidently/p1_drift_resumen.json): periodos, estaciones nuevas
+  y la distancia de drift de cada variable.
+- [p1_drift_por_mes.csv](reports/evidently/p1_drift_por_mes.csv) y
+  [p1_drift_por_mes.png](reports/evidently/p1_drift_por_mes.png): cada mes del periodo actual
+  contra el mismo mes de los años de entrenamiento.
+
+El drift se mide con distancias (Wasserstein normalizada para las numéricas, Jensen-Shannon para
+las categóricas) con umbral 0.1. Resultado: 3 de 10 variables con drift (`media_7d` 0.16,
+`lag_7d` 0.15 y `viajes` 0.15) y sin drift del conjunto. `lon` y `capacidad` pasan el umbral
+desde julio de 2026, cuando abren la mayoría de las 100 estaciones nuevas.
+
+![Drift de P1 por mes](reports/evidently/p1_drift_por_mes.png)
+
 ## Pruebas y chequeos
 
 Tres capas:
