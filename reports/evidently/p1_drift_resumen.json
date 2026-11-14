@@ -1,0 +1,44 @@
+{
+  "referencia": {
+    "desde": "2022-03-08",
+    "hasta": "2025-09-30",
+    "filas": 434345,
+    "estaciones": 371,
+    "viajes_media": 36.49,
+    "viajes_mediana": 26.0
+  },
+  "actual": {
+    "desde": "2025-10-01",
+    "hasta": "2026-09-30",
+    "filas": 142803,
+    "estaciones": 469,
+    "viajes_media": 31.47,
+    "viajes_mediana": 21.0
+  },
+  "estaciones_nuevas": 100,
+  "filas_de_estaciones_nuevas": 9548,
+  "metodos": {
+    "numericas": "wasserstein",
+    "categoricas": "jensenshannon"
+  },
+  "umbral_drift": 0.1,
+  "drift_por_variable": {
+    "media_7d": 0.1617,
+    "lag_7d": 0.1539,
+    "viajes": 0.1467,
+    "lon": 0.0727,
+    "capacidad": 0.071,
+    "mes": 0.0394,
+    "lat": 0.0201,
+    "dia_semana": 0.0027,
+    "es_feriado": 0.0018,
+    "es_fin_de_semana": 0.0005
+  },
+  "variables_con_drift": [
+    "media_7d",
+    "lag_7d",
+    "viajes"
+  ],
+  "proporcion_con_drift": 0.3,
+  "drift_del_conjunto": false
+}

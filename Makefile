@@ -63,6 +63,12 @@ data: requirements
 	$(PYTHON_INTERPRETER) mibici_mlops/dataset.py
 
 
+## Reporte de drift y calidad de datos de P1 con Evidently (reports/evidently/)
+.PHONY: monitoreo
+monitoreo:
+	$(PYTHON_INTERPRETER) -m mibici_mlops.monitoreo p1
+
+
 ## Pruebas unitarias con PyTest
 .PHONY: test
 test:

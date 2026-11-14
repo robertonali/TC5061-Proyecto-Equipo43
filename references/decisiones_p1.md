@@ -321,5 +321,10 @@ periodo actual sale de los datos abiertos de MiBici.
 
 ### Consecuencias
 
-- El reporte de Evidently se genera sobre estos periodos (paso 2 de la entrega).
+- Resultados (`reports/evidently/p1_drift_resumen.json`): 3 de 10 variables con drift —
+  `media_7d` (0.16), `lag_7d` (0.15) y `viajes` (0.15)—; no hay drift del conjunto (0.3 < 0.5).
+  `lon` (0.07) y `capacidad` (0.07) quedan debajo del umbral en el año, pero lo pasan desde
+  julio de 2026 (`reports/evidently/p1_drift_por_mes.png`).
+- 100 estaciones del periodo actual no existían en entrenamiento (9,548 filas); 98 abrieron
+  entre mayo y agosto de 2026.
 - La interpretación y sus implicaciones para el modelo van en el reporte de la entrega 8.
