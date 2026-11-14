@@ -266,3 +266,60 @@ de un run.
 - Los runs `p1-gradient-boosting` de la entrega 1 quedan como históricos; los de esta entrega se
   llaman como en la tabla de resultados del README.
 - Las gráficas se guardan como artefactos del run (`plots/`), no en `reports/figures`.
+
+## 8. Monitoreo de datos con Evidently: periodos de referencia y actual (entrega 8)
+
+- **Fecha:** 2026-11-14
+- **Estado:** vigente
+- **Aplica a:** `mibici_mlops/monitoreo.py` y `P1_MONITOREO_INICIO` / `P1_MONITOREO_FIN` en
+  `config.py`.
+
+### Contexto
+
+La entrega 8 pide comparar los datos con los que se entrenó el modelo contra un periodo
+posterior que represente producción, y reportar el drift por variable y la calidad de los datos
+con Evidently. La API de la entrega anterior no guarda las peticiones que recibe, así que el
+periodo actual sale de los datos abiertos de MiBici.
+
+### Decisión
+
+| Conjunto | Periodo | Filas estación-día | Estaciones |
+|---|---|---|---|
+| Referencia | 2022-03-08 a 2025-09-30 (el conjunto de entrenamiento) | 434,345 | 371 |
+| Actual | 2025-10-01 a 2026-09-30 (validación + prueba) | 142,803 | 469 |
+
+- **Referencia = entrenamiento.** Es exactamente la tabla con la que se ajustó el modelo
+  `champion` (decisión 7); validación y prueba no se usaron para ajustar sus parámetros.
+- **Actual = los 12 meses posteriores al corte del entrenamiento.** Es lo que el modelo habría
+  recibido si se hubiera puesto en producción el 1 de octubre de 2025.
+- **Métricas de drift:** distancia de Wasserstein normalizada (numéricas) y de Jensen-Shannon
+  (categóricas: día de la semana, mes y los dos indicadores), con umbral 0.1. Hay drift del
+  conjunto si la mitad o más de las variables lo tienen. Son los valores por defecto de
+  Evidently para tablas grandes, fijados en el código.
+- **Además, drift mes a mes:** cada mes del periodo actual contra el mismo mes en los años de
+  entrenamiento (octubre de 2025 contra los octubres de 2022 a 2024), sin la variable `mes`.
+
+### Por qué
+
+- **Un año completo no confunde estacionalidad con drift.** Contra la prueba sola (abril a
+  septiembre), `mes` tenía drift de 0.53 por construcción (DeepChecks,
+  `reports/deepchecks/p1_hallazgos.txt`). Con 12 meses baja a 0.04 y el drift que queda es un
+  cambio real.
+- **Comparar contra el mismo mes quita la estacionalidad del análisis por mes.** Así se ve si el
+  cambio crece con el tiempo, que es lo que importa para decidir cuándo reentrenar.
+- **Distancias y no pruebas de hipótesis.** Con cientos de miles de filas, una prueba de KS o
+  chi cuadrada marca como drift cualquier diferencia mínima; una distancia mide su tamaño.
+- **Sin descargar meses nuevos.** Los 12 meses ya están en la versión de los datos de DVC
+  (`FECHA_FIN` = 2026-09-30), así que el reporte se puede reproducir sin cambiarla.
+
+### Alternativas descartadas
+
+- **Solo la prueba (abril a septiembre de 2026):** el drift de `mes` dominaría el reporte.
+- **Octubre de 2026 (ya publicado en el portal):** un solo mes, fuera de la versión de datos
+  del equipo. Queda como opción para evaluar el A/B testing con datos que ningún modelo vio.
+- **Registros de la API:** la API no los guarda.
+
+### Consecuencias
+
+- El reporte de Evidently se genera sobre estos periodos (paso 2 de la entrega).
+- La interpretación y sus implicaciones para el modelo van en el reporte de la entrega 8.
