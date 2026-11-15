@@ -214,3 +214,63 @@ detienen el pipeline.
   perfil de entrenamiento se parezca más al de prueba. Cambia la decisión 4 y obliga a
   reentrenar y registrar de nuevo.
 - Definir un umbral de drift multivariado a partir del cual se reentrena (monitoreo).
+
+## 8. Monitoreo con Evidently y versión alternativa: periodos, reglas y A/B
+
+- **Fecha:** 2026-11-15
+- **Estado:** vigente
+
+### Contexto
+
+La entrega 8 pide comparar un conjunto de referencia con uno actual, medir el drift con Evidently,
+entrenar una versión alternativa y compararla con el modelo vigente. P3 no tiene etiquetas ni
+variable objetivo, así que el monitoreo mira las 56 variables que recibe el modelo y el grupo que
+asigna.
+
+### Decisión
+
+- **Referencia:** los perfiles de `entrenamiento` (2022-03-01 a 2025-09-30), con los que se ajustó
+  el `champion`.
+- **Actual:** los perfiles de `validacion` (2025-10-01 a 2026-03-31) y de `prueba` (2026-04-01 a
+  2026-09-30), cada uno contra la referencia. Son los periodos posteriores al entrenamiento que
+  hay en los datos abiertos; dos periodos muestran si el drift crece con el tiempo.
+- **Qué se mide** (`python -m mibici_mlops.monitoreo p3`):
+  - drift de cada una de las 56 variables y del grupo asignado (drift de predicción), con los
+    mismos métodos y umbral que P1 (decisión 8 de P1): Wasserstein para las variables numéricas,
+    Jensen-Shannon para el grupo, y drift si la distancia es >= 0.1;
+  - calidad de los datos (`DataSummaryPreset`) y estaciones que entran o salen del perfil;
+  - silhouette y Davies-Bouldin de los grupos del `champion` en cada conjunto, porque sin
+    etiquetas es la señal de que los grupos siguen separando bien.
+  El monitoreo lee el `champion` del Model Registry y queda como un run (`p3-monitoreo`).
+- **Versión alternativa:** el mismo modelo e hiperparámetros del `champion` (`kmeans_k3`), ajustado
+  con el perfil de **toda la ventana de entrenamiento y validación** (2022-03-01 a 2026-03-31), no
+  con filas de los dos periodos por separado (`features p3-ampliado`). Se registra como una nueva
+  versión de `mibici-equipo43-p3-clusters` con el alias `reentrenado`, y su run lleva la etapa
+  `retrain`, para que `registrar_p3` no la elija como `champion` por su ARI.
+- **A/B:** las dos versiones asignan grupos a los mismos perfiles de `prueba`, que ninguna usó
+  para ajustarse (`python -m mibici_mlops.modeling.ab_p3`). La alternativa se vuelve `champion`
+  solo si mejora el silhouette al menos 0.01 (`P3_AB_MARGEN_SILHOUETTE`), no empeora
+  Davies-Bouldin y tiene el mismo número de grupos. Con `--promover` el script mueve el alias; sin
+  él, solo reporta.
+
+### Por qué
+
+- **Dos periodos actuales.** Un solo periodo no distingue un cambio puntual de uno que crece.
+- **Perfil de toda la ventana, no filas repetidas.** Con una fila por estación y periodo, cada
+  estación pesaría dos veces en el ajuste y las más estables dominarían los grupos.
+- **El A/B usa `prueba`.** Si la alternativa se ajustó con validación, medirla ahí sería
+  evaluarla con sus propios datos. `prueba` es el periodo que las dos versiones no vieron.
+- **El margen se fijó antes de correr el A/B.** Con unas 430 estaciones, diferencias de centésimas
+  en el silhouette son ruido; sin margen cualquier mejora mínima cambiaría el modelo en
+  producción.
+- **Dos métricas, no una.** Una sola métrica interna puede mejorar por azar.
+
+### Limitaciones
+
+- La referencia abarca 3.5 años y cada periodo actual, seis meses. Parte del drift puede ser
+  estacional (`prueba` es abril a septiembre) y con este perfil no se separa; P1 lo resolvió
+  comparando mes contra mes, pero en P3 un perfil mensual tendría muy pocos viajes por estación
+  (decisión 3).
+- Sin etiquetas, un silhouette menor indica que los grupos se separan peor, no que sean erróneos.
+- Los números de grupo de dos versiones no coinciden; por eso se comparan métricas y el ARI entre
+  asignaciones, no las etiquetas.

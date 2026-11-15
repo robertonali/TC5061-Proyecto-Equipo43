@@ -45,6 +45,7 @@ from mibici_mlops.config import (
     P2_VENTANAS_PATH,
     P3_FRANJAS,
     P3_MIN_VIAJES,
+    P3_PERFILES_AMPLIADO_PATH,
     P3_PERFILES_PATH,
     VIAJES_PATH,
 )
@@ -386,13 +387,10 @@ def perfiles_estaciones(
     return perfil[perfil.index.isin(estaciones) & suficientes]
 
 
-@app.command()
-def p3(
-    viajes_path: Path = VIAJES_PATH,
-    estaciones_path: Path = ESTACIONES_PATH,
-    output_path: Path = P3_PERFILES_PATH,
-):
-    """P3: perfil de uso de cada estación en los periodos de entrenamiento y de prueba."""
+def guardar_perfiles(viajes_path: Path, estaciones_path: Path, output_path: Path, periodos: dict):
+    """Calcula el perfil de cada estación en cada periodo de `periodos` y guarda la tabla.
+    `periodos` va del nombre del conjunto a (desde, hasta), con `hasta` excluido.
+    """
     estaciones = pd.read_csv(estaciones_path)["id"].to_numpy()
     viajes = pd.read_parquet(
         viajes_path,
@@ -403,24 +401,55 @@ def p3(
         ],
     )
     logger.info(f"{len(viajes):,} viajes de {FECHA_INICIO} a {FECHA_FIN}")
-
-    # La validación no se usa: P3 no ajusta hiperparámetros con ella (decisión 4).
-    fin = (pd.Timestamp(FECHA_FIN) + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
-    periodos = {
-        "entrenamiento": (FECHA_INICIO, FECHA_INICIO_VALIDACION),
-        "validacion": (FECHA_INICIO_VALIDACION, FECHA_INICIO_PRUEBA),
-        "prueba": (FECHA_INICIO_PRUEBA, fin),
-    }
     partes = []
     for conjunto, (desde, hasta) in periodos.items():
         perfil = perfiles_estaciones(viajes, estaciones, desde, hasta)
         logger.info(f"{conjunto}: {len(perfil)} estaciones con perfil ({desde} a {hasta})")
         partes.append(perfil.reset_index().assign(conjunto=conjunto))
-
     tabla = pd.concat(partes, ignore_index=True)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     tabla.to_parquet(output_path, index=False, compression="zstd")
     logger.success(f"{len(tabla):,} perfiles guardados en {output_path}")
+
+
+def fin_exclusivo() -> str:
+    """Día siguiente a FECHA_FIN: el límite superior (excluido) del último periodo."""
+    return (pd.Timestamp(FECHA_FIN) + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+
+
+@app.command()
+def p3(
+    viajes_path: Path = VIAJES_PATH,
+    estaciones_path: Path = ESTACIONES_PATH,
+    output_path: Path = P3_PERFILES_PATH,
+):
+    """P3: perfil de uso de cada estación en los periodos de entrenamiento y de prueba."""
+    # La validación no se usa: P3 no ajusta hiperparámetros con ella (decisión 4).
+    periodos = {
+        "entrenamiento": (FECHA_INICIO, FECHA_INICIO_VALIDACION),
+        "validacion": (FECHA_INICIO_VALIDACION, FECHA_INICIO_PRUEBA),
+        "prueba": (FECHA_INICIO_PRUEBA, fin_exclusivo()),
+    }
+    guardar_perfiles(viajes_path, estaciones_path, output_path, periodos)
+
+
+@app.command("p3-ampliado")
+def p3_ampliado(
+    viajes_path: Path = VIAJES_PATH,
+    estaciones_path: Path = ESTACIONES_PATH,
+    output_path: Path = P3_PERFILES_AMPLIADO_PATH,
+):
+    """P3 alternativo: el perfil de `entrenamiento` abarca también la validación (decisión 8).
+    La tabla tiene los mismos conjuntos que la de `p3`. Cambia `entrenamiento`, que va de
+    FECHA_INICIO a FECHA_INICIO_PRUEBA, así que incluye los meses de `validacion`. `prueba` queda
+    igual, para comparar las dos versiones del modelo sobre los mismos perfiles.
+    """
+    periodos = {
+        "entrenamiento": (FECHA_INICIO, FECHA_INICIO_PRUEBA),
+        "validacion": (FECHA_INICIO_VALIDACION, FECHA_INICIO_PRUEBA),
+        "prueba": (FECHA_INICIO_PRUEBA, fin_exclusivo()),
+    }
+    guardar_perfiles(viajes_path, estaciones_path, output_path, periodos)
 
 
 # Variables del modelo de P1. La variable objetivo es `viajes`.

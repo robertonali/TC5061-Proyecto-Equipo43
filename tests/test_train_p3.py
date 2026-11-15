@@ -128,3 +128,13 @@ def test_sin_estaciones_comunes_entre_entrenamiento_y_validacion_falla():
     estaciones = pd.concat([estaciones, estaciones.assign(id=estaciones["id"] + 1000)])
     with pytest.raises(ValueError, match="estaciones comunes"):
         P3Trainer(perfiles, estaciones, candidato("kmeans_k3")).fit_predict()
+
+
+def test_reentrenamiento_no_acepta_las_rutas_del_champion():
+    """Sin rutas propias, el reentrenamiento pisaría el modelo y las asignaciones del champion."""
+    import typer
+
+    from mibici_mlops.modeling.train_p3 import p3train
+
+    with pytest.raises(typer.BadParameter, match="archivos propios"):
+        p3train(modelo="kmeans_k3", reentrenamiento=True)
