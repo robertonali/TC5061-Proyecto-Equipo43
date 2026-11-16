@@ -1,0 +1,9 @@
+,validacion,prueba
+hora,0.0,0.0
+dia_semana,0.0005,0.004
+feriado,0.0192,0.0245
+capacidad,0.0401,0.0973
+frec_se_vacia,0.1135,0.2111
+frec_se_llena,0.0346,0.087
+clase,0.0394,0.0732
+prediccion,0.042,0.0897

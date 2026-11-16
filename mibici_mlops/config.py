@@ -156,6 +156,23 @@ P3_MONITOREO_ACTUALES = ("validacion", "prueba")
 # (FECHA_INICIO a FECHA_INICIO_PRUEBA) y se compara con el `champion` sobre `prueba`, que ninguna
 # de las dos versiones usó para ajustarse.
 P3_AB_MARGEN_SILHOUETTE = 0.01
+# Monitoreo de P2 (entrega 8). Referencia: las ventanas de `entrenamiento`, con las que se ajustó
+# el `champion`. Actual: las de `validacion` y las de `prueba`, cada periodo contra la referencia,
+# para ver si el drift crece con el tiempo. Ver references/decisiones_p2.md, decisión 12.
+P2_MONITOREO_ACTUALES = ("validacion", "prueba")
+# A/B de P2 (decisión 13). La versión alternativa es el mismo modelo reentrenado con entrenamiento
+# y validación (FECHA_INICIO a FECHA_INICIO_PRUEBA); se compara con el `champion` sobre `prueba`,
+# que ninguna de las dos usó para ajustarse. Reemplaza al `champion` solo si cumple las tres
+# condiciones, fijadas antes de correr el A/B:
+# 1. la PR-AUC promedio de las clases de riesgo mejora al menos P2_AB_MARGEN_PR_AUC;
+# 2. el intervalo de confianza de esa mejora queda arriba de 0. Se calcula con bootstrap: la
+#    comparación se repite P2_AB_REPLICAS veces, cada vez con los días de `prueba` elegidos al
+#    azar con repetición;
+# 3. el recall de ninguna clase de riesgo baja más de P2_AB_TOLERANCIA_RECALL.
+P2_AB_MARGEN_PR_AUC = 0.005
+P2_AB_TOLERANCIA_RECALL = 0.01
+P2_AB_REPLICAS = 500
+P2_AB_CONFIANZA = 0.95
 
 # If tqdm is installed, configure loguru with tqdm.write
 # https://github.com/Delgan/loguru/issues/135

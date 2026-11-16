@@ -22,6 +22,14 @@ periodos y el porqué están en references/decisiones_p3.md, decisión 8. Necesi
 MLflow activo: lee el modelo del registro y deja el monitoreo como un run del experimento.
 
     python -m mibici_mlops.monitoreo p3
+
+P2 (riesgo de las estaciones) compara las ventanas de `entrenamiento` (referencia) con las de
+`validacion` y las de `prueba` (actual): las 6 variables del modelo, la etiqueta y la clase que
+predice el `champion` del Model Registry. Como P2 sí tiene etiqueta, también mide el desempeño del
+modelo en cada periodo y en cada mes, junto al baseline de frecuencia. Los periodos y el porqué
+están en references/decisiones_p2.md, decisión 12. Necesita el servidor de MLflow activo.
+
+    python -m mibici_mlops.monitoreo p2
 """
 
 import json
@@ -34,6 +42,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.figure import Figure
 import mlflow
 from mlflow import MlflowClient
+import numpy as np
 import pandas as pd
 from sklearn.metrics import davies_bouldin_score, silhouette_score
 import typer
@@ -43,14 +52,38 @@ from mibici_mlops.config import (
     P1_FEATURES_PATH,
     P1_MONITOREO_FIN,
     P1_MONITOREO_INICIO,
+    P2_MODELO_REGISTRADO,
+    P2_MONITOREO_ACTUALES,
+    P2_SERVICIO_MODELO_URI,
+    P2_VENTANA,
+    P2_VENTANAS_PATH,
     P3_FRANJAS,
     P3_MODELO_REGISTRADO,
     P3_MONITOREO_ACTUALES,
     P3_PERFILES_PATH,
     P3_SERVICIO_MODELO_URI,
 )
-from mibici_mlops.features import COLUMNAS_P1, COLUMNAS_P3, DIAS_SEMANA
-from mibici_mlops.modeling.registro import etiquetas_run, registrar_parametros, usar_experimento
+from mibici_mlops.features import CLASES_P2, COLUMNAS_P1, COLUMNAS_P3, DIAS_SEMANA, VARIABLES_P2
+from mibici_mlops.modeling.registro import (
+    etiquetas_run,
+    registrar_parametros,
+    usar_experimento,
+    version_datos,
+)
+from mibici_mlops.modeling.train_p2 import (
+    CLASES_RIESGO,
+    COLORES,
+    FONDO,
+    NOMBRES,
+    TEXTO,
+    TEXTO_SECUNDARIO,
+    asignar_conjunto,
+    baseline_frecuencia,
+    calcular_metricas,
+    dar_estilo,
+    predecir,
+    probabilidades_modelo,
+)
 
 app = typer.Typer()
 
@@ -145,7 +178,7 @@ AZULES = LinearSegmentedColormap.from_list(
 )
 
 
-def graficar_drift_por_mes(por_mes: pd.DataFrame) -> Figure:
+def graficar_drift_por_mes(por_mes: pd.DataFrame, pregunta: str = "P1") -> Figure:
     """Mapa de calor variable × mes; las celdas con drift (>= UMBRAL_DRIFT) llevan el valor."""
     figura = Figure(figsize=(10, 4.8), layout="constrained")
     eje = figura.subplots()
@@ -174,7 +207,7 @@ def graficar_drift_por_mes(por_mes: pd.DataFrame) -> Figure:
     barra.set_label("Distancia de drift (Wasserstein normalizada / Jensen-Shannon)")
     barra.ax.axhline(UMBRAL_DRIFT, color="#1f1f1f", linewidth=1)
     eje.set_title(
-        f"P1: drift de cada mes contra el mismo mes en entrenamiento "
+        f"{pregunta}: drift de cada mes contra el mismo mes en entrenamiento "
         f"(con número: drift >= {UMBRAL_DRIFT})",
         loc="left",
         fontsize=11,
@@ -476,6 +509,366 @@ def p3(perfiles_path: Path = P3_PERFILES_PATH, salida_dir: Path = EVIDENTLY_DIR)
                     f"{nombre}_estaciones_nuevas": len(datos["estaciones_nuevas"]),
                 }
             )
+        for archivo in archivos:
+            mlflow.log_artifact(str(archivo), artifact_path="evidently")
+    logger.success(f"Reportes de Evidently guardados en {salida_dir} y registrados en MLflow")
+
+
+# ---------------------------------------------------------------------------------------------
+# P2: riesgo de las estaciones. Se vigilan las 6 variables que recibe el modelo, la etiqueta
+# (`clase`) y la clase que predice el `champion` (drift de predicción). Como P2 sí tiene etiqueta,
+# también se mide el desempeño del modelo en cada periodo, junto al baseline de frecuencia.
+PREDICCION = "prediccion"
+REFERENCIA_P2 = "entrenamiento"
+NUMERICAS_P2 = ["capacidad", "frec_se_vacia", "frec_se_llena"]
+CATEGORICAS_P2 = ["hora", "dia_semana", "feriado", "clase", PREDICCION]
+COLUMNAS_MONITOREO_P2 = [*VARIABLES_P2, "clase", PREDICCION]
+NOMBRES_CONJUNTO_P2 = {"entrenamiento": "entrenamiento", "validacion": "validación"}
+MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
+# Colores de la gráfica de desempeño. Las clases de riesgo usan los de train_p2 (espacios 1 y 2 de
+# la paleta categórica de referencia) y el champion, el espacio 3. El baseline va en gris porque
+# es el contexto, no la serie que se sigue.
+COLOR_CHAMPION = "#1baf7a"
+COLOR_BASELINE = "#898781"
+COLOR_EJE = "#c3c2b7"
+
+
+def preparar_p2(conjunto: pd.DataFrame) -> pd.DataFrame:
+    """Columnas que se monitorean. Las categóricas pasan a texto, legible en el reporte."""
+    datos = conjunto[["estacion", "ventana", *COLUMNAS_MONITOREO_P2]].copy()
+    datos["hora"] = datos["hora"].map({hora: f"{hora:02d}:00" for hora in range(24)})
+    datos["dia_semana"] = datos["dia_semana"].map(dict(enumerate(DIAS_SEMANA)))
+    datos["feriado"] = np.where(datos["feriado"], "si", "no")
+    return datos
+
+
+def dataset_p2(conjunto: pd.DataFrame) -> Dataset:
+    definicion = DataDefinition(
+        numerical_columns=NUMERICAS_P2,
+        categorical_columns=CATEGORICAS_P2,
+        datetime_columns=["ventana"],
+        id_column="estacion",
+    )
+    return Dataset.from_pandas(preparar_p2(conjunto), data_definition=definicion)
+
+
+def drift_por_mes_p2(referencia: pd.DataFrame, actual: pd.DataFrame) -> pd.DataFrame:
+    """Drift de cada mes de `actual` contra el mismo mes del año en `referencia`.
+
+    Como en P1: comparar diciembre de 2025 con los diciembres de entrenamiento quita la
+    estacionalidad, y lo que queda es el cambio de un año a otro. Regresa una tabla variable × mes
+    con la distancia de drift.
+    """
+    resultados = {}
+    for periodo, mes_actual in actual.groupby(actual["dia"].dt.to_period("M")):
+        mismo_mes = referencia[referencia["dia"].dt.month == periodo.month]
+        snapshot = Report([preset_drift(COLUMNAS_MONITOREO_P2)]).run(
+            dataset_p2(mes_actual), dataset_p2(mismo_mes)
+        )
+        resultados[str(periodo)] = puntajes_drift(snapshot)
+    return pd.DataFrame(resultados).loc[COLUMNAS_MONITOREO_P2]
+
+
+def proporcion_clases(clases: pd.Series) -> dict[str, float]:
+    """Fracción de las ventanas en cada clase, en el orden de CLASES_P2."""
+    proporciones = clases.value_counts(normalize=True).reindex(CLASES_P2, fill_value=0.0)
+    return proporciones.round(4).to_dict()
+
+
+def calidad_p2(conjunto: pd.DataFrame) -> dict[str, int]:
+    """Chequeos de calidad propios de la tabla de P2; complementan los de DataSummaryPreset.
+
+    Todos deben dar 0: sin valores faltantes, una sola fila por estación y ventana, frecuencias
+    entre 0 y 1, horas en la rejilla de P2_VENTANA, capacidad positiva y solo las 3 clases.
+    """
+    frecuencias = conjunto[["frec_se_vacia", "frec_se_llena"]]
+    horas_por_ventana = pd.Timedelta(P2_VENTANA) // pd.Timedelta(hours=1)
+    return {
+        "valores_faltantes": int(conjunto[[*VARIABLES_P2, "clase"]].isna().sum().sum()),
+        "ventanas_duplicadas": int(conjunto.duplicated(["estacion", "ventana"]).sum()),
+        "frecuencias_fuera_de_0_a_1": int(
+            ((frecuencias < 0) | (frecuencias > 1)).any(axis=1).sum()
+        ),
+        "horas_fuera_de_la_rejilla": int((conjunto["hora"] % horas_por_ventana != 0).sum()),
+        "capacidad_no_positiva": int((conjunto["capacidad"] <= 0).sum()),
+        "clases_desconocidas": int((~conjunto["clase"].isin(CLASES_P2)).sum()),
+    }
+
+
+def describir_p2(conjunto: pd.DataFrame) -> dict:
+    """Periodo, tamaño, clases reales y predichas, y calidad de un conjunto de ventanas."""
+    return {
+        "desde": f"{conjunto['dia'].min():%Y-%m-%d}",
+        "hasta": f"{conjunto['dia'].max():%Y-%m-%d}",
+        "ventanas": len(conjunto),
+        "estaciones": int(conjunto["estacion"].nunique()),
+        "proporcion_clases": proporcion_clases(conjunto["clase"]),
+        "proporcion_predicha": proporcion_clases(conjunto[PREDICCION]),
+        "calidad": calidad_p2(conjunto),
+    }
+
+
+def desempeno_p2(conjunto: pd.DataFrame, probabilidades: pd.DataFrame) -> dict[str, float] | None:
+    """Métricas del modelo en `conjunto` y PR-AUC promedio del baseline de frecuencia.
+
+    Son las métricas del entrenamiento (train_p2.calcular_metricas). El baseline da la escala: con
+    menos ventanas en riesgo la PR-AUC baja para cualquier modelo, así que lo que dice si el
+    `champion` se degrada es su ventaja sobre el baseline (`mejora_sobre_baseline`). Regresa None
+    si al conjunto le falta alguna clase de riesgo, porque no se pueden calcular.
+    """
+    if not set(CLASES_RIESGO) <= set(conjunto["clase"].unique()):
+        return None
+    modelo = calcular_metricas(conjunto["clase"], probabilidades.loc[conjunto.index], "modelo")
+    baseline = calcular_metricas(
+        conjunto["clase"], baseline_frecuencia(conjunto, conjunto), "baseline"
+    )
+    metricas = {clave.removeprefix("modelo_"): float(valor) for clave, valor in modelo.items()}
+    metricas["pr_auc_promedio_baseline"] = float(baseline["baseline_pr_auc_promedio"])
+    metricas["mejora_sobre_baseline"] = (
+        metricas["pr_auc_promedio"] - metricas["pr_auc_promedio_baseline"]
+    )
+    return {clave: round(valor, 4) for clave, valor in metricas.items()}
+
+
+def desempeno_por_mes_p2(datos: pd.DataFrame, probabilidades: pd.DataFrame) -> pd.DataFrame:
+    """`desempeno_p2` de cada mes de `datos`: una fila por mes, con su conjunto y sus ventanas."""
+    filas = [
+        {
+            "mes": str(mes),
+            "conjunto": grupo["conjunto"].iloc[0],
+            "ventanas": len(grupo),
+            **(desempeno_p2(grupo, probabilidades) or {}),
+        }
+        for mes, grupo in datos.groupby(datos["dia"].dt.to_period("M"))
+    ]
+    return pd.DataFrame(filas)
+
+
+def resumen_p2(referencia: pd.DataFrame, actual: pd.DataFrame, puntajes: pd.Series) -> dict:
+    """Estaciones que entran y salen, y drift por variable, de un periodo actual."""
+    con_drift = puntajes[puntajes >= UMBRAL_DRIFT]
+    ids_ref, ids_act = set(referencia["estacion"]), set(actual["estacion"])
+    return {
+        "estaciones_nuevas": len(ids_act - ids_ref),
+        "ventanas_de_estaciones_nuevas": int(actual["estacion"].isin(ids_act - ids_ref).sum()),
+        "estaciones_que_salen": len(ids_ref - ids_act),
+        "drift_por_variable": puntajes.round(4).to_dict(),
+        "variables_con_drift": list(con_drift.index),
+        "proporcion_con_drift": round(len(con_drift) / len(puntajes), 3),
+        "drift_del_conjunto": bool(len(con_drift) / len(puntajes) >= PROPORCION_DRIFT),
+        "drift_de_la_prediccion": round(float(puntajes[PREDICCION]), 4),
+    }
+
+
+def graficar_desempeno_p2(por_mes: pd.DataFrame, version: str) -> Figure:
+    """PR-AUC promedio del champion y del baseline, y ventanas en riesgo, por mes.
+
+    Dos paneles con el mismo eje de meses, en lugar de un eje doble: la PR-AUC y el porcentaje de
+    ventanas en riesgo tienen escalas distintas, y alinear dos ejes inventaría una relación.
+    """
+    figura = Figure(figsize=(10, 6.4), facecolor=FONDO)
+    arriba, abajo = figura.subplots(2, 1, sharex=True, height_ratios=[3, 2])
+    x = np.arange(len(por_mes))
+    paneles = [
+        (
+            arriba,
+            "PR-AUC promedio de «se vacía» y «se llena»",
+            "{:.3f}",
+            [
+                (por_mes["pr_auc_promedio"], f"Champion (versión {version})", COLOR_CHAMPION),
+                (por_mes["pr_auc_promedio_baseline"], "Baseline de frecuencia", COLOR_BASELINE),
+            ],
+        ),
+        (
+            abajo,
+            "Ventanas en riesgo (% de las ventanas del mes)",
+            "{:.1f}%",
+            [
+                (por_mes[f"proporcion_{riesgo}"] * 100, NOMBRES[riesgo], COLORES[riesgo])
+                for riesgo in CLASES_RIESGO
+            ],
+        ),
+    ]
+    for eje, titulo, formato, series in paneles:
+        for valores, nombre, color in series:
+            eje.plot(
+                x,
+                valores,
+                color=color,
+                linewidth=2,
+                marker="o",
+                markersize=8,
+                markeredgecolor=FONDO,
+                markeredgewidth=1.5,
+                label=nombre,
+            )
+        # Valor del último mes al final de cada línea, si no se enciman; los nombres van en la
+        # leyenda.
+        ultimos = [valores.iloc[-1] for valores, _, _ in series]
+        minimo = min(valores.min() for valores, _, _ in series)
+        maximo = max(valores.max() for valores, _, _ in series)
+        if abs(ultimos[0] - ultimos[1]) > 0.08 * (maximo - minimo):
+            for ultimo in ultimos:
+                eje.annotate(
+                    formato.format(ultimo),
+                    (x[-1], ultimo),
+                    xytext=(10, 0),
+                    textcoords="offset points",
+                    va="center",
+                    color=TEXTO_SECUNDARIO,
+                    fontsize=9,
+                )
+        eje.set_title(titulo, loc="left", color=TEXTO, fontsize=10)
+        eje.legend(loc="lower left", ncols=2, frameon=False, labelcolor=TEXTO_SECUNDARIO)
+        dar_estilo(eje)
+    valores = por_mes[["pr_auc_promedio", "pr_auc_promedio_baseline"]].to_numpy()
+    arriba.set_ylim(np.floor(valores.min() * 20 - 1) / 20, np.ceil(valores.max() * 20 + 0.5) / 20)
+    riesgo_maximo = por_mes[[f"proporcion_{riesgo}" for riesgo in CLASES_RIESGO]].to_numpy().max()
+    abajo.set_ylim(0, np.ceil(riesgo_maximo * 100 + 1))
+    abajo.yaxis.set_major_formatter(lambda valor, _: f"{valor:.0f}%")
+    meses = pd.PeriodIndex(por_mes["mes"], freq="M")
+    abajo.set_xticks(x, [f"{MESES[mes.month - 1]} {mes.year % 100}" for mes in meses])
+    abajo.set_xlim(-0.5, len(x) - 1 + 1.1)
+
+    # Línea entre los dos periodos actuales (validación y prueba), si la tabla trae los dos.
+    conjuntos = por_mes["conjunto"].to_numpy()
+    cambios = np.flatnonzero(conjuntos[1:] != conjuntos[:-1])
+    if len(cambios):
+        corte = cambios[0] + 0.5
+        for eje in (arriba, abajo):
+            eje.axvline(corte, color=COLOR_EJE, linewidth=1)
+        nombres = [NOMBRES_CONJUNTO_P2.get(c, c) for c in (conjuntos[0], conjuntos[-1])]
+        for texto, alineacion in ((f"{nombres[0]}  ", "right"), (f"  {nombres[1]}", "left")):
+            arriba.text(
+                corte,
+                0.97,
+                texto,
+                transform=arriba.get_xaxis_transform(),
+                ha=alineacion,
+                va="top",
+                color=TEXTO_SECUNDARIO,
+                fontsize=9,
+            )
+    figura.suptitle(
+        "P2 · desempeño del champion y riesgo real, por mes", x=0.01, ha="left", color=TEXTO
+    )
+    figura.tight_layout()
+    return figura
+
+
+@app.command()
+def p2(ventanas_path: Path = P2_VENTANAS_PATH, salida_dir: Path = EVIDENTLY_DIR):
+    """P2: drift y calidad de las ventanas y desempeño del champion; queda como run de MLflow."""
+    tabla = pd.read_parquet(ventanas_path)
+    tabla["conjunto"] = asignar_conjunto(tabla["dia"])
+    usar_experimento()
+    version = MlflowClient().get_model_version_by_alias(P2_MODELO_REGISTRADO, "champion").version
+    modelo = mlflow.sklearn.load_model(P2_SERVICIO_MODELO_URI)
+    logger.info(f"Modelo: {P2_SERVICIO_MODELO_URI} (versión {version})")
+    probabilidades = probabilidades_modelo(modelo, tabla)
+    tabla[PREDICCION] = predecir(probabilidades)
+    conjuntos = {
+        nombre: tabla[tabla["conjunto"] == nombre]
+        for nombre in (REFERENCIA_P2, *P2_MONITOREO_ACTUALES)
+    }
+    for nombre, conjunto in conjuntos.items():
+        logger.info(
+            f"{nombre}: {len(conjunto):,} ventanas de {conjunto['estacion'].nunique()} estaciones"
+        )
+
+    referencia = conjuntos[REFERENCIA_P2]
+    datos_referencia = dataset_p2(referencia)
+    estaciones_referencia = set(referencia["estacion"])
+    salida_dir.mkdir(parents=True, exist_ok=True)
+    archivos, periodos, puntajes_por_conjunto = [], {}, {}
+    for nombre in P2_MONITOREO_ACTUALES:
+        actual = conjuntos[nombre]
+        snapshot = Report([preset_drift(COLUMNAS_MONITOREO_P2), DataSummaryPreset()]).run(
+            dataset_p2(actual), datos_referencia
+        )
+        html = salida_dir / f"p2_drift_calidad_{nombre}.html"
+        snapshot.save_html(str(html))
+        archivos.append(html)
+        puntajes = puntajes_drift(snapshot)
+        puntajes_por_conjunto[nombre] = puntajes
+        conocidas = actual["estacion"].isin(estaciones_referencia)
+        periodos[nombre] = {
+            **describir_p2(actual),
+            **resumen_p2(referencia, actual, puntajes),
+            "desempeno": desempeno_p2(actual, probabilidades),
+            "desempeno_estaciones_conocidas": desempeno_p2(actual[conocidas], probabilidades),
+            "desempeno_estaciones_nuevas": desempeno_p2(actual[~conocidas], probabilidades),
+        }
+        logger.info(
+            f"{nombre}: {len(periodos[nombre]['variables_con_drift'])} de {len(puntajes)} "
+            f"variables con drift (>= {UMBRAL_DRIFT}): {periodos[nombre]['variables_con_drift']}; "
+            f"PR-AUC promedio {periodos[nombre]['desempeno']['pr_auc_promedio']} "
+            f"(baseline {periodos[nombre]['desempeno']['pr_auc_promedio_baseline']})"
+        )
+
+    datos_resumen = {
+        "modelo": {"uri": P2_SERVICIO_MODELO_URI, "version": version},
+        "metodos": {"numericas": METODO_NUMERICAS, "categoricas": METODO_CATEGORICAS},
+        "umbral_drift": UMBRAL_DRIFT,
+        REFERENCIA_P2: {
+            **describir_p2(referencia),
+            # El modelo se ajustó con estas ventanas: su desempeño aquí es optimista.
+            "desempeno_dentro_de_muestra": desempeno_p2(referencia, probabilidades),
+        },
+        **periodos,
+    }
+    resumen_json = salida_dir / "p2_drift_resumen.json"
+    resumen_json.write_text(
+        json.dumps(datos_resumen, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    variables_csv = salida_dir / "p2_drift_variables.csv"
+    pd.DataFrame(puntajes_por_conjunto).loc[COLUMNAS_MONITOREO_P2].round(4).to_csv(variables_csv)
+
+    # Por mes: drift contra el mismo mes de entrenamiento y desempeño del champion.
+    actual_completo = pd.concat([conjuntos[nombre] for nombre in P2_MONITOREO_ACTUALES])
+    drift_mensual = drift_por_mes_p2(referencia, actual_completo)
+    drift_csv = salida_dir / "p2_drift_por_mes.csv"
+    drift_mensual.round(4).to_csv(drift_csv)
+    drift_png = salida_dir / "p2_drift_por_mes.png"
+    graficar_drift_por_mes(drift_mensual, "P2").savefig(drift_png, dpi=150)
+    desempeno_mensual = desempeno_por_mes_p2(actual_completo, probabilidades)
+    desempeno_csv = salida_dir / "p2_desempeno_por_mes.csv"
+    desempeno_mensual.to_csv(desempeno_csv, index=False)
+    desempeno_png = salida_dir / "p2_desempeno_por_mes.png"
+    graficar_desempeno_p2(desempeno_mensual, version).savefig(desempeno_png, dpi=150)
+    archivos += [resumen_json, variables_csv, drift_csv, drift_png, desempeno_csv, desempeno_png]
+
+    with mlflow.start_run(run_name="p2-monitoreo"):
+        mlflow.set_tags(
+            {
+                **etiquetas_run("P2", __file__),
+                "stage_of_work": "monitoring",
+                "mlflow.runName": "p2-monitoreo",
+            }
+        )
+        registrar_parametros(
+            {
+                "modelo_uri": P2_SERVICIO_MODELO_URI,
+                "modelo_version": version,
+                "referencia": REFERENCIA_P2,
+                "actuales": ",".join(P2_MONITOREO_ACTUALES),
+                "umbral_drift": UMBRAL_DRIFT,
+                "proporcion_drift": PROPORCION_DRIFT,
+                "metodo_numericas": METODO_NUMERICAS,
+                "metodo_categoricas": METODO_CATEGORICAS,
+                "version_datos": version_datos(),
+            }
+        )
+        metricas = {}
+        for nombre, datos in periodos.items():
+            metricas[f"{nombre}_variables_con_drift"] = len(datos["variables_con_drift"])
+            metricas[f"{nombre}_drift_del_conjunto"] = float(datos["drift_del_conjunto"])
+            metricas[f"{nombre}_estaciones_nuevas"] = datos["estaciones_nuevas"]
+            for variable, distancia in datos["drift_por_variable"].items():
+                metricas[f"{nombre}_drift_{variable}"] = distancia
+            for metrica, valor in datos["desempeno"].items():
+                metricas[f"{nombre}_{metrica}"] = valor
+        mlflow.log_metrics(metricas)
         for archivo in archivos:
             mlflow.log_artifact(str(archivo), artifact_path="evidently")
     logger.success(f"Reportes de Evidently guardados en {salida_dir} y registrados en MLflow")
