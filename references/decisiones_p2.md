@@ -785,3 +785,197 @@ P3 iba a hacer lo mismo en paralelo.
   las pruebas de P1 se ajustaron.
 - Pruebas nuevas: `tests/test_api_p2.py` (modelo falso) y `tests/test_api_p2_modelo_real.py` (el
   modelo exportado sobre 400 ventanas reales).
+
+## 12. Monitoreo con Evidently: periodos, qué se vigila y cómo se mide
+
+- **Fecha:** 2026-11-15
+- **Estado:** vigente
+- **Aplica a:** `mibici_mlops/monitoreo.py` (subcomando `p2`), `P2_MONITOREO_ACTUALES` en
+  `config.py` y `reports/evidently/p2_*`.
+
+### Contexto
+
+La entrega 8 pide comparar los datos con los que se entrenó el modelo contra un periodo posterior
+que represente producción, reportar con Evidently el drift por variable y la calidad de los datos,
+e interpretar qué implica para el modelo. La API de la entrega 4 no guarda las peticiones que
+recibe, así que el periodo actual sale de los datos abiertos de MiBici.
+
+### Decisión
+
+| Conjunto | Periodo | Ventanas | Estaciones | Ventanas en riesgo |
+|---|---|---|---|---|
+| Referencia (`entrenamiento`) | 2022-03-01 a 2025-09-30 | 5,247,312 | 371 | 20.0% |
+| Actual 1 (`validacion`) | 2025-10-01 a 2026-03-31 | 809,388 | 371 | 16.1% |
+| Actual 2 (`prueba`) | 2026-04-01 a 2026-09-30 | 922,584 | 469 | 12.9% |
+
+- **Referencia = entrenamiento:** las ventanas con las que se ajustó el `champion` (versión 1,
+  decisión 9).
+- **Dos periodos actuales**, cada uno contra la referencia: los dos semestres que siguen al corte
+  del entrenamiento.
+- **Qué se vigila (8 columnas):** las 6 variables del modelo (`VARIABLES_P2`), la etiqueta
+  (`clase`) y la clase que predice el `champion` (`prediccion`), que se carga del Model Registry.
+- **Cómo se mide el drift:** igual que en P1 y P3 (decisión 8 de P1). Distancia de Wasserstein
+  normalizada para las numéricas (`capacidad`, `frec_se_vacia`, `frec_se_llena`) y de
+  Jensen-Shannon para las categóricas (`hora`, `dia_semana`, `feriado`, `clase`, `prediccion`).
+  Hay drift si la distancia es >= 0.1, y drift del conjunto si lo tiene la mitad o más de las
+  columnas.
+- **Detalle por mes:** cada mes de los periodos actuales contra el mismo mes de los años de
+  entrenamiento.
+- **Calidad de los datos:** `DataSummaryPreset` de Evidently y seis chequeos propios de la tabla
+  (`calidad_p2`): valores faltantes, ventanas duplicadas, frecuencias fuera de 0 a 1, horas fuera
+  de la rejilla de 2 horas, capacidad no positiva y clases desconocidas.
+- **Desempeño del modelo:** como P2 sí tiene etiqueta, recall, precisión y PR-AUC del `champion`
+  en cada periodo y cada mes, junto al baseline de frecuencia, y por separado en las estaciones
+  que el modelo conoce y en las nuevas.
+- El monitoreo queda como el run `p2-monitoreo` (etapa `monitoring`), con las distancias y las
+  métricas de cada periodo y los reportes como artefactos.
+
+### Por qué
+
+- **Dos periodos y no 12 meses juntos:** el cambio crece. "Se vacía" baja de 10.8% de las ventanas
+  a 7.8% y a 5.7%, y en prueba aparecen 100 estaciones que el modelo no vio (12% de sus ventanas).
+  Un solo periodo lo promediaría. Además deja listo el A/B (decisión 13): la versión alternativa
+  se reentrena con el primer periodo y se evalúa en el segundo.
+- **Seis meses contra toda la referencia es una comparación justa:** dentro de entrenamiento, de
+  octubre a marzo y de abril a septiembre las clases de riesgo difieren en menos de medio punto
+  porcentual (11.0% contra 10.6% en "se vacía" y 9.2% en los dos en "se llena").
+- **El mismo mes para el detalle mensual:** un mes suelto sí tiene estacionalidad. En los
+  diciembres de entrenamiento el riesgo baja a entre 14.5% y 18.4% de las ventanas, contra 20% a
+  23% en octubre y noviembre; contra toda la referencia, cada diciembre parecería drift.
+- **La etiqueta y la predicción, además de las variables:** en P2 lo que cambia es cuánto riesgo
+  hay. Las variables de calendario no pueden cambiar (cada estación tiene sus 12 ventanas todos
+  los días), así que vigilar solo las entradas escondería el cambio.
+- **El baseline como referencia del desempeño:** la PR-AUC depende de la proporción de riesgo
+  (decisión 6) y no se puede comparar entre periodos. La ventaja sobre el baseline sí: los dos se
+  miden en las mismas ventanas.
+- **Distancias y no pruebas de hipótesis:** con millones de ventanas, una prueba de KS o de chi
+  cuadrada marca como drift cualquier diferencia mínima.
+
+### Alternativas descartadas
+
+- **Un solo periodo de 12 meses (como P1):** más simple, pero promedia un cambio que crece y
+  mezcla los datos con que se reentrena con los del A/B.
+- **Vigilar solo las variables de entrada:** no vería el cambio en la proporción de riesgo.
+- **Muestrear la referencia:** no hizo falta; Evidently procesa las 5.2 millones de ventanas en
+  unos 35 segundos por reporte.
+- **Octubre de 2026 (ya publicado) o los registros de la API:** el mes está fuera de la versión de
+  los datos del equipo (`FECHA_FIN`) y la API no guarda las peticiones.
+
+### Consecuencias
+
+- **Drift por variable** (`reports/evidently/p2_drift_variables.csv`): solo `frec_se_vacia` pasa
+  el umbral, con 0.11 en validación y 0.21 en prueba; no hay drift del conjunto (1 de 8 columnas).
+  Las demás crecen sin pasarlo en el semestre: `capacidad` de 0.04 a 0.10, `prediccion` de 0.04 a
+  0.09, `frec_se_llena` de 0.03 a 0.09 y `clase` de 0.04 a 0.07.
+- **Por mes** (`p2_drift_por_mes.png`): `frec_se_vacia` pasa el umbral desde noviembre de 2025 y
+  llega a 0.26 en agosto de 2026. `capacidad`, `frec_se_llena` y `prediccion` lo pasan desde julio
+  de 2026, cuando las estaciones nuevas ya son el 16% de las ventanas.
+- **Calidad:** los seis chequeos dan 0 en los tres conjuntos.
+- **Desempeño:** la PR-AUC promedio baja de 0.571 a 0.522, pero el baseline baja casi lo mismo
+  (0.495 a 0.453): la ventaja del `champion` pasa de +0.076 a +0.069 y por mes se mantiene entre
+  +0.060 y +0.086. El recall de "se vacía" baja de 0.76 a 0.71, y el del baseline, de 0.52 a 0.47.
+- **El umbral de 0.1 es poco sensible para la etiqueta:** la proporción de "se vacía" cayó casi a
+  la mitad y la distancia de `clase` es 0.07. Por eso la interpretación
+  (`reports/evidently/p2_reporte.md`) mira la magnitud y el desempeño, no solo cuántas columnas
+  pasan el umbral.
+- `make monitoreo_p2` tarda unos 3 minutos y necesita el servidor de MLflow. Pruebas:
+  `tests/test_monitoreo_p2.py`.
+
+## 13. Versión alternativa y A/B testing: reentrenar con datos recientes y regla de decisión
+
+- **Fecha:** 2026-11-15
+- **Estado:** vigente
+- **Aplica a:** `train_p2.py --reentrenamiento`, `mibici_mlops/modeling/ab_p2.py`, las constantes
+  `P2_AB_*` de `config.py` y el modelo `mibici-equipo43-p2-riesgo` del Model Registry.
+
+### Contexto
+
+La entrega 8 pide una segunda versión del modelo, registrada como una versión nueva del mismo
+modelo, y compararla con la vigente sobre el mismo conjunto del periodo actual para decidir cuál
+queda. El monitoreo (decisión 12) mostró que el riesgo baja y que `frec_se_vacia` tiene drift; la
+pregunta es si reentrenar con datos más recientes lo corrige.
+
+### Decisión
+
+- **Versión alternativa:** el mismo modelo y los mismos hiperparámetros del `champion`
+  (`HistGradientBoostingClassifier` con pesos de clase, `learning_rate` 0.05, 31 hojas, 300
+  árboles, semilla 43), ajustado con entrenamiento y validación: del 2022-03-01 al 2026-03-31,
+  6,056,700 ventanas (15% más). Se corre con `train_p2 --reentrenamiento`; su run termina en
+  `-ampliado`, lleva la etapa `retrain` y solo se evalúa en prueba.
+- **Registro:** `ab_p2.py` la registra como una versión nueva de `mibici-equipo43-p2-riesgo` con el
+  alias `reentrenado`. `challenger` sigue en la regresión logística (decisión 9).
+- **A/B fuera de línea:** las dos versiones predicen las mismas 922,584 ventanas de prueba (183
+  días), que ninguna usó para ajustarse. Se comparan con la PR-AUC promedio de las clases de riesgo
+  (la métrica con que se elige el modelo, decisión 8), la PR-AUC, el recall y la precisión de cada
+  clase, y la PR-AUC promedio de cada mes.
+- **Qué tan confiable es la diferencia:** bootstrap por días. La comparación se repite 500 veces,
+  cada vez con 183 días de prueba elegidos al azar con repetición, y el intervalo de confianza de
+  95% es donde cae el 95% central de esas diferencias.
+- **Regla**, fijada en `config.py` antes de correr el A/B. La alternativa reemplaza al `champion`
+  solo si cumple las tres condiciones:
+  1. la PR-AUC promedio mejora al menos 0.005 (`P2_AB_MARGEN_PR_AUC`);
+  2. el intervalo de confianza de esa mejora queda arriba de 0;
+  3. el recall de ninguna clase de riesgo baja más de 0.01 (`P2_AB_TOLERANCIA_RECALL`).
+- **Promoción:** `ab_p2 --promover` mueve `champion` a la alternativa si gana y deja la versión
+  anterior con el alias `anterior`; sin la opción, solo reporta.
+
+### Por qué
+
+- **Reentrenar y no cambiar hiperparámetros:** la búsqueda de la entrega 2 mostró que los
+  hiperparámetros casi no mueven el resultado (0.569 a 0.571, decisión 9); lo que cambió desde
+  entonces son los datos. Es además la pregunta del Continuous Training: ¿sirve reentrenar?
+- **Los mismos hiperparámetros:** así la diferencia entre las versiones se debe solo a los datos de
+  entrenamiento. El script lo comprueba con los parámetros de los dos runs.
+- **Prueba como conjunto de evaluación:** es el periodo más reciente y el único que ninguna de las
+  dos versiones vio; la validación ya es parte del entrenamiento de la alternativa.
+- **Fuera de línea y con las mismas ventanas:** la etiqueta (si la estación se vació o se llenó)
+  no depende de lo que el modelo predijo, así que las dos versiones se pueden medir sobre los
+  mismos datos históricos. Repartir las estaciones entre las versiones compararía estaciones
+  distintas y agregaría ruido.
+- **Bootstrap por días y no por ventanas:** las ventanas de un mismo día se parecen (clima,
+  eventos). Tratarlas como independientes haría ver la diferencia más segura de lo que es.
+- **Un margen además del intervalo:** con casi un millón de ventanas, cualquier diferencia es
+  estadísticamente confiable. El margen pide que además valga la pena: 0.005 es 2.5 veces la
+  diferencia entre combinaciones de la búsqueda (0.002) y cerca del 1% de la métrica. Cambiar el
+  modelo en producción tiene un costo: volver a exportarlo, reconstruir la imagen de la API y
+  repetir las pruebas.
+- **El recall como condición:** el ML Canvas prioriza detectar las ventanas en riesgo (decisión
+  9); una versión que gana PR-AUC perdiendo recall no sirve al equipo de rebalanceo.
+- **El alias `reentrenado` y no `challenger`:** es el que usa P3 para lo mismo y no cambia lo que
+  quedó registrado en la entrega 2.
+
+### Alternativas descartadas
+
+- **Ventana móvil (entrenar solo con los últimos meses):** cambia dos cosas a la vez, datos más
+  recientes y menos datos. Queda como experimento si el drift sigue creciendo.
+- **Evaluar en validación:** la alternativa se entrenó con ella.
+- **A/B en línea, repartiendo estaciones o días:** necesita el modelo operando y compara grupos
+  distintos; con datos históricos, medir las dos versiones en las mismas ventanas es más preciso.
+- **Una prueba estadística por ventana (por ejemplo, McNemar):** supone que las ventanas son
+  independientes.
+- **Promover con cualquier mejora:** ver el margen, arriba.
+
+### Consecuencias
+
+Resultado del A/B en prueba (`reports/evidently/p2_ab_resultado.json`, run `p2-ab-test`):
+
+| Métrica en prueba | Versión 1 (`champion`) | Versión 3 (`reentrenado`) | Diferencia |
+|---|---|---|---|
+| PR-AUC promedio | 0.5220 | 0.5248 | +0.0028 |
+| PR-AUC de "se vacía" / "se llena" | 0.4421 / 0.6019 | 0.4479 / 0.6016 | +0.0058 / −0.0003 |
+| Recall de "se vacía" / "se llena" | 0.7105 / 0.7871 | 0.7135 / 0.7869 | +0.0030 / −0.0002 |
+| Precisión de "se vacía" / "se llena" | 0.3016 / 0.4147 | 0.2995 / 0.4158 | −0.0021 / +0.0011 |
+
+- **La versión 1 sigue como `champion`.** La mejora de +0.0028 es confiable (intervalo de
+  confianza de 95% de +0.0024 a +0.0032; la alternativa gana en las 500 réplicas y en los 6 meses)
+  pero no llega al margen de 0.005. El recall prácticamente no cambia.
+- La versión 3 queda registrada con el alias `reentrenado` y las etiquetas `ab_test_run` y
+  `ab_test_gana = false`; la versión 1 también lleva `ab_test_run`.
+- Seis meses más de datos casi no cambian el modelo. La caída de la PR-AUC entre validación y
+  prueba (0.049) no se recupera reentrenando: casi toda la comparte el baseline (decisión 12).
+  La recomendación sobre el reentrenamiento está en `reports/evidently/p2_reporte.md`.
+- `train_p2.py` gana `partir` y la opción `--reentrenamiento` (solo para `logistica` y `hgb`), y
+  registra `entrenamiento_hasta` y `entrenamiento_ampliado` en todos los runs. `registrar_p2.py`
+  ya no pone la métrica de validación a una versión que no la tiene.
+- `make reentrenar_p2` tarda unos 3 minutos y `make ab_p2`, unos 5 (4 son del bootstrap). Pruebas:
+  `tests/test_ab_p2.py` y `tests/test_train_p2.py`.
