@@ -1,0 +1,104 @@
+{
+  "conjunto_de_evaluacion": "prueba",
+  "desde": "2026-04-01",
+  "hasta": "2026-09-30",
+  "dias": 183,
+  "ventanas": 922584,
+  "champion": {
+    "version": "1",
+    "run_id": "5d56abf449a04d58991c8e029ad1b9a2",
+    "run_name": "p2-hgb-balanceado-lr0.05-hojas31-arboles300",
+    "entrenamiento": {
+      "ventanas": 5247312,
+      "hasta": "2025-09-30"
+    },
+    "hiperparametros": {
+      "modelo": "HistGradientBoostingClassifier",
+      "variables": "hora,dia_semana,feriado,capacidad,frec_se_vacia,frec_se_llena",
+      "learning_rate": "0.05",
+      "max_iter": "300",
+      "max_leaf_nodes": "31",
+      "class_weight": "balanced"
+    },
+    "recall_se_vacia": 0.7105,
+    "precision_se_vacia": 0.3016,
+    "pr_auc_se_vacia": 0.4421,
+    "recall_se_llena": 0.7871,
+    "precision_se_llena": 0.4147,
+    "pr_auc_se_llena": 0.6019,
+    "pr_auc_promedio": 0.522
+  },
+  "alternativa": {
+    "version": "3",
+    "run_id": "8c12da7dc4894ce4b0269ca2e2a08a95",
+    "run_name": "p2-hgb-balanceado-lr0.05-hojas31-arboles300-ampliado",
+    "entrenamiento": {
+      "ventanas": 6056700,
+      "hasta": "2026-03-31"
+    },
+    "hiperparametros": {
+      "modelo": "HistGradientBoostingClassifier",
+      "variables": "hora,dia_semana,feriado,capacidad,frec_se_vacia,frec_se_llena",
+      "learning_rate": "0.05",
+      "max_iter": "300",
+      "max_leaf_nodes": "31",
+      "class_weight": "balanced"
+    },
+    "recall_se_vacia": 0.7135,
+    "precision_se_vacia": 0.2995,
+    "pr_auc_se_vacia": 0.4479,
+    "recall_se_llena": 0.7869,
+    "precision_se_llena": 0.4158,
+    "pr_auc_se_llena": 0.6016,
+    "pr_auc_promedio": 0.5248
+  },
+  "mismos_hiperparametros": true,
+  "diferencia_pr_auc_promedio": 0.0028,
+  "intervalo_de_confianza": {
+    "confianza": 0.95,
+    "inferior": 0.0024,
+    "superior": 0.0032,
+    "replicas": 500,
+    "semilla": 43,
+    "replicas_en_que_gana_la_alternativa": 1.0
+  },
+  "pr_auc_promedio_por_mes": {
+    "2026-04": {
+      "champion": 0.5476,
+      "alternativa": 0.5506,
+      "diferencia": 0.0029
+    },
+    "2026-05": {
+      "champion": 0.5524,
+      "alternativa": 0.5565,
+      "diferencia": 0.0041
+    },
+    "2026-06": {
+      "champion": 0.4649,
+      "alternativa": 0.469,
+      "diferencia": 0.0041
+    },
+    "2026-07": {
+      "champion": 0.5037,
+      "alternativa": 0.5067,
+      "diferencia": 0.003
+    },
+    "2026-08": {
+      "champion": 0.5181,
+      "alternativa": 0.5188,
+      "diferencia": 0.0007
+    },
+    "2026-09": {
+      "champion": 0.5408,
+      "alternativa": 0.5432,
+      "diferencia": 0.0024
+    }
+  },
+  "meses_en_que_gana_la_alternativa": 6,
+  "regla": {
+    "margen_pr_auc": 0.005,
+    "tolerancia_recall": 0.01
+  },
+  "gana_alternativa": false,
+  "motivo": "la PR-AUC promedio cambia +0.0028, menos que el margen de 0.005"
+}
