@@ -14,6 +14,10 @@ Lee la tabla de `features.py` (data/processed/p2_ventanas.parquet), la parte por
 Los hiperparámetros por defecto están en P2_HIPERPARAMETROS (config.py) y se cambian con las
 opciones de la terminal (o con `-P` en `mlflow run`).
 
+Con `--reentrenamiento` (decisión 13), un candidato se ajusta con entrenamiento y validación y
+solo se evalúa en prueba. Es la versión alternativa del A/B de la entrega 8 (ab_p2.py): su run
+termina en `-ampliado` y lleva la etapa `retrain`.
+
 Cada run registra las fechas, las versiones de los datos, la semilla y los hiperparámetros como
 parámetros; recall, precisión y PR-AUC de cada clase de riesgo como métricas `val_*` y `test_*`,
 más su promedio (`*_pr_auc_promedio`, la métrica para elegir modelo), su variación de un mes a
@@ -26,6 +30,7 @@ Uso (normalmente con `mlflow run`, ver la sección de P2 del README):
     python -m mibici_mlops.modeling.train_p2 --modelo frecuencia
     python -m mibici_mlops.modeling.train_p2 --modelo hgb --learning-rate 0.05
     python -m mibici_mlops.modeling.train_p2 --modelo busqueda-hgb
+    python -m mibici_mlops.modeling.train_p2 --modelo hgb --learning-rate 0.05 --reentrenamiento
 
 Antes de correrlo, el servidor de MLflow debe estar levantado (ver la sección de MLflow del
 README):
@@ -131,6 +136,23 @@ def asignar_conjunto(dia: pd.Series) -> pd.Series:
     conjunto[dia >= pd.Timestamp(FECHA_INICIO_VALIDACION)] = "validacion"
     conjunto[dia >= pd.Timestamp(FECHA_INICIO_PRUEBA)] = "prueba"
     return conjunto
+
+
+def partir(
+    tabla: pd.DataFrame, reentrenamiento: bool = False
+) -> tuple[pd.DataFrame, dict[str, pd.DataFrame]]:
+    """Entrenamiento y conjuntos de evaluación (val, test) de la partición por fechas.
+
+    Con `reentrenamiento` (decisión 13), el entrenamiento abarca también la validación y el modelo
+    solo se evalúa en prueba: la validación deja de ser un periodo que el modelo no vio.
+    """
+    conjunto = asignar_conjunto(tabla["dia"])
+    if reentrenamiento:
+        return tabla[conjunto != "prueba"], {"test": tabla[conjunto == "prueba"]}
+    return tabla[conjunto == "entrenamiento"], {
+        "val": tabla[conjunto == "validacion"],
+        "test": tabla[conjunto == "prueba"],
+    }
 
 
 def baseline_clase_mayoritaria(
@@ -477,19 +499,22 @@ def graficar_estabilidad(por_mes: pd.DataFrame, titulo: str) -> Figure:
             fontsize=9,
         )
     eje.set_xlim(right=ultimo["mes"] + pd.Timedelta(days=40))
-    corte = pd.Timestamp(FECHA_INICIO_PRUEBA) - pd.Timedelta(days=15)
-    eje.axvline(corte, color=TEXTO_SECUNDARIO, linestyle="--", linewidth=1)
-    for texto, alineacion in [("validación ", "right"), (" prueba", "left")]:
-        eje.text(
-            corte,
-            0.97,
-            texto,
-            transform=eje.get_xaxis_transform(),
-            ha=alineacion,
-            va="top",
-            color=TEXTO_SECUNDARIO,
-            fontsize=9,
-        )
+    # La línea que separa validación de prueba solo aplica si se evaluaron los dos conjuntos (el
+    # reentrenamiento solo se evalúa en prueba).
+    if por_mes["conjunto"].nunique() > 1:
+        corte = pd.Timestamp(FECHA_INICIO_PRUEBA) - pd.Timedelta(days=15)
+        eje.axvline(corte, color=TEXTO_SECUNDARIO, linestyle="--", linewidth=1)
+        for texto, alineacion in [("validación ", "right"), (" prueba", "left")]:
+            eje.text(
+                corte,
+                0.97,
+                texto,
+                transform=eje.get_xaxis_transform(),
+                ha=alineacion,
+                va="top",
+                color=TEXTO_SECUNDARIO,
+                fontsize=9,
+            )
     eje.set_ylim(0, 1)
     eje.set_ylabel("PR-AUC", color=TEXTO_SECUNDARIO)
     eje.legend(loc="lower left", frameon=False, labelcolor=TEXTO_SECUNDARIO)
@@ -559,14 +584,14 @@ def registrar_datos(
 
     `log_input` guarda el esquema, el número de filas y una huella (digest) de cada conjunto, no
     los datos. La tabla de P2 no tiene datos de los usuarios (decisión 7); `fuente` es la tabla de
-    la que salen, como la da `ruta_para_registro`.
+    la que salen, como la da `ruta_para_registro`. En un reentrenamiento no hay conjunto de
+    validación: es parte del entrenamiento.
     """
     registrar_manifiesto()
-    contextos = {
-        "training": entrenamiento,
-        "validation": conjuntos["val"],
-        "testing": conjuntos["test"],
-    }
+    contextos = {"training": entrenamiento}
+    if "val" in conjuntos:
+        contextos["validation"] = conjuntos["val"]
+    contextos["testing"] = conjuntos["test"]
     for contexto, datos in contextos.items():
         dataset = mlflow.data.from_pandas(
             datos[VARIABLES + ["clase"]],
@@ -608,11 +633,15 @@ def correr_modelo(
     conjuntos: dict[str, pd.DataFrame],
     parametros: dict,
     etiquetas: dict,
+    reentrenamiento: bool = False,
 ) -> dict[str, float]:
     """Entrena (si hace falta), evalúa y registra un modelo como un run de MLflow."""
     elegido = MODELOS[modelo]
-    nombre = nombre_run(modelo, hiperparametros)
-    tags = {**etiquetas, "model_family": elegido["familia"], "stage_of_work": elegido["etapa"]}
+    nombre, etapa = nombre_run(modelo, hiperparametros), elegido["etapa"]
+    if reentrenamiento:
+        # No es un candidato: así registrar_p2 no lo elige como champion por su métrica.
+        nombre, etapa = f"{nombre}-ampliado", "retrain"
+    tags = {**etiquetas, "model_family": elegido["familia"], "stage_of_work": etapa}
     with mlflow.start_run(run_name=nombre, tags=tags):
         mlflow.set_tag("mlflow.runName", nombre)
         if "crear" in elegido:
@@ -726,11 +755,20 @@ def main(
     class_weight: str = typer.Option(None, help="logistica y hgb: balanced o none."),
     learning_rate: float = typer.Option(None, help="hgb: tasa de aprendizaje."),
     max_leaf_nodes: int = typer.Option(None, help="hgb: hojas máximas por árbol."),
+    reentrenamiento: bool = typer.Option(
+        False,
+        help="logistica y hgb: entrena con entrenamiento y validación y evalúa solo en prueba "
+        "(la versión alternativa del A/B, decisión 13).",
+    ),
     ventanas_path: Path = P2_VENTANAS_PATH,
 ):
     if modelo not in [*MODELOS, BUSQUEDA]:
         raise typer.BadParameter(
             f"usa uno de: {', '.join([*MODELOS, BUSQUEDA])}", param_hint="--modelo"
+        )
+    if reentrenamiento and "crear" not in MODELOS.get(modelo, {}):
+        raise typer.BadParameter(
+            "solo aplica a los candidatos (logistica, hgb)", param_hint="--reentrenamiento"
         )
     opciones = {
         "c": c,
@@ -742,14 +780,10 @@ def main(
     hiperparametros = resolver_hiperparametros(modelo, opciones)
 
     tabla = pd.read_parquet(ventanas_path)
-    tabla["conjunto"] = asignar_conjunto(tabla["dia"])
-    entrenamiento = tabla[tabla["conjunto"] == "entrenamiento"]
-    conjuntos = {
-        "val": tabla[tabla["conjunto"] == "validacion"],
-        "test": tabla[tabla["conjunto"] == "prueba"],
-    }
+    entrenamiento, conjuntos = partir(tabla, reentrenamiento)
+    ventanas_validacion = len(conjuntos["val"]) if "val" in conjuntos else 0
     logger.info(
-        f"Ventanas: {len(entrenamiento):,} de entrenamiento, {len(conjuntos['val']):,} de "
+        f"Ventanas: {len(entrenamiento):,} de entrenamiento, {ventanas_validacion:,} de "
         f"validación y {len(conjuntos['test']):,} de prueba"
     )
 
@@ -767,14 +801,24 @@ def main(
         "hora_reinicio": P2_HORA_REINICIO,
         "inventario_inicial": P2_INVENTARIO_INICIAL,
         "ventanas_entrenamiento": len(entrenamiento),
-        "ventanas_validacion": len(conjuntos["val"]),
+        "ventanas_validacion": ventanas_validacion,
         "ventanas_prueba": len(conjuntos["test"]),
+        "entrenamiento_hasta": f"{entrenamiento['dia'].max():%Y-%m-%d}",
+        "entrenamiento_ampliado": reentrenamiento,
     }
 
     if modelo == BUSQUEDA:
         buscar_hgb(hiperparametros, entrenamiento, conjuntos["val"], parametros, etiquetas)
     else:
-        correr_modelo(modelo, hiperparametros, entrenamiento, conjuntos, parametros, etiquetas)
+        correr_modelo(
+            modelo,
+            hiperparametros,
+            entrenamiento,
+            conjuntos,
+            parametros,
+            etiquetas,
+            reentrenamiento,
+        )
     logger.success(f"Registrado en el experimento {EXPERIMENTO_MLFLOW} ({MLFLOW_TRACKING_URI})")
 
 
