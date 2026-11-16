@@ -32,6 +32,11 @@ P3_CLUSTERS_PATH = PROCESSED_DATA_DIR / "p3_clusters.parquet"
 P3_PERFILES_PATH = PROCESSED_DATA_DIR / "p3_perfiles.parquet"
 P3_VIAJES_PATH = INTERIM_DATA_DIR / "p3_viajes.parquet"
 P3_MODEL_PATH = MODELS_DIR / "p3.joblib"
+# Versión alternativa de P3 (entrega 8): perfiles con entrenamiento ampliado y su modelo. Van en
+# archivos aparte para no pisar los del `champion`.
+P3_PERFILES_AMPLIADO_PATH = PROCESSED_DATA_DIR / "p3_perfiles_ampliado.parquet"
+P3_CLUSTERS_AMPLIADO_PATH = PROCESSED_DATA_DIR / "p3_clusters_ampliado.parquet"
+P3_MODEL_AMPLIADO_PATH = MODELS_DIR / "p3_ampliado.joblib"
 
 # Página de datos abiertos de donde dataset.py descarga los CSV que falten en data/raw.
 # Ver references/fuentes_datos.md.
@@ -143,6 +148,14 @@ FIGURES_DIR = REPORTS_DIR / "figures"
 P1_MONITOREO_INICIO = FECHA_INICIO_VALIDACION
 P1_MONITOREO_FIN = FECHA_FIN
 EVIDENTLY_DIR = REPORTS_DIR / "evidently"
+# Monitoreo de P3 (entrega 8). Referencia: los perfiles de `entrenamiento`. Actual: los perfiles de
+# `validacion` y de `prueba`, cada uno contra la referencia, para ver si el drift crece con el
+# tiempo. Ver references/decisiones_p3.md, decisión 8.
+P3_MONITOREO_ACTUALES = ("validacion", "prueba")
+# Versión alternativa: se reentrena con el perfil de toda la ventana de entrenamiento y validación
+# (FECHA_INICIO a FECHA_INICIO_PRUEBA) y se compara con el `champion` sobre `prueba`, que ninguna
+# de las dos versiones usó para ajustarse.
+P3_AB_MARGEN_SILHOUETTE = 0.01
 
 # If tqdm is installed, configure loguru with tqdm.write
 # https://github.com/Delgan/loguru/issues/135

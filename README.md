@@ -924,6 +924,29 @@ desde julio de 2026, cuando abren la mayoría de las 100 estaciones nuevas.
 
 ![Drift de P1 por mes](reports/evidently/p1_drift_por_mes.png)
 
+### Monitoreo de P3 (grupos de estaciones)
+
+Mismo esquema para P3, que no tiene variable objetivo: se vigilan las 56 variables del perfil
+de uso y el grupo que asigna el `champion`. Necesita el servidor de MLflow activo.
+
+| Conjunto | Periodo | Por qué |
+|---|---|---|
+| Referencia (`entrenamiento`) | 2022-03-01 a 2025-09-30 | Con él se ajustó el `champion` |
+| Actual 1 (`validacion`) | 2025-10-01 a 2026-03-31 | Primeros seis meses después del corte |
+| Actual 2 (`prueba`) | 2026-04-01 a 2026-09-30 | Los seis meses siguientes |
+
+```powershell
+make monitoreo_p3    # drift y calidad de datos; queda como el run p3-monitoreo de MLflow
+make reentrenar_p3   # versión alternativa con perfiles de entrenamiento + validación
+make ab_p3           # la registra como nueva versión y la compara con el champion en prueba
+```
+
+`ab_p3` deja la alternativa con el alias `reentrenado` y solo mueve `champion` con
+`python -m mibici_mlops.modeling.ab_p3 --promover` si gana (regla en la decisión 8 de
+[references/decisiones_p3.md](references/decisiones_p3.md)). El reporte con la interpretación, el
+A/B y la recomendación de reentrenamiento está en
+[reports/evidently/p3_reporte.md](reports/evidently/p3_reporte.md).
+
 ## Pruebas y chequeos
 
 Tres capas:

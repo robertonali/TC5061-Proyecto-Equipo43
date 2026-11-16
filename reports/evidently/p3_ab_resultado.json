@@ -1,0 +1,35 @@
+{
+  "conjunto_de_evaluacion": "prueba",
+  "estaciones": 429,
+  "champion": {
+    "version": "1",
+    "silhouette": 0.24579515373602337,
+    "davies_bouldin": 1.2809667974369778,
+    "calinski_harabasz": 160.59806768558204,
+    "grupos": 3
+  },
+  "alternativa": {
+    "version": "3",
+    "run_id": "484b5df50bd5481bb6d99fa394a431b9",
+    "silhouette": 0.24964429279158337,
+    "davies_bouldin": 1.2668024751276514,
+    "calinski_harabasz": 163.65977803318617,
+    "grupos": 3
+  },
+  "ari_entre_versiones": 0.9331,
+  "tamano_de_grupos": {
+    "champion": {
+      "0": 43,
+      "1": 186,
+      "2": 200
+    },
+    "alternativa": {
+      "0": 40,
+      "1": 191,
+      "2": 198
+    }
+  },
+  "margen_silhouette": 0.01,
+  "gana_alternativa": false,
+  "motivo": "el silhouette mejora +0.0038, menos que el margen 0.01"
+}

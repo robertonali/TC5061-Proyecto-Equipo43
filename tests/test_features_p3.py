@@ -8,10 +8,11 @@ from mibici_mlops.features import (
     columnas_perfil,
     franja_del_dia,
     p3,
+    p3_ampliado,
     perfil_de_uso,
     perfiles_estaciones,
 )
-from mibici_mlops.config import P3_MIN_VIAJES
+from mibici_mlops.config import FECHA_INICIO, FECHA_INICIO_PRUEBA, P3_MIN_VIAJES
 
 PERIODOS = {
     "entrenamiento": "2023-03-06",
@@ -94,4 +95,28 @@ def test_viajes_fuera_del_periodo_no_cambian_el_perfil():
     pd.testing.assert_frame_equal(
         perfiles_estaciones(base, **args),
         perfiles_estaciones(pd.concat([base, despues]), **args),
+    )
+
+
+def test_p3_ampliado_entrena_con_la_ventana_de_entrenamiento_y_validacion(tmp_path):
+    viajes_path = tmp_path / "viajes.parquet"
+    estaciones_path = tmp_path / "estaciones.csv"
+    output_path = tmp_path / "p3_perfiles_ampliado.parquet"
+    viajes = crear_viajes_de_prueba()
+    viajes.to_parquet(viajes_path)
+    pd.DataFrame({"id": [1, 2]}).to_csv(estaciones_path, index=False)
+    p3_ampliado(viajes_path=viajes_path, estaciones_path=estaciones_path, output_path=output_path)
+    tabla = pd.read_parquet(output_path)
+    assert set(tabla["conjunto"]) == set(PERIODOS)
+    esperado = perfiles_estaciones(viajes, np.array([1, 2]), FECHA_INICIO, FECHA_INICIO_PRUEBA)
+    columnas = columnas_perfil("sal")
+    ampliado = tabla[tabla["conjunto"] == "entrenamiento"].set_index("estacion")
+    pd.testing.assert_frame_equal(
+        ampliado[columnas].sort_index(), esperado[columnas].sort_index(), check_names=False
+    )
+    # `prueba` queda igual que en `p3`, para comparar las dos versiones sobre los mismos perfiles.
+    prueba = perfiles_estaciones(viajes, np.array([1, 2]), FECHA_INICIO_PRUEBA, "2026-10-01")
+    de_prueba = tabla[tabla["conjunto"] == "prueba"].set_index("estacion")
+    pd.testing.assert_frame_equal(
+        de_prueba[columnas].sort_index(), prueba[columnas].sort_index(), check_names=False
     )

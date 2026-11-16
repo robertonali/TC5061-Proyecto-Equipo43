@@ -296,11 +296,28 @@ def p3train(
     output_path : Path = P3_CLUSTERS_PATH,
     model_path : Path = P3_MODEL_PATH,
     random_state : int = SEMILLA,
-    run_id : str = None
+    run_id : str = None,
+    reentrenamiento : bool = False,
 ):
+    """Entrena un modelo de P3 y lo registra en MLflow.
+    `reentrenamiento` es la versión alternativa de la entrega 8: usa los perfiles de
+    `features p3-ampliado` (entrenamiento con la ventana de entrenamiento y validación). Exige
+    --input-path, --output-path y --model-path propios, para no pisar los del champion.
+    """
     if modelo not in [*MODELOS, BASELINE, BUSQUEDA]:
         raise typer.BadParameter(
             f'usa uno de: {', '.join([*MODELOS, BASELINE, BUSQUEDA])}', param_hint='--modelo'
+        )
+    if reentrenamiento and (
+        input_path == P3_PERFILES_PATH
+        or output_path == P3_CLUSTERS_PATH
+        or model_path == P3_MODEL_PATH
+        or modelo in (BASELINE, BUSQUEDA)
+    ):
+        raise typer.BadParameter(
+            'El reentrenamiento necesita un modelo candidato y archivos propios (los de '
+            'P3_*_AMPLIADO_PATH en config.py); así no pisa los del champion.',
+            param_hint='--reentrenamiento',
         )
     perfiles = pd.read_parquet(input_path)
     estaciones = pd.read_csv(stations_path)
@@ -320,24 +337,24 @@ def p3train(
     logger.success(f'Modelo entrenado, datos guardados en {output_path}')
     logger.info('Métricas: {}', p3.metricas)
 
-    tags = {
-        **tags,
-        "stage_of_work": "baseline" if es_baseline else "candidate",
-        "model_family": familia,
-    }
+    # El reentrenamiento no es un candidato: así registrar_p3 no lo elige como champion por su ARI.
+    etapa = 'retrain' if reentrenamiento else 'baseline' if es_baseline else 'candidate'
+    nombre_run = f'p3-{modelo}-ampliado' if reentrenamiento else f'p3-{modelo}'
+    tags = {**tags, "stage_of_work": etapa, "model_family": familia}
     variables = 'estacion_lat,estacion_lon' if es_baseline else 'perfil_de_uso'
 
     with mlflow.start_run(
         run_id=run_id,
-        run_name=f"p3-{modelo}",
+        run_name=nombre_run,
     ) as run:
         logger.info('MLflow run ID: {}', run.info.run_id)
         mlflow.set_tags(tags)
-        mlflow.set_tag('mlflow.runName', f'p3-{modelo}')
+        mlflow.set_tag('mlflow.runName', nombre_run)
         registrar_parametros({
             **parametros_comunes(input_path, p3),
             'modelo': modelo,
             'variables': variables,
+            'entrenamiento_ampliado': reentrenamiento,
             **parametros,
         })
         mlflow.log_metrics(p3.metricas)

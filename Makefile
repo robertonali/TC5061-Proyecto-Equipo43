@@ -68,6 +68,26 @@ data: requirements
 monitoreo:
 	$(PYTHON_INTERPRETER) -m mibici_mlops.monitoreo p1
 
+## Drift y calidad de datos de P3 con Evidently, y registro en MLflow (requiere el servidor de MLflow)
+.PHONY: monitoreo_p3
+monitoreo_p3:
+	$(PYTHON_INTERPRETER) -m mibici_mlops.monitoreo p3
+
+## Versión alternativa de P3: perfiles ampliados, reentrenamiento y registro (requiere MLflow)
+MODELO_P3 ?= kmeans_k3
+.PHONY: reentrenar_p3
+reentrenar_p3:
+	$(PYTHON_INTERPRETER) -m mibici_mlops.features p3-ampliado
+	$(PYTHON_INTERPRETER) -m mibici_mlops.modeling.train_p3 --modelo $(MODELO_P3) --reentrenamiento \
+		--input-path data/processed/p3_perfiles_ampliado.parquet \
+		--output-path data/processed/p3_clusters_ampliado.parquet \
+		--model-path models/p3_ampliado.joblib
+
+## A/B testing de P3: registra la versión alternativa y la compara con el champion sobre prueba
+.PHONY: ab_p3
+ab_p3:
+	$(PYTHON_INTERPRETER) -m mibici_mlops.modeling.ab_p3
+
 
 ## Pruebas unitarias con PyTest
 .PHONY: test
