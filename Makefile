@@ -88,6 +88,22 @@ reentrenar_p3:
 ab_p3:
 	$(PYTHON_INTERPRETER) -m mibici_mlops.modeling.ab_p3
 
+## Drift, calidad de datos y desempeño del champion de P2 con Evidently (requiere el servidor de MLflow)
+.PHONY: monitoreo_p2
+monitoreo_p2:
+	$(PYTHON_INTERPRETER) -m mibici_mlops.monitoreo p2
+
+## Versión alternativa de P2: el modelo del champion reentrenado con entrenamiento y validación (requiere MLflow)
+MODELO_P2 ?= --modelo hgb --learning-rate 0.05
+.PHONY: reentrenar_p2
+reentrenar_p2:
+	$(PYTHON_INTERPRETER) -m mibici_mlops.modeling.train_p2 $(MODELO_P2) --reentrenamiento
+
+## A/B testing de P2: registra la versión alternativa y la compara con el champion sobre prueba
+.PHONY: ab_p2
+ab_p2:
+	$(PYTHON_INTERPRETER) -m mibici_mlops.modeling.ab_p2
+
 
 ## Pruebas unitarias con PyTest
 .PHONY: test

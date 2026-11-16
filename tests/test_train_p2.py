@@ -1,15 +1,16 @@
 """Pruebas del entrenamiento de P2: partición, baselines, hiperparámetros, predicción, métricas,
-estabilidad mensual y reproducibilidad.
+estabilidad mensual, reproducibilidad y reentrenamiento.
 
 Usan una tabla simulada con las columnas de `features p2` y versiones pequeñas de los candidatos,
 para que corran en segundos. Las reglas que se prueban están en references/decisiones_p2.md
-(decisiones 6, 7 y 8).
+(decisiones 6, 7, 8 y 13).
 """
 
 import numpy as np
 import pandas as pd
 import pytest
 import typer
+from typer.testing import CliRunner
 
 from mibici_mlops.config import (
     FECHA_INICIO_PRUEBA,
@@ -23,6 +24,7 @@ from mibici_mlops.modeling.train_p2 import (
     BUSQUEDA,
     MODELOS,
     VARIABLES,
+    app,
     asignar_conjunto,
     baseline_clase_mayoritaria,
     baseline_frecuencia,
@@ -30,7 +32,9 @@ from mibici_mlops.modeling.train_p2 import (
     crear_hgb,
     crear_logistica,
     entrenar,
+    graficar_estabilidad,
     nombre_run,
+    partir,
     pesos_de_clase,
     pr_auc_por_mes,
     predecir,
@@ -369,3 +373,59 @@ def test_entrenamiento_no_depende_del_orden_de_las_filas(modelo):
     original = probabilidades_modelo(entrenado(modelo, entrenamiento), evaluacion)
     otro_orden = probabilidades_modelo(entrenado(modelo, revuelto), evaluacion)
     np.testing.assert_allclose(original, otro_orden, atol=1e-6)
+
+
+# Reentrenamiento (decisión 13)
+
+
+def ventanas_en_los_cortes() -> pd.DataFrame:
+    """Una ventana el día anterior a cada corte de la partición y otra el día del corte."""
+    validacion = pd.Timestamp(FECHA_INICIO_VALIDACION)
+    prueba = pd.Timestamp(FECHA_INICIO_PRUEBA)
+    un_dia = pd.Timedelta(days=1)
+    return pd.DataFrame({"dia": [validacion - un_dia, validacion, prueba - un_dia, prueba]})
+
+
+def test_partir_separa_entrenamiento_validacion_y_prueba():
+    entrenamiento, conjuntos = partir(ventanas_en_los_cortes())
+    assert list(entrenamiento.index) == [0]
+    assert {nombre: list(datos.index) for nombre, datos in conjuntos.items()} == {
+        "val": [1, 2],
+        "test": [3],
+    }
+
+
+def test_partir_con_reentrenamiento_entrena_tambien_con_la_validacion():
+    """La prueba queda igual, para comparar las dos versiones con las mismas ventanas."""
+    tabla = ventanas_en_los_cortes()
+    entrenamiento, conjuntos = partir(tabla, reentrenamiento=True)
+    assert list(entrenamiento.index) == [0, 1, 2]
+    assert list(conjuntos) == ["test"]
+    pd.testing.assert_frame_equal(conjuntos["test"], partir(tabla)[1]["test"])
+
+
+@pytest.mark.parametrize("modelo", ["mayoritaria", "frecuencia", BUSQUEDA])
+def test_reentrenamiento_solo_aplica_a_los_candidatos(modelo):
+    """Los baselines y la búsqueda no son versiones que puedan reemplazar al champion. Falla antes
+    de leer los datos o de conectarse a MLflow."""
+    resultado = CliRunner().invoke(app, ["--modelo", modelo, "--reentrenamiento"])
+    assert resultado.exit_code == 2
+    assert "reentrenamiento" in resultado.output
+
+
+# Las fechas simuladas quedan lejos del corte real, y matplotlib avisa que no le cabe en el margen.
+@pytest.mark.filterwarnings("ignore:Tight layout not applied")
+def test_la_grafica_por_mes_solo_marca_el_corte_si_hay_validacion_y_prueba():
+    """Un reentrenamiento solo se evalúa en prueba: su gráfica no lleva la línea del corte."""
+    datos = tabla_simulada()
+    de_frecuencia = baseline_frecuencia(datos, datos)
+    conjuntos = {"val": datos.iloc[:1500], "test": datos.iloc[1500:]}
+    con_validacion = pr_auc_por_mes(
+        conjuntos, {nombre: de_frecuencia.loc[d.index] for nombre, d in conjuntos.items()}
+    )
+    solo_prueba = pr_auc_por_mes({"test": datos}, {"test": de_frecuencia})
+    lineas = [
+        len(graficar_estabilidad(por_mes, "P2").axes[0].lines)
+        for por_mes in (con_validacion, solo_prueba)
+    ]
+    assert lineas == [3, 2]  # las dos clases de riesgo, más la línea del corte si aplica

@@ -1,0 +1,200 @@
+{
+  "modelo": {
+    "uri": "models:/mibici-equipo43-p2-riesgo@champion",
+    "version": "1"
+  },
+  "metodos": {
+    "numericas": "wasserstein",
+    "categoricas": "jensenshannon"
+  },
+  "umbral_drift": 0.1,
+  "entrenamiento": {
+    "desde": "2022-03-01",
+    "hasta": "2025-09-30",
+    "ventanas": 5247312,
+    "estaciones": 371,
+    "proporcion_clases": {
+      "se_vacia": 0.1079,
+      "se_llena": 0.0922,
+      "sin_riesgo": 0.8
+    },
+    "proporcion_predicha": {
+      "se_vacia": 0.2157,
+      "se_llena": 0.1691,
+      "sin_riesgo": 0.6152
+    },
+    "calidad": {
+      "valores_faltantes": 0,
+      "ventanas_duplicadas": 0,
+      "frecuencias_fuera_de_0_a_1": 0,
+      "horas_fuera_de_la_rejilla": 0,
+      "capacidad_no_positiva": 0,
+      "clases_desconocidas": 0
+    },
+    "desempeno_dentro_de_muestra": {
+      "recall_se_vacia": 0.7965,
+      "precision_se_vacia": 0.3983,
+      "pr_auc_se_vacia": 0.5823,
+      "proporcion_se_vacia": 0.1079,
+      "recall_se_llena": 0.8046,
+      "precision_se_llena": 0.4385,
+      "pr_auc_se_llena": 0.646,
+      "proporcion_se_llena": 0.0922,
+      "pr_auc_promedio": 0.6142,
+      "pr_auc_promedio_baseline": 0.5309,
+      "mejora_sobre_baseline": 0.0833
+    }
+  },
+  "validacion": {
+    "desde": "2025-10-01",
+    "hasta": "2026-03-31",
+    "ventanas": 809388,
+    "estaciones": 371,
+    "proporcion_clases": {
+      "se_vacia": 0.0782,
+      "se_llena": 0.0825,
+      "sin_riesgo": 0.8392
+    },
+    "proporcion_predicha": {
+      "se_vacia": 0.1775,
+      "se_llena": 0.1517,
+      "sin_riesgo": 0.6708
+    },
+    "calidad": {
+      "valores_faltantes": 0,
+      "ventanas_duplicadas": 0,
+      "frecuencias_fuera_de_0_a_1": 0,
+      "horas_fuera_de_la_rejilla": 0,
+      "capacidad_no_positiva": 0,
+      "clases_desconocidas": 0
+    },
+    "estaciones_nuevas": 2,
+    "ventanas_de_estaciones_nuevas": 3492,
+    "estaciones_que_salen": 2,
+    "drift_por_variable": {
+      "frec_se_vacia": 0.1135,
+      "prediccion": 0.042,
+      "capacidad": 0.0401,
+      "clase": 0.0394,
+      "frec_se_llena": 0.0346,
+      "feriado": 0.0192,
+      "dia_semana": 0.0005,
+      "hora": 0.0
+    },
+    "variables_con_drift": [
+      "frec_se_vacia"
+    ],
+    "proporcion_con_drift": 0.125,
+    "drift_del_conjunto": false,
+    "drift_de_la_prediccion": 0.042,
+    "desempeno": {
+      "recall_se_vacia": 0.7604,
+      "precision_se_vacia": 0.3351,
+      "pr_auc_se_vacia": 0.4766,
+      "proporcion_se_vacia": 0.0782,
+      "recall_se_llena": 0.8177,
+      "precision_se_llena": 0.445,
+      "pr_auc_se_llena": 0.6655,
+      "proporcion_se_llena": 0.0825,
+      "pr_auc_promedio": 0.571,
+      "pr_auc_promedio_baseline": 0.4952,
+      "mejora_sobre_baseline": 0.0758
+    },
+    "desempeno_estaciones_conocidas": {
+      "recall_se_vacia": 0.7604,
+      "precision_se_vacia": 0.3351,
+      "pr_auc_se_vacia": 0.4767,
+      "proporcion_se_vacia": 0.0786,
+      "recall_se_llena": 0.8177,
+      "precision_se_llena": 0.445,
+      "pr_auc_se_llena": 0.6656,
+      "proporcion_se_llena": 0.0829,
+      "pr_auc_promedio": 0.5712,
+      "pr_auc_promedio_baseline": 0.4953,
+      "mejora_sobre_baseline": 0.0759
+    },
+    "desempeno_estaciones_nuevas": null
+  },
+  "prueba": {
+    "desde": "2026-04-01",
+    "hasta": "2026-09-30",
+    "ventanas": 922584,
+    "estaciones": 469,
+    "proporcion_clases": {
+      "se_vacia": 0.0572,
+      "se_llena": 0.0715,
+      "sin_riesgo": 0.8712
+    },
+    "proporcion_predicha": {
+      "se_vacia": 0.1349,
+      "se_llena": 0.1358,
+      "sin_riesgo": 0.7294
+    },
+    "calidad": {
+      "valores_faltantes": 0,
+      "ventanas_duplicadas": 0,
+      "frecuencias_fuera_de_0_a_1": 0,
+      "horas_fuera_de_la_rejilla": 0,
+      "capacidad_no_positiva": 0,
+      "clases_desconocidas": 0
+    },
+    "estaciones_nuevas": 100,
+    "ventanas_de_estaciones_nuevas": 112668,
+    "estaciones_que_salen": 2,
+    "drift_por_variable": {
+      "frec_se_vacia": 0.2111,
+      "capacidad": 0.0973,
+      "prediccion": 0.0897,
+      "frec_se_llena": 0.087,
+      "clase": 0.0732,
+      "feriado": 0.0245,
+      "dia_semana": 0.004,
+      "hora": 0.0
+    },
+    "variables_con_drift": [
+      "frec_se_vacia"
+    ],
+    "proporcion_con_drift": 0.125,
+    "drift_del_conjunto": false,
+    "drift_de_la_prediccion": 0.0897,
+    "desempeno": {
+      "recall_se_vacia": 0.7105,
+      "precision_se_vacia": 0.3016,
+      "pr_auc_se_vacia": 0.4421,
+      "proporcion_se_vacia": 0.0572,
+      "recall_se_llena": 0.7871,
+      "precision_se_llena": 0.4147,
+      "pr_auc_se_llena": 0.6019,
+      "proporcion_se_llena": 0.0715,
+      "pr_auc_promedio": 0.522,
+      "pr_auc_promedio_baseline": 0.4535,
+      "mejora_sobre_baseline": 0.0685
+    },
+    "desempeno_estaciones_conocidas": {
+      "recall_se_vacia": 0.7157,
+      "precision_se_vacia": 0.305,
+      "pr_auc_se_vacia": 0.4488,
+      "proporcion_se_vacia": 0.0638,
+      "recall_se_llena": 0.7912,
+      "precision_se_llena": 0.414,
+      "pr_auc_se_llena": 0.6072,
+      "proporcion_se_llena": 0.0792,
+      "pr_auc_promedio": 0.528,
+      "pr_auc_promedio_baseline": 0.4589,
+      "mejora_sobre_baseline": 0.0691
+    },
+    "desempeno_estaciones_nuevas": {
+      "recall_se_vacia": 0.4652,
+      "precision_se_vacia": 0.1668,
+      "pr_auc_se_vacia": 0.1914,
+      "proporcion_se_vacia": 0.0098,
+      "recall_se_llena": 0.6487,
+      "precision_se_llena": 0.4464,
+      "pr_auc_se_llena": 0.4704,
+      "proporcion_se_llena": 0.0166,
+      "pr_auc_promedio": 0.3309,
+      "pr_auc_promedio_baseline": 0.2809,
+      "mejora_sobre_baseline": 0.05
+    }
+  }
+}

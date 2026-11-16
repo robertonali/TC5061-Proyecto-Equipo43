@@ -70,9 +70,13 @@ def modelo_del_run(run: Run) -> str:
 
 
 def linaje(run: Run) -> dict[str, str]:
-    """Etiquetas de la versión: de dónde salió el modelo y con qué datos y código."""
+    """Etiquetas de la versión: de dónde salió el modelo y con qué datos y código.
+
+    Un reentrenamiento (etapa `retrain`, decisión 13) no tiene métricas de validación, porque la
+    validación es parte de su entrenamiento: esa etiqueta no se pone.
+    """
     datos = run.data
-    return {
+    etiquetas = {
         "experimento": EXPERIMENTO_MLFLOW,
         "run_id": run.info.run_id,
         "run_name": run.info.run_name,
@@ -81,9 +85,20 @@ def linaje(run: Run) -> dict[str, str]:
         "version_manifiesto": datos.params.get("version_manifiesto", ""),
         "version_datos": datos.params.get("version_datos", ""),
         "model_family": datos.tags.get("model_family", ""),
-        "val_pr_auc_promedio": f"{datos.metrics.get(METRICA, float('nan')):.4f}",
-        "test_pr_auc_promedio": f"{datos.metrics.get('test_pr_auc_promedio', float('nan')):.4f}",
+        "stage_of_work": datos.tags.get("stage_of_work", ""),
     }
+    for metrica in (METRICA, "test_pr_auc_promedio"):
+        if metrica in datos.metrics:
+            etiquetas[metrica] = f"{datos.metrics[metrica]:.4f}"
+    return etiquetas
+
+
+def describir_desempeno(etiquetas: dict[str, str]) -> str:
+    """PR-AUC promedio de la versión en los conjuntos en que se evaluó su run."""
+    prueba = f"{etiquetas.get('test_pr_auc_promedio', 'sin dato')} en prueba"
+    if METRICA not in etiquetas:
+        return f"{prueba} (la validación es parte de su entrenamiento)"
+    return f"{etiquetas[METRICA]} en validación y {prueba}"
 
 
 def registrar_version(cliente: MlflowClient, run: Run) -> str:
@@ -99,8 +114,7 @@ def registrar_version(cliente: MlflowClient, run: Run) -> str:
         version.version,
         description=(
             f"{run.info.run_name}. PR-AUC promedio de las clases de riesgo: "
-            f"{etiquetas['val_pr_auc_promedio']} en validación y "
-            f"{etiquetas['test_pr_auc_promedio']} en prueba. Commit {etiquetas['commit'][:7]}, "
+            f"{describir_desempeno(etiquetas)}. Commit {etiquetas['commit'][:7]}, "
             f"manifiesto de datos {etiquetas['version_manifiesto']}."
         ),
     )

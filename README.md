@@ -236,6 +236,10 @@ modelo = mlflow.pyfunc.load_model("models:/mibici-equipo43-p2-riesgo@champion")
 Cada pregunta se registra con `mlflow run . -e register -P question=<p1|p2|p3>` (ver la sección
 de cada una).
 
+P2 y P3 tienen además el alias `reentrenado`: la versión alternativa de la entrega 8, que se
+comparó con el `champion` en un A/B y no lo reemplazó (ver
+[Monitoreo de datos con Evidently](#monitoreo-de-datos-con-evidently)).
+
 ## Despliegue: recuperar los modelos del Model Registry
 
 Una sola API sirve los modelos en producción (`champion`) de tres preguntas:
@@ -766,6 +770,9 @@ Las de la entrega 1 están en `reports/figures/mlflow_p2_*.png`.
 y `GET /p2/modelo`; ver [Despliegue](#despliegue-recuperar-los-modelos-del-model-registry) y la
 decisión 11 de `references/decisiones_p2.md`.
 
+**Monitoreo y A/B** (entrega 8): drift con Evidently, versión reentrenada y A/B contra el
+`champion`; ver [Monitoreo de P2](#monitoreo-de-p2-riesgo-de-estaciones) y las decisiones 12 y 13.
+
 ## P3: grupos de estaciones con patrones de uso parecidos
 
 **Pregunta:** ¿qué grupos de estaciones comparten patrones de uso y dónde se ubican en la
@@ -947,6 +954,53 @@ make ab_p3           # la registra como nueva versión y la compara con el champ
 A/B y la recomendación de reentrenamiento está en
 [reports/evidently/p3_reporte.md](reports/evidently/p3_reporte.md).
 
+### Monitoreo de P2 (riesgo de estaciones)
+
+Mismo esquema para P2, que sí tiene etiqueta: se vigilan las 6 variables del modelo, la etiqueta
+y la clase que predice el `champion`, y además el desempeño del modelo en cada periodo y cada mes,
+junto al baseline de frecuencia. Necesita el servidor de MLflow activo.
+
+| Conjunto | Periodo | Por qué |
+|---|---|---|
+| Referencia (`entrenamiento`) | 2022-03-01 a 2025-09-30 | Con él se ajustó el `champion` |
+| Actual 1 (`validacion`) | 2025-10-01 a 2026-03-31 | Primeros seis meses después del corte |
+| Actual 2 (`prueba`) | 2026-04-01 a 2026-09-30 | Los seis meses siguientes; también es el conjunto del A/B |
+
+```powershell
+make monitoreo_p2    # drift, calidad de datos y desempeño; queda como el run p2-monitoreo (~3 min)
+make reentrenar_p2   # versión alternativa: el modelo del champion con entrenamiento + validación (~3 min)
+make ab_p2           # la registra como nueva versión y la compara con el champion en prueba (~5 min)
+```
+
+Sin `make`: `python -m mibici_mlops.monitoreo p2`,
+`python -m mibici_mlops.modeling.train_p2 --modelo hgb --learning-rate 0.05 --reentrenamiento` y
+`python -m mibici_mlops.modeling.ab_p2`.
+
+`monitoreo p2` guarda en `reports/evidently/` los reportes de Evidently de cada periodo
+([validación](reports/evidently/p2_drift_calidad_validacion.html) y
+[prueba](reports/evidently/p2_drift_calidad_prueba.html)), la distancia de drift por variable y por
+mes (`p2_drift_variables.csv`, `p2_drift_por_mes.csv` y `.png`), el desempeño por mes
+(`p2_desempeno_por_mes.csv` y `.png`) y el resumen (`p2_drift_resumen.json`). `ab_p2` guarda
+`p2_ab_resultado.json`. `p2_evidently_validacion.png` y `p2_evidently_prueba.png` son capturas del
+resumen de esos reportes, para el documento de la entrega.
+
+- **Drift:** de 8 columnas, solo `frec_se_vacia` pasa el umbral (0.11 en validación y 0.21 en
+  prueba). El riesgo real baja: las ventanas que se vacían pasan de 10.8% a 7.8% y a 5.7%.
+- **Desempeño del `champion`:** la PR-AUC promedio baja de 0.571 a 0.522, pero conserva su ventaja
+  sobre el baseline (+0.076 y +0.069). El recall de "se vacía" baja de 0.76 a 0.71.
+- **A/B:** la versión reentrenada (versión 3, alias `reentrenado`) mejora la PR-AUC promedio en
+  +0.0028, con intervalo de confianza de 95% de +0.0024 a +0.0032. Es menos que el margen de 0.005
+  de la regla, así que la versión 1 sigue como `champion`. `ab_p2 --promover` mueve el alias solo
+  si la alternativa gana.
+- **Reentrenamiento:** hoy no conviene; se propone monitorear cada mes y reentrenar cuando haya
+  meses nuevos que incluyan a las 100 estaciones que abrieron en 2026.
+
+La interpretación completa está en
+[reports/evidently/p2_reporte.md](reports/evidently/p2_reporte.md) y las reglas, en las decisiones
+12 y 13 de [references/decisiones_p2.md](references/decisiones_p2.md).
+
+![Desempeño del champion de P2 por mes](reports/evidently/p2_desempeno_por_mes.png)
+
 ## Pruebas y chequeos
 
 Tres capas:
@@ -969,9 +1023,10 @@ pytest
 ```
 
 Las pruebas usan datos pequeños hechos a mano, así que corren en menos de un minuto y no
-necesitan `data/` ni el servidor de MLflow. Resultado esperado: `315 passed, 2 xfailed` (con los dos
-modelos exportados en `models/servicio/`; sin ellos, las 4 pruebas de integración de la API se
-saltan). Las dos `xfailed` son casos límite que se documentan como limitación conocida (`@pytest.mark.xfail` con
+necesitan `data/` ni el servidor de MLflow. Resultado esperado: `387 passed, 6 skipped, 2 xfailed`
+si falta alguno de los tres modelos exportados en `models/servicio/` (las 6 que se saltan son las
+pruebas de integración de la API); con los tres, esas 6 también corren. Las dos `xfailed` son casos
+límite que se documentan como limitación conocida (`@pytest.mark.xfail` con
 la razón); si alguna de ellas pasara, PyTest lo reportaría como error.
 
 | Archivo | Pruebas | Qué cubre |
@@ -979,7 +1034,8 @@ la razón); si alguna de ellas pasara, PyTest lo reportaría como error.
 | `tests/test_environment.py` | 55 | Que Python y los paquetes instalados sean los de `python_env.yaml` y `requirements.txt`, que `pip check` no reporte conflictos y que existan los módulos del `MLproject` |
 | `tests/test_features_p1.py`, `tests/test_train_p1.py` | 51 | P1: conteos, historial sin información del futuro, feriados, hiperparámetros, métricas y reproducibilidad |
 | `tests/test_features_p2.py` | 33 | P2: inventario simulado (reinicio a las 4:00, acumulación, capacidad impar), ventanas sin viajes, etiqueta en los umbrales exactos y cuando se cumplen las dos reglas, frecuencia de las semanas anteriores sin fuga, calendario y la tabla completa |
-| `tests/test_train_p2.py` | 46 | P2: partición por fechas, baselines, desempates, validación de hiperparámetros, métricas con un modelo perfecto y con uno que nunca predice riesgo, y reproducibilidad: dos entrenamientos con la misma semilla dan exactamente las mismas probabilidades |
+| `tests/test_train_p2.py` | 52 | P2: partición por fechas, baselines, desempates, validación de hiperparámetros, métricas con un modelo perfecto y con uno que nunca predice riesgo, reproducibilidad (dos entrenamientos con la misma semilla dan exactamente las mismas probabilidades) y reentrenamiento: suma la validación al entrenamiento sin tocar la prueba y solo aplica a los candidatos |
+| `tests/test_monitoreo_p2.py`, `tests/test_ab_p2.py` | 30 | P2, entrega 8. Monitoreo: columnas que se vigilan, drift sin cambio y con menos riesgo, drift por mes, chequeos de calidad y desempeño contra el baseline. A/B: cada condición de la regla de decisión, bootstrap por días reproducible y con dos versiones iguales, y linaje de la versión reentrenada |
 | `tests/test_features_p3.py`, `tests/test_train_p3.py` | 25 | P3: perfiles de uso, KMeans con semilla fija y estabilidad |
 | `tests/test_seguridad.py` | 29 | Que ningún archivo versionado tenga secretos, que `.gitignore` cubra `.env`, credenciales y datos, que `.dvc/config` no guarde el secreto de Drive y que la descarga solo abra URL http(s) (ver [Chequeos de seguridad](#chequeos-de-seguridad)) |
 | `tests/test_api.py`, `tests/test_api_modelo_real.py` | 35 | API de P1: respuestas, validación de entradas, formatos de URI del registry, y la API con el modelo exportado contra el modelo cargado directamente (se salta si no está exportado) |
@@ -1254,6 +1310,7 @@ gh pr create --base master --fill
 │
 ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
 │   ├── deepchecks     <- Reportes HTML y hallazgos de DeepChecks (P1, P2 y P3)
+│   ├── evidently      <- Reportes de drift de Evidently, resultados del A/B y reportes de la entrega 8
 │   ├── seguridad      <- Salida de bandit y pip-audit (ver "Chequeos de seguridad")
 │   └── figures        <- Generated graphics and figures to be used in reporting
 │
@@ -1285,12 +1342,15 @@ gh pr create --base master --fill
     ├── modeling                
     │   ├── __init__.py 
     │   ├── predict.py          <- Code to run model inference with trained models          
+    │   ├── ab_p2.py            <- P2: A/B del champion contra la versión reentrenada
     │   ├── registrar_p2.py     <- P2: modelo elegido al Model Registry (champion y challenger)
     │   ├── registro.py         <- Experimento, etiquetas y versión de datos de MLflow (P1, P2, P3)
     │   ├── train.py            <- Punto de entrada train del MLproject: llama al de cada pregunta
     │   ├── train_p1.py         <- P1: baseline y gradient boosting registrados en MLflow
     │   ├── train_p2.py         <- P2: baselines, candidatos y búsqueda registrados en MLflow
     │   └── train_p3.py         <- P3: baseline y KMeans registrados en MLflow
+    │
+    ├── monitoreo.py            <- Drift y calidad de datos con Evidently (`python -m mibici_mlops.monitoreo p1|p2|p3`)
     │
     └── plots.py                <- Code to create visualizations
 ```
