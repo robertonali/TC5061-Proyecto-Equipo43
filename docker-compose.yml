@@ -1,0 +1,50 @@
+# Levanta todo el proyecto con un solo comando (Docker Compose o podman-compose):
+#     docker compose up --build
+# Servicios:
+#     mlflow  servidor de tracking y Model Registry   http://localhost:5000
+#     api     API de los modelos P1, P2 y P3          http://localhost:8000/docs
+# Antes de la primera vez, exporta los modelos que empaqueta la imagen (ver el Containerfile):
+#     python -m mibici_mlops.api.modelo exportar [--question p2|p3]
+services:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.17.2
+    command: >
+      mlflow server
+      --host 0.0.0.0 --port 5000 --workers 1
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/mlruns
+    environment:
+      # MLflow 3.x valida el encabezado Host; sin esto rechaza "mlflow:5000" dentro de la red.
+      MLFLOW_SERVER_ALLOWED_HOSTS: "*"
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=4)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: mibici-api
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      # Vacíos: usa los modelos empaquetados en la imagen. Para cargarlos del registry:
+      # MODELO_URI: models:/mibici-equipo43-p1-demanda@champion
+      # MODELO_URI_P2: models:/mibici-equipo43-p2-riesgo@champion
+      # MODELO_URI_P3: models:/mibici-equipo43-p3-clusters@champion
+    ports:
+      - "8000:8000"
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mlflow-data:
