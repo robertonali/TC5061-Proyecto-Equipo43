@@ -593,6 +593,19 @@ Los defaults de `API_WORKERS`, `API_HILOS` y `API_KEEPALIVE` salen de la prueba 
 El resultado se ve en la pestaña *Actions* del repositorio y en el badge del inicio de este README.
 Para correr lo mismo en local: `pytest` y `docker build -f Containerfile .`.
 
+**Publicación de la imagen.** En cada push a `master`, si `build` pasa, el job **`publish`** sube la
+imagen a GitHub Container Registry con las etiquetas `latest` y el SHA del commit. Usa el
+`GITHUB_TOKEN` de la corrida con el permiso `packages: write`, sin secretos adicionales. Los pull
+requests y las demás ramas no publican.
+
+```bash
+docker pull ghcr.io/robertonali/mibici-api:latest
+```
+
+La imagen publicada no trae los modelos, porque `models/servicio/` no está en Git: demuestra el
+pipeline de publicación, pero la API no arranca con ella sola. Para servir predicciones hay que
+exportar los modelos y construir la imagen en local, como se explica arriba.
+
 ### Prueba de carga con Locust
 
 Todo está en [`carga/`](carga/):
