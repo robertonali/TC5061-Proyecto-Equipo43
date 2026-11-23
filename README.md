@@ -585,13 +585,25 @@ Los defaults de `API_WORKERS`, `API_HILOS` y `API_KEEPALIVE` salen de la prueba 
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) corre en cada push y pull request:
 
-1. **`test`**: instala `requirements.txt` con Python 3.13 (con caché de pip) y corre `pytest`. Las
-   pruebas que necesitan los modelos o los datos reales se omiten solas si no están.
-2. **`build`**: si `test` pasa, construye la imagen de la API con Buildx (con caché de capas en
-   GitHub Actions) y valida `docker-compose.yml` con `docker compose config`.
+1. **`test`**: una matriz con Python 3.13 y 3.12 que instala `requirements.txt` (con caché de pip)
+   y corre `pytest`. Las pruebas que necesitan los modelos o los datos reales se omiten solas si no
+   están. Las dos versiones corren aunque una falle (`fail-fast: false`).
+   - **3.13** es la versión del proyecto (`python_env.yaml`, `pyproject.toml` y la imagen).
+   - **3.12** es la del entorno de DeepChecks y sirve como prueba de compatibilidad. Como el
+     paquete fija `requires-python ~=3.13.0`, se instala con `--ignore-requires-python` y se omite
+     la única prueba que exige 3.13 (`test_version_de_python_coincide_con_python_env`). Los modelos
+     se siguen entrenando, guardando y sirviendo con 3.13.
+2. **`build`**: si las dos versiones de `test` pasan, construye la imagen de la API con Buildx (con
+   caché de capas en GitHub Actions) y valida `docker-compose.yml` con `docker compose config`.
+3. **`compose`**: si `build` pasa, levanta MLflow con `docker compose up -d --wait mlflow` (espera a
+   su healthcheck), comprueba `curl -f http://localhost:5000/health` y termina con
+   `docker compose down -v`, que corre aunque un paso falle. La API no se levanta en CI porque su
+   imagen necesita los modelos exportados, que no están en Git.
 
 El resultado se ve en la pestaña *Actions* del repositorio y en el badge del inicio de este README.
-Para correr lo mismo en local: `pytest` y `docker build -f Containerfile .`.
+Para correr lo mismo en local: `pytest`, `docker build -f Containerfile .` y
+`docker compose up -d --wait mlflow` seguido de `curl -f http://localhost:5000/health` y
+`docker compose down -v`.
 
 **Publicación de la imagen.** En cada push a `master`, si `build` pasa, el job **`publish`** sube la
 imagen a GitHub Container Registry con las etiquetas `latest` y el SHA del commit. Usa el

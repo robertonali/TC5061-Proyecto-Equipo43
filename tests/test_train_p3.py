@@ -59,7 +59,10 @@ def test_misma_semilla_mismas_etiquetas_y_metricas(nombre):
     asignaciones_a, metricas_a = a.fit_predict()
     asignaciones_b, metricas_b = b.fit_predict()
     pd.testing.assert_frame_equal(asignaciones_a, asignaciones_b)
-    assert metricas_a == metricas_b
+    # Las etiquetas son idénticas; las métricas, salvo el último dígito: con varios núcleos (p. ej.
+    # en GitHub Actions) KMeans suma la inercia en hilos y el orden de las sumas puede cambiar
+    # entre corridas (1.2991691317088154 contra 1.2991691317088156).
+    assert metricas_a == pytest.approx(metricas_b, rel=1e-12)
 
 
 def test_recupera_grupos_bien_separados():
