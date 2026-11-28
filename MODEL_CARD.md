@@ -33,48 +33,152 @@ se corrigen están en [references/fuentes_datos.md](references/fuentes_datos.md)
 
 ## P1: demanda de viajes por estación y día
 
-> **[POR COMPLETAR – P1]** Llenar cada sección con la misma estructura que la ficha de P2. Lo que
-> ya está escrito sale del README y es solo un punto de partida.
-
 - **Responsable:** Manuel Medina.
-- **Decisiones:** [references/decisiones_p1.md](references/decisiones_p1.md).
+- **Fecha de la ficha:** 2026-11-27.
+- **Decisiones:** [references/decisiones_p1.md](references/decisiones_p1.md). Los números de esta
+  ficha salen de ahí, de la sección de P1 del README y de
+  [reports/evidently/p1_drift_resumen.json](reports/evidently/p1_drift_resumen.json).
 
 ### 1. Detalles del modelo
 
-- **Modelo registrado:** `mibici-equipo43-p1-demanda`.
-- **En producción (`champion`):** `HistGradientBoostingRegressor` con pérdida de Poisson y 63 hojas,
-  del run `p1-hgb-poisson-lr0.1-hojas63-arboles300`.
-- **`challenger`:** `RandomForestRegressor`, del run `p1-rf-arboles100-prof16-hoja20`.
-- [POR COMPLETAR – P1] Hiperparámetros, semilla y etiquetas de linaje de la versión.
+| Campo | Valor |
+|---|---|
+| Modelo registrado | `mibici-equipo43-p1-demanda` |
+| En producción | Versión 1, alias `champion`: `models:/mibici-equipo43-p1-demanda@champion` |
+| Algoritmo | `HistGradientBoostingRegressor` de scikit-learn: pérdida de Poisson, `learning_rate` 0.1, 300 árboles, 63 hojas, sin parada anticipada y semilla 43 (decisiones 5 y 7) |
+| Run de origen | `p1-hgb-poisson-lr0.1-hojas63-arboles300`. La búsqueda `p1-busqueda-hgb-lr0.1-arboles300` (pérdida × hojas, 6 hijos) confirmó la combinación |
+| Linaje | Cada versión lleva como etiquetas el run de origen, el commit, si había cambios sin commit, la versión del manifiesto de datos, la versión de DVC de `data/raw`, la familia del modelo y el MAE de validación y prueba (`registrar_p1.py`) |
+| Otras versiones | Versión 2, alias `challenger`: `RandomForestRegressor` (`p1-rf-arboles100-prof16-hoja20`; 100 árboles, profundidad 16, 20 filas por hoja). Es de otra familia, así que si el boosting falla el reemplazo no comparte sus errores |
 
 ### 2. Uso previsto
 
-- Cada día a las 23:59, predecir cuántos viajes iniciarán en cada estación el día siguiente. Lo usa
-  operación para repartir bicicletas y personal por zona y por día.
-- [POR COMPLETAR – P1] Usos fuera de alcance.
+- **Para qué:** cada día a las 23:59, con los viajes hasta ese momento, predecir cuántos viajes
+  iniciarán en cada estación activa durante el día siguiente (decisión 1).
+- **Quién lo usa:** operación, para repartir bicicletas y personal por zona y por día. Las
+  predicciones de las estaciones de una zona se pueden sumar para dimensionar la flota de la zona.
+- **Cómo se consume:** el proceso diario manda todas las estaciones en una sola petición a la API
+  (hasta 5,000 filas); la misma API responde consultas sueltas, como un escenario con feriado.
+- **Fuera de alcance:**
+  - Decir a qué hora del día hace falta la flota: eso lo cubre P2 con ventanas de 2 horas.
+  - Predecir más de un día adelante: `lag_7d` y `media_7d` necesitan los viajes hasta el día
+    anterior.
+  - Estaciones sin viajes en los 7 días anteriores (nuevas o cerradas): no entran a los datos
+    (decisión 3) y sus rezagos valen 0.
+  - Decidir de forma automática, sin una persona, o usarlo en otra ciudad sin reentrenarlo.
 
 ### 3. Datos
 
-- [POR COMPLETAR – P1] Periodo, partición por fechas y variables (`lag_7d`, `media_7d`, calendario
-  y datos de la estación).
+- **Fuente:** los viajes del 2022-03-01 al 2026-09-30 y el catálogo de estaciones (capacidad,
+  latitud y longitud).
+- **Datos personales:** no usa los datos de los usuarios (id, género ni año de nacimiento); solo
+  cuenta los viajes que inician en cada estación.
+- **Unidad:** una fila por estación y día, con malla completa: los días sin viajes cuentan como 0,
+  para que el modelo aprenda también los días sin demanda (decisión 1).
+- **Partición por fechas** (decisión 6, la común del equipo): la prueba es lo más reciente.
+
+  | Conjunto | Periodo | Filas estación-día |
+  |---|---|---|
+  | Entrenamiento | 2022-03-08 a 2025-09-30 | 434,345 |
+  | Validación | 2025-10-01 a 2026-03-31 | 66,890 |
+  | Prueba | 2026-04-01 a 2026-09-30 | 75,913 |
+
+  El entrenamiento empieza el 2022-03-08 porque cada fila necesita una semana completa de historial.
+- **Variables** (decisión 2), nueve, todas conocidas a las 23:59 del día anterior:
+  - Historial: `lag_7d` (viajes del mismo día de la semana anterior) y `media_7d` (promedio de los
+    7 días anteriores). `tests/test_features_p1.py` comprueba que no usan información del día que
+    se predice.
+  - Calendario: `dia_semana`, `mes`, `es_fin_de_semana` y `es_feriado` (los feriados oficiales de
+    la Ley Federal del Trabajo).
+  - Estación: `capacidad`, `lat` y `lon`. No se usa el id de la estación: la ubicación y la
+    capacidad ya la identifican.
 
 ### 4. Métricas y resultados
 
-- MAE y RMSE en viajes por estación y día, en validación y prueba. El modelo se elige con el MAE de
-  validación.
-- [POR COMPLETAR – P1] Tabla del `champion` y el `challenger` contra el baseline (`lag_7d`).
+- **Métrica para elegir el modelo:** el MAE de validación, en viajes por estación-día. La prueba se
+  evalúa una sola vez y no interviene en la elección. Se reporta también el RMSE, que castiga más
+  los errores grandes de los días de mucha demanda. No se usa MAPE porque hay estación-días con 0
+  viajes.
+
+| Modelo | MAE validación | RMSE validación | MAE prueba | RMSE prueba | Mejora del MAE de prueba |
+|---|---|---|---|---|---|
+| Baseline: mismo día de la semana anterior (`lag_7d`) | 7.78 | 14.12 | 7.94 | 15.41 | — |
+| Regresión Ridge | 6.85 | 11.72 | 7.03 | 12.80 | 11% |
+| `challenger`: random forest | 5.90 | 10.75 | 6.13 | 11.92 | 23% |
+| **`champion`: HGB con pérdida de Poisson, 63 hojas** | **5.72** | **10.39** | **5.99** | **11.51** | **25%** |
+
+- **Contra el baseline:** en prueba el MAE baja de 7.94 a 5.99 viajes por estación-día (25%) y el
+  RMSE en la misma proporción, el criterio de despliegue de la propuesta.
+- **63 y no 127 hojas:** con 127 el MAE de validación baja solo 0.005 viajes, menos que el ruido; en
+  prueba es peor (6.02) y entrena en el doble de tiempo.
+- **Estabilidad:** el error de prueba es 5% mayor que el de validación, y el modelo gana al
+  baseline todos los días de la semana (artefacto `plots/error_por_dia_semana_test.png` del run).
+- **Por qué Poisson:** la demanda es un conteo no negativo con muchos ceros, y la pérdida de
+  Poisson nunca predice valores negativos. La API, además, recorta a 0 cualquier predicción
+  negativa.
+- **Costo:** entrena en unos 8 segundos y predice las estaciones de un día en milisegundos.
 
 ### 5. Limitaciones y riesgos
 
-- [POR COMPLETAR – P1]
+- **Errores grandes en algunos días.** El RMSE (11.51) es casi el doble del MAE (5.99): hay
+  estaciones-día con errores grandes, sobre todo en los días de mucha demanda.
+- **El error depende del nivel de uso.** En las estaciones de uso alto (63 viajes al día en
+  promedio) el MAE es de 11.0 viajes, contra 2.9 en las de uso bajo. En proporción a su demanda es
+  al revés: 17% en las de uso alto contra 28% en las de uso bajo. Para las estaciones de poco uso
+  la predicción es menos confiable en términos relativos.
+- **Estaciones nuevas.** 100 estaciones del periodo actual no existían en el entrenamiento (98
+  abrieron de mayo a agosto de 2026). Entran a los datos desde el día siguiente a su primer viaje,
+  con rezagos de 0 antes de abrir, así que en su primera semana la predicción puede quedarse corta.
+- **Variables limitadas.** No usa el clima, los eventos de la ciudad ni los cierres de estaciones.
+  Los feriados son solo los oficiales: un evento local que mueva la demanda no se ve (pendiente de
+  la decisión 2).
+- **Depende del dato del día anterior.** Si un día los datos de viajes llegan incompletos,
+  `lag_7d` y `media_7d` bajan y la predicción también.
 
 ### 6. Monitoreo y mantenimiento
 
-- [POR COMPLETAR – P1] Drift con Evidently (`reports/evidently/p1_*`) y cuándo reentrenar.
+- **Drift y calidad de los datos con Evidently** (decisión 8): la referencia es el entrenamiento y
+  el periodo actual, los 12 meses que siguen al corte (2025-10-01 a 2026-09-30, 142,803 filas). Un
+  año completo evita que la estacionalidad de `mes` parezca drift. Hay drift si la distancia es de
+  0.1 o más (Wasserstein normalizada en las numéricas, Jensen-Shannon en las categóricas), y drift
+  del conjunto si lo tiene la mitad o más de las variables.
+  - 3 de 10 variables tienen drift: `media_7d` (0.16), `lag_7d` (0.15) y la demanda `viajes`
+    (0.15). No hay drift del conjunto (0.3 < 0.5): en el año, el cambio está sobre todo en el nivel
+    de demanda.
+  - `lon` y `capacidad` quedan debajo del umbral en el año (0.07), pero lo pasan desde julio de
+    2026, cuando abren las estaciones nuevas (`reports/evidently/p1_drift_por_mes.png`).
+  - Reportes: `reports/evidently/p1_drift_calidad.html` (drift por variable y calidad de los datos
+    de ambos periodos), `p1_drift_resumen.json` y `p1_drift_por_mes.csv`.
+- **Cuándo reentrenar** (propuesta): correr `make monitoreo` con cada mes nuevo de datos y
+  reentrenar si pasa alguna de estas señales:
+  - el MAE mensual del `champion` deja de ser al menos 15% menor que el del baseline dos meses
+    seguidos;
+  - `lon` o `capacidad` siguen arriba del umbral tres meses seguidos, porque la red cambió;
+  - hay drift del conjunto.
+
+  El siguiente reentrenamiento recomendado es con los meses de octubre a diciembre de 2026, que ya
+  incluyen las estaciones nuevas con historial. Como respaldo, una vez al año.
+- **Promoción y vuelta atrás:** P1 todavía no tiene un A/B automatizado como `ab_p2`. Propuesta:
+  una versión nueva pasa a `champion` solo si baja el MAE de prueba sin subir el RMSE, evaluada en
+  los mismos días que la versión actual. Volver atrás es mover el alias, volver a exportar el
+  modelo y reconstruir la imagen de la API.
 
 ### 7. Cómo usarlo
 
-- `POST /prediccion` y `GET /modelo` de la API (ver la sección "La API" del README).
+- **API:** `POST /prediccion` recibe hasta 5,000 filas por petición, cada una con las 9 variables
+  y, opcionalmente, `estacion_id`, que la respuesta devuelve. Se rechaza con `422` una fila con
+  columnas de más o de menos, o fuera de rango (`dia_semana` de 0 a 6, `mes` de 1 a 12,
+  `es_fin_de_semana` coherente con `dia_semana`, capacidad positiva, ubicación dentro de
+  Guadalajara). `GET /modelo` dice qué versión y qué run se están sirviendo. Por ejemplo:
+
+  ```json
+  {"filas": [{"estacion_id": 512, "dia_semana": 3, "mes": 8, "es_fin_de_semana": 0, "es_feriado": 0,
+              "capacidad": 15, "lat": 20.69256, "lon": -103.36436, "lag_7d": 4, "media_7d": 4.0}]}
+  ```
+
+  regresa `"viajes": 6.46` para la estación 512. El comando completo está en la sección "La API"
+  del README.
+- **Desde Python:** `mlflow.pyfunc.load_model("models:/mibici-equipo43-p1-demanda@champion")` y
+  `predict` con un DataFrame de las 9 variables.
 
 ---
 
