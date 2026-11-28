@@ -255,10 +255,10 @@ modelo = mlflow.pyfunc.load_model("models:/mibici-equipo43-p2-riesgo@champion")
 Cada pregunta se registra con `mlflow run . -e register -P question=<p1|p2|p3>` (ver la sección
 de cada una).
 
-`champion` es el estado de producción: no hay un alias `production` aparte. P3 tiene además el
-alias `reentrenado`: la versión alternativa de la entrega 8, que se comparó con el `champion` en un
-A/B y no lo reemplazó (ver [Monitoreo de datos con Evidently](#monitoreo-de-datos-con-evidently)).
-Un registry nuevo (sin esa versión) no lo tiene.
+`champion` es el estado de producción: no hay un alias `production` aparte. P2 y P3 tienen además
+el alias `reentrenado`: la versión alternativa de la entrega 8, que se comparó con el `champion` en
+un A/B y no lo reemplazó (ver [Monitoreo de datos con Evidently](#monitoreo-de-datos-con-evidently)).
+Un registry creado con el punto de entrada `pipeline` no lo tiene, porque el pipeline no corre el A/B.
 
 ## Despliegue: recuperar los modelos del Model Registry
 
