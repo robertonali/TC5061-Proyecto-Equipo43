@@ -5,6 +5,15 @@
 #     api     API de los modelos P1, P2 y P3          http://localhost:8000/docs
 # Antes de la primera vez, exporta los modelos que empaqueta la imagen (ver el Containerfile):
 #     python -m mibici_mlops.api.modelo exportar [--question p2|p3]
+# Variables opcionales (en el entorno o en un archivo .env junto a este):
+#     MLFLOW_PORT=5000  API_PORT=8000   puertos del host (en macOS el 5000 suele ocuparlo AirPlay)
+#     API_WORKERS=2                     procesos de uvicorn de la API
+#     API_HILOS=1                       hilos de OpenMP/BLAS por proceso (el contenedor ve todos los
+#                                       núcleos del host aunque tenga límite; sin esto, el modelo de
+#                                       P1 abre un hilo por núcleo y compiten por los 2 vCPU)
+#     API_KEEPALIVE=30                  segundos que uvicorn mantiene abierta una conexión inactiva
+#     API_CPUS=2  API_MEMORIA=4g        límites del contenedor de la API (2 vCPU / 4 GiB, como una
+#                                       instancia t3.medium; ver reports/carga/ y el análisis FinOps)
 services:
   mlflow:
     image: ghcr.io/mlflow/mlflow:v3.17.2
@@ -17,7 +26,7 @@ services:
       # MLflow 3.x valida el encabezado Host; sin esto rechaza "mlflow:5000" dentro de la red.
       MLFLOW_SERVER_ALLOWED_HOSTS: "*"
     ports:
-      - "5000:5000"
+      - "${MLFLOW_PORT:-5000}:5000"
     volumes:
       - mlflow-data:/mlflow
     healthcheck:
@@ -26,6 +35,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+    networks: [mibici]
     restart: unless-stopped
 
   api:
@@ -33,18 +43,13 @@ services:
       context: .
       dockerfile: Containerfile
     image: mibici-api
+    command: >
+      uvicorn mibici_mlops.api.app:app --host 0.0.0.0 --port 8000
+      --workers ${API_WORKERS:-2} --timeout-keep-alive ${API_KEEPALIVE:-30}
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
+      OMP_NUM_THREADS: ${API_HILOS:-1}
+      OPENBLAS_NUM_THREADS: ${API_HILOS:-1}
       # Vacíos: usa los modelos empaquetados en la imagen. Para cargarlos del registry:
       # MODELO_URI: models:/mibici-equipo43-p1-demanda@champion
       # MODELO_URI_P2: models:/mibici-equipo43-p2-riesgo@champion
-      # MODELO_URI_P3: models:/mibici-equipo43-p3-clusters@champion
-    ports:
-      - "8000:8000"
-    depends_on:
-      mlflow:
-        condition: service_healthy
-    restart: unless-stopped
-
-volumes:
-  mlflow-data:

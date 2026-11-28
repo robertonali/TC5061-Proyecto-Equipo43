@@ -1,0 +1,210 @@
+[
+  {
+    "corrida": "base-w1",
+    "slo": {
+      "p95_ms": 500,
+      "errores": 0.01
+    },
+    "peticiones_totales": 12638,
+    "inferencias_totales": 40487,
+    "inferencias_por_peticion": 3.2,
+    "capacidad_sostenible": {
+      "usuarios": 50,
+      "rps": 37.6,
+      "p95_ms": 48.0,
+      "inferencias_por_s": 120.0,
+      "cpu_api_pct": 64.0,
+      "memoria_total_gb": 1.8
+    },
+    "costos": {
+      "AWS t3.small (2 vCPU, 2 GiB)": {
+        "usd_hora": 0.0208,
+        "usd_por_millon_inferencias": 0.048,
+        "usd_por_peticion": 1.536643026004728e-07
+      },
+      "AWS t3.medium (2 vCPU, 4 GiB)": {
+        "usd_hora": 0.0416,
+        "usd_por_millon_inferencias": 0.0959,
+        "usd_por_peticion": 3.073286052009456e-07
+      },
+      "AWS c6i.large (2 vCPU, 4 GiB)": {
+        "usd_hora": 0.085,
+        "usd_por_millon_inferencias": 0.196,
+        "usd_por_peticion": 6.279550827423169e-07
+      },
+      "GCP e2-standard-2 (2 vCPU, 8 GiB)": {
+        "usd_hora": 0.067,
+        "usd_por_millon_inferencias": 0.1545,
+        "usd_por_peticion": 4.949763593380615e-07
+      },
+      "AWS Fargate (2 vCPU, 4 GB)": {
+        "usd_hora": 0.0987,
+        "usd_por_millon_inferencias": 0.2277,
+        "usd_por_peticion": 7.294621749408985e-07
+      }
+    },
+    "demanda_real": {
+      "inferencias_dia": 3900,
+      "instancia_24x7_usd_mes": 29.95,
+      "usd_por_millon_inferencias_24x7": 256.0,
+      "utilizacion_pct": 0.0375,
+      "fargate_10min_dia_usd_mes": 0.49
+    }
+  },
+  {
+    "corrida": "base-w2",
+    "slo": {
+      "p95_ms": 500,
+      "errores": 0.01
+    },
+    "peticiones_totales": 10964,
+    "inferencias_totales": 36566,
+    "inferencias_por_peticion": 3.34,
+    "capacidad_sostenible": {
+      "usuarios": 50,
+      "rps": 37.5,
+      "p95_ms": 28.0,
+      "inferencias_por_s": 125.0,
+      "cpu_api_pct": 54.0,
+      "memoria_total_gb": 2.02
+    },
+    "costos": {
+      "AWS t3.small (2 vCPU, 2 GiB)": {
+        "usd_hora": 0.0208,
+        "usd_por_millon_inferencias": 0.0462,
+        "usd_por_peticion": 1.5407407407407407e-07
+      },
+      "AWS t3.medium (2 vCPU, 4 GiB)": {
+        "usd_hora": 0.0416,
+        "usd_por_millon_inferencias": 0.0924,
+        "usd_por_peticion": 3.0814814814814815e-07
+      },
+      "AWS c6i.large (2 vCPU, 4 GiB)": {
+        "usd_hora": 0.085,
+        "usd_por_millon_inferencias": 0.1888,
+        "usd_por_peticion": 6.296296296296296e-07
+      },
+      "GCP e2-standard-2 (2 vCPU, 8 GiB)": {
+        "usd_hora": 0.067,
+        "usd_por_millon_inferencias": 0.1488,
+        "usd_por_peticion": 4.962962962962963e-07
+      },
+      "AWS Fargate (2 vCPU, 4 GB)": {
+        "usd_hora": 0.0987,
+        "usd_por_millon_inferencias": 0.2193,
+        "usd_por_peticion": 7.314074074074075e-07
+      }
+    },
+    "demanda_real": {
+      "inferencias_dia": 3900,
+      "instancia_24x7_usd_mes": 29.95,
+      "usd_por_millon_inferencias_24x7": 256.0,
+      "utilizacion_pct": 0.0361,
+      "fargate_10min_dia_usd_mes": 0.49
+    }
+  },
+  {
+    "corrida": "opt-w1h2",
+    "slo": {
+      "p95_ms": 500,
+      "errores": 0.01
+    },
+    "peticiones_totales": 13012,
+    "inferencias_totales": 39817,
+    "inferencias_por_peticion": 3.06,
+    "capacidad_sostenible": {
+      "usuarios": 50,
+      "rps": 37.6,
+      "p95_ms": 140.0,
+      "inferencias_por_s": 115.0,
+      "cpu_api_pct": 94.0,
+      "memoria_total_gb": 1.79
+    },
+    "costos": {
+      "AWS t3.small (2 vCPU, 2 GiB)": {
+        "usd_hora": 0.0208,
+        "usd_por_millon_inferencias": 0.0502,
+        "usd_por_peticion": 1.536643026004728e-07
+      },
+      "AWS t3.medium (2 vCPU, 4 GiB)": {
+        "usd_hora": 0.0416,
+        "usd_por_millon_inferencias": 0.1004,
+        "usd_por_peticion": 3.073286052009456e-07
+      },
+      "AWS c6i.large (2 vCPU, 4 GiB)": {
+        "usd_hora": 0.085,
+        "usd_por_millon_inferencias": 0.2052,
+        "usd_por_peticion": 6.279550827423169e-07
+      },
+      "GCP e2-standard-2 (2 vCPU, 8 GiB)": {
+        "usd_hora": 0.067,
+        "usd_por_millon_inferencias": 0.1618,
+        "usd_por_peticion": 4.949763593380615e-07
+      },
+      "AWS Fargate (2 vCPU, 4 GB)": {
+        "usd_hora": 0.0987,
+        "usd_por_millon_inferencias": 0.2384,
+        "usd_por_peticion": 7.294621749408985e-07
+      }
+    },
+    "demanda_real": {
+      "inferencias_dia": 3900,
+      "instancia_24x7_usd_mes": 29.95,
+      "usd_por_millon_inferencias_24x7": 256.0,
+      "utilizacion_pct": 0.0392,
+      "fargate_10min_dia_usd_mes": 0.49
+    }
+  },
+  {
+    "corrida": "opt-w2h1",
+    "slo": {
+      "p95_ms": 500,
+      "errores": 0.01
+    },
+    "peticiones_totales": 21535,
+    "inferencias_totales": 49733,
+    "inferencias_por_peticion": 2.31,
+    "capacidad_sostenible": {
+      "usuarios": 100,
+      "rps": 76.6,
+      "p95_ms": 32.0,
+      "inferencias_por_s": 177.0,
+      "cpu_api_pct": 52.0,
+      "memoria_total_gb": 2.01
+    },
+    "costos": {
+      "AWS t3.small (2 vCPU, 2 GiB)": {
+        "usd_hora": 0.0208,
+        "usd_por_millon_inferencias": 0.0327,
+        "usd_por_peticion": 7.542790832608065e-08
+      },
+      "AWS t3.medium (2 vCPU, 4 GiB)": {
+        "usd_hora": 0.0416,
+        "usd_por_millon_inferencias": 0.0653,
+        "usd_por_peticion": 1.508558166521613e-07
+      },
+      "AWS c6i.large (2 vCPU, 4 GiB)": {
+        "usd_hora": 0.085,
+        "usd_por_millon_inferencias": 0.1335,
+        "usd_por_peticion": 3.0823904844792574e-07
+      },
+      "GCP e2-standard-2 (2 vCPU, 8 GiB)": {
+        "usd_hora": 0.067,
+        "usd_por_millon_inferencias": 0.1052,
+        "usd_por_peticion": 2.4296489701189444e-07
+      },
+      "AWS Fargate (2 vCPU, 4 GB)": {
+        "usd_hora": 0.0987,
+        "usd_por_millon_inferencias": 0.155,
+        "usd_por_peticion": 3.5806498404409637e-07
+      }
+    },
+    "demanda_real": {
+      "inferencias_dia": 3900,
+      "instancia_24x7_usd_mes": 29.95,
+      "usd_por_millon_inferencias_24x7": 256.0,
+      "utilizacion_pct": 0.0255,
+      "fargate_10min_dia_usd_mes": 0.49
+    }
+  }
+]

@@ -1,0 +1,3 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+POST,P2 lote 300,RemoteDisconnected('Remote end closed connection without response'),4,2026-11-22T17:44:51Z,2026-11-22T17:46:46Z
+POST,P1 lote 300,RemoteDisconnected('Remote end closed connection without response'),7,2026-11-22T17:42:34Z,2026-11-22T17:46:23Z

@@ -3,6 +3,9 @@
 <a target="_blank" href="https://cookiecutter-data-science.drivendata.org/">
     <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter" />
 </a>
+<a target="_blank" href="https://github.com/robertonali/TC5061-Proyecto-Equipo43/actions/workflows/ci.yml">
+    <img src="https://github.com/robertonali/TC5061-Proyecto-Equipo43/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI" />
+</a>
 
 Proyecto del equipo 43 (MLOps, TC5061.10). Usa los datos abiertos de MiBici, el sistema de
 bicicletas públicas de Guadalajara, para responder tres preguntas de negocio con un pipeline
@@ -559,6 +562,124 @@ una estación candidata, y manda todos los perfiles juntos a `POST /p3/prediccio
 petición). Se despliega como API, y no como un job aparte, por las mismas razones que P1: un solo
 camino con la misma validación, y la respuesta dice qué versión del registry asignó cada grupo. Eso
 importa más aquí que en P1, porque los números de grupo no se conservan entre versiones del modelo.
+
+## Operación: Docker Compose, CI/CD, pruebas de carga y FinOps
+
+### Levantar el sistema con un solo comando
+
+`docker-compose.yml` levanta dos servicios en la red `mibici`:
+
+| Servicio | Qué es | URL |
+|---|---|---|
+| `mlflow` | Servidor de tracking y Model Registry (imagen oficial, datos en el volumen `mlflow-data`) | http://localhost:5000 |
+| `api` | La API de P1, P2 y P3, construida con el `Containerfile`. Espera a que `mlflow` esté sano | http://localhost:8000/docs |
+
+```bash
+# Una sola vez: exportar del registry los modelos que empaqueta la imagen (ver "Contenedor")
+python -m mibici_mlops.api.modelo exportar
+python -m mibici_mlops.api.modelo exportar --question p2
+python -m mibici_mlops.api.modelo exportar --question p3
+
+docker compose up --build -d --wait     # o: podman-compose up --build -d
+curl http://localhost:8000/salud
+docker compose down                     # -v borra también el volumen de MLflow
+```
+
+Todo se ajusta con variables de entorno o un archivo `.env` junto al compose, sin editarlo:
+
+| Variable | Default | Para qué |
+|---|---|---|
+| `API_PORT`, `MLFLOW_PORT` | 8000, 5000 | Puertos del host. En macOS el 5000 suele ocuparlo AirPlay: `MLFLOW_PORT=15000` |
+| `API_WORKERS` | 2 | Procesos de uvicorn |
+| `API_HILOS` | 1 | Hilos de OpenMP/BLAS por proceso (`OMP_NUM_THREADS`) |
+| `API_CPUS`, `API_MEMORIA` | 2, 4g | Límites del contenedor de la API: 2 vCPU y 4 GiB, como una AWS t3.medium |
+| `API_KEEPALIVE` | 30 | Segundos que uvicorn mantiene abierta una conexión inactiva |
+| `MODELO_URI`, `MODELO_URI_P2`, `MODELO_URI_P3` | vacías | Cargar los modelos del registry en lugar de los de la imagen |
+
+Los defaults de `API_WORKERS`, `API_HILOS` y `API_KEEPALIVE` salen de la prueba de carga (abajo).
+
+### Pipeline de CI/CD (GitHub Actions)
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) corre en cada push y pull request:
+
+1. **`test`**: una matriz con Python 3.13 y 3.12 que instala `requirements.txt` (con caché de pip)
+   y corre `pytest`. Las pruebas que necesitan los modelos o los datos reales se omiten solas si no
+   están. Las dos versiones corren aunque una falle (`fail-fast: false`).
+   - **3.13** es la versión del proyecto (`python_env.yaml`, `pyproject.toml` y la imagen).
+   - **3.12** es la del entorno de DeepChecks y sirve como prueba de compatibilidad. Como el
+     paquete fija `requires-python ~=3.13.0`, se instala con `--ignore-requires-python` y se omite
+     la única prueba que exige 3.13 (`test_version_de_python_coincide_con_python_env`). Los modelos
+     se siguen entrenando, guardando y sirviendo con 3.13.
+2. **`build`**: si las dos versiones de `test` pasan, construye la imagen de la API con Buildx (con
+   caché de capas en GitHub Actions) y valida `docker-compose.yml` con `docker compose config`.
+3. **`compose`**: si `build` pasa, levanta MLflow con `docker compose up -d --wait mlflow` (espera a
+   su healthcheck), comprueba `curl -f http://localhost:5000/health` y termina con
+   `docker compose down -v`, que corre aunque un paso falle. La API no se levanta en CI porque su
+   imagen necesita los modelos exportados, que no están en Git.
+
+El resultado se ve en la pestaña *Actions* del repositorio y en el badge del inicio de este README.
+Para correr lo mismo en local: `pytest`, `docker build -f Containerfile .` y
+`docker compose up -d --wait mlflow` seguido de `curl -f http://localhost:5000/health` y
+`docker compose down -v`.
+
+**Publicación de la imagen.** En cada push a `master`, si `build` pasa, el job **`publish`** sube la
+imagen a GitHub Container Registry con las etiquetas `latest` y el SHA del commit. Usa el
+`GITHUB_TOKEN` de la corrida con el permiso `packages: write`, sin secretos adicionales. Los pull
+requests y las demás ramas no publican.
+
+```bash
+docker pull ghcr.io/robertonali/mibici-api:latest
+```
+
+La imagen publicada no trae los modelos, porque `models/servicio/` no está en Git: demuestra el
+pipeline de publicación, pero la API no arranca con ella sola. Para servir predicciones hay que
+exportar los modelos y construir la imagen en local, como se explica arriba.
+
+### Prueba de carga con Locust
+
+Todo está en [`carga/`](carga/):
+
+| Archivo | Qué hace |
+|---|---|
+| `locustfile.py` | El escenario. `ClienteInteractivo` (mayoría del tráfico) pide una estación a la vez: P1 50 %, P2 25 %, y P3, `/salud` y peticiones inválidas (deben dar 422) ~8 % cada una, con pausas de 0.5 a 2 s. `ProcesoDiario` (2 usuarios fijos) manda lotes de 300 estaciones a P1 y P2. La carga sube en escalones: 10, 50, 100, 200 y 300 usuarios, 60 s cada uno |
+| `recursos.py` | Muestrea `docker stats` (o `podman stats`) cada 2 s a un CSV |
+| `correr_carga.sh` | Levanta el compose, arranca el monitor, corre Locust sin interfaz y guarda todo en `reports/carga/<etiqueta>/` |
+| `analizar.py` | Gráficas de latencia, peticiones/s, errores, CPU y memoria, y el cálculo FinOps |
+
+```bash
+python -m venv .venv-carga && source .venv-carga/bin/activate
+pip install -r carga/requirements-carga.txt
+
+bash carga/correr_carga.sh                       # configuración actual (w2h1)
+API_WORKERS=1 API_HILOS=2 bash carga/correr_carga.sh w1h2   # otra configuración
+python carga/analizar.py reports/carga/base-w1 reports/carga/base-w2 \
+    reports/carga/opt-w1h2 reports/carga/opt-w2h1
+```
+
+Para explorar a mano: `locust -f carga/locustfile.py --host http://localhost:8000` y abrir
+http://localhost:8089.
+
+### Resultados y FinOps
+
+Cuatro corridas con el contenedor limitado a 2 vCPU (detalle en
+[`reports/carga/finops.md`](reports/carga/finops.md) y gráficas en `reports/carga/*.png`):
+
+| Corrida | Configuración | Máx. pet/s | Usuarios con p95 ≤ 500 ms | Errores |
+|---|---|---|---|---|
+| `base-w1` | 1 worker, hilos sin límite, keep-alive 5 s | 58 | 50 | 13 (0.10 %) |
+| `base-w2` | 2 workers, hilos sin límite, keep-alive 5 s | 47 | 50 | 11 (0.10 %) |
+| `opt-w1h2` | 1 worker, 2 hilos, keep-alive 30 s | 59 | 50 | 0 |
+| `opt-w2h1` | **2 workers, 1 hilo, keep-alive 30 s** | **125** | **100** | **0** |
+
+- **Hilos:** el contenedor ve los 10 núcleos del host aunque tenga 2 vCPU, así que el modelo de P1
+  abre un hilo de OpenMP por núcleo. Con 2 workers son 20 hilos peleando por 2 núcleos, y por eso
+  `base-w2` rinde menos que `base-w1`. Con un hilo por worker la capacidad se duplica.
+- **Errores:** todos los de la base fueron `RemoteDisconnected` en los lotes. uvicorn cerraba la
+  conexión inactiva a los 5 s y el proceso por lotes la reusaba justo a los 5 s. Con 30 s, cero.
+- **Costo:** en una t3.medium (USD 0.0416/h) a la capacidad sostenible, `opt-w2h1` cuesta
+  USD 0.065 por millón de inferencias contra 0.096 de la base (−32 %). Pero la demanda real (~3,900
+  inferencias al día) usa menos del 0.1 % de la instancia: 24x7 sale en ~USD 30 al mes. Correr
+  la API solo durante el proceso diario (Fargate o escalar a cero) lo baja a menos de USD 1 al mes.
 
 ## P1: demanda de viajes por estación y día
 
