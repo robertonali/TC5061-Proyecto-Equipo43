@@ -197,6 +197,22 @@ crea un run en el experimento `mibici-equipo43` e imprime su id al terminar
 - **Opcional:** `$env:LOGNAME = "equipo43"` antes de `mlflow run` para que MLflow no guarde tu
   usuario de Windows en el campo interno de usuario de cada run.
 
+### Flujo completo en un comando
+
+El punto de entrada `pipeline` (`project_runner.py`) encadena `ingest` y, por pregunta, `features`,
+todos los `train` de los comandos de abajo y `register`, con el `champion` y el `challenger` de la
+tabla de [Model Registry](#model-registry) (diccionario `ELEGIDOS` en `project_runner.py`, que
+busca esos runs por nombre). Cada paso queda como un run en `mibici-equipo43`:
+
+```bash
+export MLFLOW_TRACKING_URI=http://127.0.0.1:5000
+mlflow run . -e pipeline --env-manager local --experiment-name mibici-equipo43
+# Solo algunas preguntas, sin descargar: -P preguntas=p2 -P descarga=sin-descargar
+```
+
+Con los datos ya descargados tarda unos 18 minutos (25 pasos, cada uno un run, más los runs hijos
+de las búsquedas) y deja los tres modelos registrados con `champion` y `challenger`.
+
 ### Reproducción de la entrega 2
 
 El 2026-10-25 se corrió la entrega completa desde un clon limpio, con un servidor de tracking
@@ -239,9 +255,10 @@ modelo = mlflow.pyfunc.load_model("models:/mibici-equipo43-p2-riesgo@champion")
 Cada pregunta se registra con `mlflow run . -e register -P question=<p1|p2|p3>` (ver la sección
 de cada una).
 
-P2 y P3 tienen además el alias `reentrenado`: la versión alternativa de la entrega 8, que se
-comparó con el `champion` en un A/B y no lo reemplazó (ver
-[Monitoreo de datos con Evidently](#monitoreo-de-datos-con-evidently)).
+`champion` es el estado de producción: no hay un alias `production` aparte. P3 tiene además el
+alias `reentrenado`: la versión alternativa de la entrega 8, que se comparó con el `champion` en un
+A/B y no lo reemplazó (ver [Monitoreo de datos con Evidently](#monitoreo-de-datos-con-evidently)).
+Un registry nuevo (sin esa versión) no lo tiene.
 
 ## Despliegue: recuperar los modelos del Model Registry
 

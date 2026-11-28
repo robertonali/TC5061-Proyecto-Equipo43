@@ -14,6 +14,13 @@ entry_points:
       descarga: {type: string, default: descargar}
     command: "python -m mibici_mlops.dataset --{descarga}"
 
+  # Flujo completo: ingest, y por pregunta features, todos los train y register. Cada paso es un
+  # run del experimento. Requiere MLFLOW_TRACKING_URI y --experiment-name (ver README).
+  pipeline:
+    parameters:
+      preguntas: {type: string, default: "p1,p2,p3"}
+      descarga: {type: string, default: descargar}
+    command: "python -m mibici_mlops.project_runner --preguntas {preguntas} --descarga {descarga}"
   # Variables y etiqueta de una pregunta (p1, p2 o p3) en data/processed/.
   features:
     parameters:
