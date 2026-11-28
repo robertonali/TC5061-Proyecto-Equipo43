@@ -18,7 +18,9 @@ reproducible: ingesta, variables, entrenamiento y registro de experimentos en ML
 | P3 | ¿Qué grupos de estaciones comparten patrones de uso y dónde están? | Planeación urbana: dónde y de qué tipo abrir estaciones | Clustering |
 
 El planteamiento completo está en el ML Canvas
-([references/MLCanvas_MiBici.pdf](references/MLCanvas_MiBici.pdf)).
+([references/MLCanvas_MiBici.pdf](references/MLCanvas_MiBici.pdf)), y la ficha de cada modelo en
+producción (uso previsto, datos, métricas, limitaciones y monitoreo), en el
+[Model Card](MODEL_CARD.md).
 
 ## Arquitectura
 
