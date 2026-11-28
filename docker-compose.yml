@@ -53,3 +53,22 @@ services:
       # Vacíos: usa los modelos empaquetados en la imagen. Para cargarlos del registry:
       # MODELO_URI: models:/mibici-equipo43-p1-demanda@champion
       # MODELO_URI_P2: models:/mibici-equipo43-p2-riesgo@champion
+      # MODELO_URI_P3: models:/mibici-equipo43-p3-clusters@champion
+    ports:
+      - "${API_PORT:-8000}:8000"
+    deploy:
+      resources:
+        limits:
+          cpus: "${API_CPUS:-2}"
+          memory: ${API_MEMORIA:-4g}
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    networks: [mibici]
+    restart: unless-stopped
+
+networks:
+  mibici:
+
+volumes:
+  mlflow-data:
