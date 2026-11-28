@@ -66,6 +66,8 @@ def linaje(run: Run) -> dict[str, str]:
         'run_name': run.info.run_name,
         'commit': datos.tags.get('commit', ''),
         'cambios_sin_commit': datos.tags.get('cambios_sin_commit', ''),
+        'version_manifiesto': datos.params.get('version_manifiesto', ''),
+        'version_datos': datos.params.get('version_datos', ''),
         'model_family': datos.tags.get('model_family', ''),
         'ari_estabilidad': f'{datos.metrics.get(METRICA, float('nan')):.4f}',
         'val_silhouette': f'{datos.metrics.get('val_silhouette', float('nan')):.4f}',
