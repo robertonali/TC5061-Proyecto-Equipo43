@@ -518,9 +518,13 @@ Respuesta (champion versión 1, que agrupa las estaciones en 3 grupos):
     "run_id": "98d5e87a6b474312b569bd1f3e2ca735",
     "origen": "imagen"
   },
-  "predicciones": [{"estacion_id": 244, "cluster": 1}]
+  "predicciones": [{"estacion_id": 244, "cluster": 2}]
 }
 ```
+El número del grupo no es estable: KMeans numera los grupos según su inicialización, y dos
+entrenamientos del mismo modelo pueden dar la misma partición con otros números. Lo que
+identifica un grupo es su perfil de uso (`reports/figures/p3/p3_perfiles_por_grupo.csv`), no su
+número. Las versiones nuevas del `champion` pueden regresar otro número para la estación 244.
 
 Un perfil cuyas salidas no suman 1 regresa `422` con la suma que recibió. Para detener el contenedor: `podman stop mibici-api` (o `docker stop`).
 
@@ -1003,9 +1007,9 @@ métricas (`train_*`, `val_*` y `test_*` de silhouette, Davies-Bouldin y Calinsk
 |---|---|---|---|---|---|---|
 | `p3-zonas_k3` | baseline | 0.063 | 0.023 | 3.721 | 30.6 | 1 (por construcción) |
 | `p3-busqueda-kmeans` (7 hijos, k = 2 a 8) | search | 0.173 a 0.303 | 0.109 a 0.246 | — | — | 0.43 a 0.75 |
-| **`p3-kmeans_k3`** | candidate | **0.303** | **0.246** | **1.278** | **161.3** | 0.749 |
-| `p3-kmeans_k4` | candidate | 0.212 | 0.172 | 1.501 | 138.4 | 0.559 |
-| `p3-gmm_diag_k2` | candidate | 0.266 | 0.203 | 1.746 | 108.5 | 0.687 |
+| **`p3-kmeans_k3`** | candidate | **0.303** | **0.246** | **1.278** | **161.3** | 0.748 |
+| `p3-kmeans_k4` | candidate | 0.212 | 0.172 | 1.501 | 138.4 | 0.545 |
+| `p3-gmm_diag_k2` | candidate | 0.266 | 0.203 | 1.746 | 108.5 | 0.706 |
 
 - **KMeans con 3 grupos es el `champion`:** es el mejor en las cuatro métricas internas y el más
   estable de los candidatos. La búsqueda confirma k = 3 (decisión 5): con 2 grupos el ARI es
